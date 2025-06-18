@@ -57,8 +57,8 @@ import { computed, h } from 'vue'
 interface Props {
   show: boolean
   type?: 'success' | 'error' | 'warning' | 'info' | 'confirm'
-  title: string
-  message: string
+  title?: string
+  message?: string
   confirmText?: string
   cancelText?: string
   showCancel?: boolean
@@ -73,6 +73,8 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   type: 'info',
+  title: '',
+  message: '',
   confirmText: 'OK',
   cancelText: 'Cancel',
   showCancel: false,

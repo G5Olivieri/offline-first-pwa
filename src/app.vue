@@ -7,7 +7,7 @@ import { useOperatorStore } from "./stores/operator-store";
 import { useOrderStore } from "./stores/order-store";
 import { useProductStore } from "./stores/product-store";
 import { useKeyboardShortcuts, createPOSShortcuts } from "./composables/use-keyboard-shortcuts";
-import { notificationState, $notify, $modal } from "./composables/use-notifications";
+import { useNotificationStore, $notify, $modal } from "./stores/notification-store";
 import ToastContainer from "./components/toast-container.vue";
 import AppModal from "./components/app-modal.vue";
 import HelpDialog from "./components/help-dialog.vue";
@@ -28,6 +28,7 @@ const orderStore = useOrderStore();
 const onlineStatusStore = useOnlineStatusStore();
 const operatorStore = useOperatorStore();
 const customerStore = useCustomerStore();
+const notificationStore = useNotificationStore();
 const isHome = computed(() => router.currentRoute.value.path === "/");
 
 // Notification system - removed unused modal variable
@@ -131,7 +132,7 @@ const addProduct = async () => {
   barcode.value = "";
 };
 
-let intervalId: number | undefined;
+let intervalId: ReturnType<typeof setInterval> | undefined;
 
 onMounted(() => {
   intervalId = setInterval(() => {
@@ -478,26 +479,23 @@ onUnmounted(() => {
 
     <!-- Toast Notifications -->
     <ToastContainer
-      :toasts="notificationState.toasts.value"
-      @remove="(id: string) => {
-        const index = notificationState.toasts.value.findIndex(t => t.id === id);
-        if (index > -1) notificationState.toasts.value.splice(index, 1);
-      }"
+      :toasts="notificationStore.activeToasts"
+      @remove="(id: string) => notificationStore.removeToast(id)"
     />
 
     <!-- Global Modal -->
     <AppModal
-      :show="notificationState.modal.show"
-      :type="notificationState.modal.options.type"
-      :title="notificationState.modal.options.title"
-      :message="notificationState.modal.options.message"
-      :confirm-text="notificationState.modal.options.confirmText"
-      :cancel-text="notificationState.modal.options.cancelText"
-      :show-cancel="notificationState.modal.options.showCancel"
-      :persistent="notificationState.modal.options.persistent"
-      @confirm="() => notificationState.modal.resolve?.({ confirmed: true, cancelled: false })"
-      @cancel="() => notificationState.modal.resolve?.({ confirmed: false, cancelled: true })"
-      @close="() => { notificationState.modal.show = false; notificationState.modal.resolve?.({ confirmed: false, cancelled: true }); }"
+      :show="notificationStore.modalState.show"
+      :type="notificationStore.modalState.options.type"
+      :title="notificationStore.modalState.options.title"
+      :message="notificationStore.modalState.options.message"
+      :confirm-text="notificationStore.modalState.options.confirmText"
+      :cancel-text="notificationStore.modalState.options.cancelText"
+      :show-cancel="notificationStore.modalState.options.showCancel"
+      :persistent="notificationStore.modalState.options.persistent"
+      @confirm="notificationStore.confirmModal"
+      @cancel="notificationStore.cancelModal"
+      @close="notificationStore.closeModal"
     />
 
     <!-- Help Dialog -->

@@ -1,0 +1,307 @@
+import { defineStore } from 'pinia';
+import { ref, computed, onMounted } from 'vue';
+import { config } from '../config/env';
+
+interface SystemInfo {
+  appName: string;
+  appVersion: string;
+  environment: string;
+  buildTime: string;
+  userAgent: string;
+  screen: { width: number; height: number };
+  connection: { type: string; effectiveType?: string };
+  locale: string;
+  currency: string;
+  timezone: string;
+  features: {
+    offlineMode: boolean;
+    analytics: boolean;
+    notifications: boolean;
+    debugMode: boolean;
+  };
+  database: {
+    url: string;
+    syncEnabled: boolean;
+  };
+}
+
+interface DeviceCapabilities {
+  touchScreen: boolean;
+  orientation: string;
+  cookiesEnabled: boolean;
+  language: string;
+  platform: string;
+  memory?: number;
+  cores?: number;
+}
+
+export const useSystemInfoStore = defineStore('systemInfo', () => {
+  // State
+  const buildTime = ref<string>('');
+  const userAgent = ref<string>('');
+  const screenInfo = ref<{ width: number; height: number }>({ width: 0, height: 0 });
+  const connectionInfo = ref<{ type: string; effectiveType?: string }>({ type: 'unknown' });
+  const deviceCapabilities = ref<DeviceCapabilities>({
+    touchScreen: false,
+    orientation: 'unknown',
+    cookiesEnabled: false,
+    language: 'en',
+    platform: 'unknown'
+  });
+  const performanceInfo = ref<{
+    memoryUsage?: number;
+    timing?: PerformanceNavigationTiming;
+  }>({});
+
+  // Getters
+  const systemInfo = computed<SystemInfo>(() => ({
+    appName: config.appTitle,
+    appVersion: config.appVersion,
+    environment: config.environment,
+    buildTime: buildTime.value,
+    userAgent: userAgent.value,
+    screen: screenInfo.value,
+    connection: connectionInfo.value,
+    locale: config.defaultLocale,
+    currency: config.defaultCurrency,
+    timezone: config.defaultTimezone,
+    features: {
+      offlineMode: config.enableOfflineMode,
+      analytics: config.enableAnalytics,
+      notifications: config.enableNotifications,
+      debugMode: config.enableDebugMode
+    },
+    database: {
+      url: config.couchdbUrl,
+      syncEnabled: config.enableSync
+    }
+  }));
+
+  const formattedBuildTime = computed(() => {
+    if (!buildTime.value) return 'Unknown';
+    try {
+      return new Date(buildTime.value).toLocaleString();
+    } catch {
+      return 'Invalid Date';
+    }
+  });
+
+  const browserInfo = computed(() => {
+    const ua = userAgent.value;
+    if (!ua) return { name: 'Unknown Browser', version: 'Unknown' };
+
+    let name = 'Unknown Browser';
+    let version = 'Unknown';
+
+    if (ua.includes('Chrome')) {
+      name = 'Chrome';
+      const match = ua.match(/Chrome\/(\d+)/);
+      if (match) version = match[1];
+    } else if (ua.includes('Firefox')) {
+      name = 'Firefox';
+      const match = ua.match(/Firefox\/(\d+)/);
+      if (match) version = match[1];
+    } else if (ua.includes('Safari')) {
+      name = 'Safari';
+      const match = ua.match(/Version\/(\d+)/);
+      if (match) version = match[1];
+    } else if (ua.includes('Edge')) {
+      name = 'Edge';
+      const match = ua.match(/Edge\/(\d+)/);
+      if (match) version = match[1];
+    }
+
+    return { name, version };
+  });
+
+  const deviceInfo = computed(() => {
+    const ua = userAgent.value;
+    if (!ua) return { type: 'Unknown Device', os: 'Unknown' };
+
+    let type = 'Desktop';
+    let os = 'Unknown';
+
+    if (ua.includes('Mobile')) type = 'Mobile Device';
+    if (ua.includes('Tablet')) type = 'Tablet';
+
+    if (ua.includes('Windows')) os = 'Windows';
+    else if (ua.includes('Mac')) os = 'macOS';
+    else if (ua.includes('Linux')) os = 'Linux';
+    else if (ua.includes('Android')) os = 'Android';
+    else if (ua.includes('iOS')) os = 'iOS';
+
+    return { type, os };
+  });
+
+  const isLowEndDevice = computed(() => {
+    const cores = deviceCapabilities.value.cores || 1;
+    const memory = deviceCapabilities.value.memory || 1;
+    return cores <= 2 || memory <= 2; // Less than 2 cores or 2GB RAM
+  });
+
+  const supportedFeatures = computed(() => ({
+    serviceWorker: 'serviceWorker' in navigator,
+    pushNotifications: 'PushManager' in window,
+    backgroundSync: 'serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype,
+    indexedDB: 'indexedDB' in window,
+    webGL: !!document.createElement('canvas').getContext('webgl'),
+    webAssembly: 'WebAssembly' in window,
+    intersectionObserver: 'IntersectionObserver' in window,
+    resizeObserver: 'ResizeObserver' in window,
+    performanceObserver: 'PerformanceObserver' in window,
+    geolocation: 'geolocation' in navigator,
+    camera: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
+    vibration: 'vibrate' in navigator
+  }));
+
+  // Actions
+  const collectSystemInfo = () => {
+    // Get build time (you might want to inject this during build)
+    buildTime.value = new Date().toISOString();
+
+    // Get user agent info
+    userAgent.value = navigator.userAgent;
+
+    // Get screen info
+    screenInfo.value = {
+      width: window.screen.width,
+      height: window.screen.height
+    };
+
+    // Get connection info if available
+    if ('connection' in navigator) {
+      const conn = (navigator as any).connection;
+      connectionInfo.value = {
+        type: conn.type || 'unknown',
+        effectiveType: conn.effectiveType
+      };
+    }
+
+    // Get device capabilities
+    deviceCapabilities.value = {
+      touchScreen: 'ontouchstart' in window,
+      orientation: screen.orientation?.type || 'unknown',
+      cookiesEnabled: navigator.cookieEnabled,
+      language: navigator.language,
+      platform: navigator.platform
+    };
+
+    // Get hardware info if available
+    if ('deviceMemory' in navigator) {
+      deviceCapabilities.value.memory = (navigator as any).deviceMemory;
+    }
+    if ('hardwareConcurrency' in navigator) {
+      deviceCapabilities.value.cores = navigator.hardwareConcurrency;
+    }
+
+    // Get performance info
+    if (window.performance && window.performance.getEntriesByType) {
+      const navigation = window.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+      if (navigation) {
+        performanceInfo.value.timing = navigation;
+      }
+    }
+
+    if ('memory' in performance) {
+      const memory = (performance as any).memory;
+      performanceInfo.value.memoryUsage = memory.usedJSHeapSize;
+    }
+  };
+
+  const updateConnectionInfo = () => {
+    if ('connection' in navigator) {
+      const conn = (navigator as any).connection;
+      connectionInfo.value = {
+        type: conn.type || 'unknown',
+        effectiveType: conn.effectiveType
+      };
+    }
+  };
+
+  const exportSystemReport = () => ({
+    timestamp: new Date().toISOString(),
+    system: systemInfo.value,
+    browser: browserInfo.value,
+    device: deviceInfo.value,
+    capabilities: deviceCapabilities.value,
+    supportedFeatures: supportedFeatures.value,
+    performance: performanceInfo.value,
+    isLowEndDevice: isLowEndDevice.value
+  });
+
+  const checkCompatibility = () => {
+    const requiredFeatures = ['serviceWorker', 'indexedDB'];
+    const missing = requiredFeatures.filter(feature => !supportedFeatures.value[feature as keyof typeof supportedFeatures.value]);
+
+    return {
+      isCompatible: missing.length === 0,
+      missingFeatures: missing,
+      recommendations: missing.map(feature => {
+        switch (feature) {
+          case 'serviceWorker':
+            return 'Service Workers are required for offline functionality. Please use a modern browser.';
+          case 'indexedDB':
+            return 'IndexedDB is required for local data storage. Please enable it in your browser settings.';
+          default:
+            return `${feature} is not supported in your browser.`;
+        }
+      })
+    };
+  };
+
+  // Initialize data collection
+  const initialize = () => {
+    collectSystemInfo();
+
+    // Listen for connection changes
+    if ('connection' in navigator) {
+      (navigator as any).connection.addEventListener('change', updateConnectionInfo);
+    }
+
+    // Listen for orientation changes
+    window.addEventListener('orientationchange', () => {
+      deviceCapabilities.value.orientation = screen.orientation?.type || 'unknown';
+    });
+  };
+
+  return {
+    // State
+    buildTime,
+    userAgent,
+    screenInfo,
+    connectionInfo,
+    deviceCapabilities,
+    performanceInfo,
+
+    // Getters
+    systemInfo,
+    formattedBuildTime,
+    browserInfo,
+    deviceInfo,
+    isLowEndDevice,
+    supportedFeatures,
+
+    // Actions
+    collectSystemInfo,
+    updateConnectionInfo,
+    exportSystemReport,
+    checkCompatibility,
+    initialize
+  };
+});
+
+// Auto-initialize when store is first used
+let initialized = false;
+export const useSystemInfoStoreWithAutoInit = () => {
+  const store = useSystemInfoStore();
+
+  if (!initialized) {
+    initialized = true;
+
+    onMounted(() => {
+      store.initialize();
+    });
+  }
+
+  return store;
+};

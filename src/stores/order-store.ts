@@ -1,12 +1,15 @@
 import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
+import { log } from "../config/env";
 import { getOrderDB } from "../db";
-import type { Item, Order } from "../types/order";
+import type { Item, Order, PaymentMethod } from "../types/order";
+import { OrderStatus } from "../types/order";
 import type { Product } from "../types/product";
 import { useCustomerStore } from "./customer-store";
 import { useOperatorStore } from "./operator-store";
 import { useProductStore } from "./product-store";
+import { useTerminalStore } from "./terminal-store";
 
 export const useOrderStore = defineStore("orderStore", () => {
   const router = useRouter();
@@ -19,31 +22,30 @@ export const useOrderStore = defineStore("orderStore", () => {
   const order = reactive<Map<string, Item>>(new Map());
   const operatorStore = useOperatorStore();
   const customerStore = useCustomerStore();
+  const terminalStore = useTerminalStore();
   const syncing = ref(false);
   const amount = ref("");
   const amountError = ref<string | null>(null);
-  const paymentMethod = ref("card");
+  const paymentMethod = ref<PaymentMethod>("card");
   const change = ref<number | null>(null);
-  const createdAt = ref<string | null>(null);
+  const createdAt = ref<string>(new Date().toISOString());
 
   const mapOrderToDocument = (
-    status: "pending" | "completed" | "cancelled" = "pending"
-  ) => {
-    if (createdAt.value === null) {
-      createdAt.value = new Date().toISOString();
-    }
+    status: OrderStatus = OrderStatus.PENDING
+  ): Order => {
     return {
       _id: currentOrderId.value,
       _rev: currentOrderRev.value,
       items: Array.from(order.values()),
       total: total.value,
       status,
-      paymentMethod: paymentMethod.value,
+      terminal_id: terminalStore.terminalId,
+      payment_method: paymentMethod.value,
       amount: paymentMethod.value === "cash" ? parseFloat(amount.value) : null,
       operator_id: operatorStore.operatorId || undefined,
       customer_id: customerStore.customerId || undefined,
-      createdAt: createdAt.value,
-      updatedAt: new Date().toISOString(),
+      created_at: createdAt.value,
+      updated_at: new Date().toISOString(),
     };
   };
 
@@ -83,47 +85,48 @@ export const useOrderStore = defineStore("orderStore", () => {
 
   const abandon = async () => {
     if (!currentOrderId.value) {
-      console.warn("No current order to abandon.");
+      log("warn", "No current order to abandon.");
       return;
     }
     if (order.size === 0) {
-      console.warn("Cannot abandon an empty order.");
+      log("warn", "Cannot abandon an empty order.");
       return;
     }
 
     if (confirm("Are you sure you want to abandon the order?")) {
       try {
-        await orderDB.put(mapOrderToDocument("cancelled"));
+        await orderDB.put(mapOrderToDocument(OrderStatus.CANCELLED));
         order.clear();
+        currentOrderId.value = "";
+        currentOrderRev.value = undefined;
+        await customerStore.clearCustomer();
+        syncOrder();
       } catch (error) {
-        console.error("Error abandoning order:", error);
+        log("error", "Error abandoning order:", error);
       }
-      currentOrderId.value = "";
-      currentOrderRev.value = undefined;
-      await customerStore.clearCustomer();
     }
   };
 
   const syncOrder = async () => {
-    console.log("Syncing order...");
+    log("debug", "Syncing order...");
     if (syncing.value) {
-      console.warn("Sync already in progress, skipping.");
+      log("warn", "Sync already in progress, skipping.");
       return;
     }
     syncing.value = true;
 
-    if (!currentOrderId.value) {
-      console.log("No current order ID found, generating a new one.");
+    if (currentOrderId.value === "") {
+      log("debug", "No current order ID found, generating a new one.");
       currentOrderId.value = crypto.randomUUID();
       localStorage.setItem("currentOrderId", currentOrderId.value);
     }
 
     try {
-      const result = await orderDB.put(mapOrderToDocument("pending"));
+      const result = await orderDB.put(mapOrderToDocument(OrderStatus.PENDING));
       currentOrderRev.value = result.rev;
       localStorage.setItem("currentOrderRev", result.rev);
     } catch (error) {
-      console.error("Error syncing order:", error);
+      log("error", "Error syncing order:", error);
     } finally {
       syncing.value = false;
     }
@@ -135,11 +138,11 @@ export const useOrderStore = defineStore("orderStore", () => {
 
   const complete = async () => {
     if (!currentOrderId.value) {
-      console.warn("No current order to complete.");
+      log("warn", "No current order to complete.");
       return;
     }
     if (order.size === 0) {
-      console.warn("Cannot complete an empty order.");
+      log("warn", "Cannot complete an empty order.");
       return;
     }
     if (router.currentRoute.value.path !== "/checkout") {
@@ -160,7 +163,7 @@ export const useOrderStore = defineStore("orderStore", () => {
     amountError.value = null;
     amount.value = "";
     paymentMethod.value = "card";
-    await orderDB.put(mapOrderToDocument("completed"));
+    await orderDB.put(mapOrderToDocument(OrderStatus.COMPLETED));
 
     const productsToUpdate: [string, number][] = Array.from(order.values()).map(
       (item) => [item.product._id, item.product.stock - item.quantity]
@@ -186,13 +189,17 @@ export const useOrderStore = defineStore("orderStore", () => {
 
   const loadOrder = async () => {
     if (!currentOrderId.value) {
-      console.log("No current order ID found in localStorage.");
+      log("debug", "No current order ID found in localStorage.");
       syncOrder();
       return;
     }
     const doc = await orderDB.get(currentOrderId.value);
-    if (!doc || doc.status === "completed" || doc.status === "cancelled") {
-      console.warn("No document found for current order ID.");
+    if (
+      !doc ||
+      doc.status === OrderStatus.COMPLETED ||
+      doc.status === OrderStatus.CANCELLED
+    ) {
+      log("warn", "No document found for current order ID.");
 
       currentOrderId.value = "";
       currentOrderRev.value = undefined;
@@ -220,7 +227,8 @@ export const useOrderStore = defineStore("orderStore", () => {
       doc.customer_id !== customerStore.customerId ||
       operatorStore.operatorId !== doc.operator_id
     ) {
-      console.warn(
+      log(
+        "warn",
         "The current order does not match the current customer or operator, resync."
       );
       syncOrder();
@@ -262,6 +270,40 @@ export const useOrderStore = defineStore("orderStore", () => {
     }
   );
 
+  const purgeNonPendingOrders = async (): Promise<number> => {
+    try {
+      const allOrders = await orderDB.allDocs({
+        include_docs: true,
+      });
+
+      const nonPendingOrders = allOrders.rows
+        .map((row) => row.doc as Order)
+        .filter(
+          (order) =>
+            order.status === OrderStatus.COMPLETED ||
+            order.status === OrderStatus.CANCELLED
+        );
+
+      let purgedCount = 0;
+      for (const order of nonPendingOrders) {
+        try {
+          if (order._rev) {
+            await orderDB.remove(order._id, order._rev);
+            purgedCount++;
+            log("info", `Purged ${order.status} order ${order._id} from local storage`);
+          }
+        } catch (error) {
+          log("error", `Failed to purge order ${order._id}:`, error);
+        }
+      }
+
+      return purgedCount;
+    } catch (error) {
+      log("error", "Error purging non-pending orders:", error);
+      return 0;
+    }
+  };
+
   const fetchOrders = async (): Promise<Order[]> => {
     try {
       const orders = await orderDB.allDocs({
@@ -269,13 +311,14 @@ export const useOrderStore = defineStore("orderStore", () => {
       });
       return orders.rows
         .map((row) => row.doc as Order)
+        .filter((order) => order.status === OrderStatus.PENDING) // Only return pending orders (non-pending are auto-purged)
         .sort((a, b) => {
           return (
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
           );
         });
     } catch (error) {
-      console.error("Error fetching orders:", error);
+      log("error", "Error fetching orders:", error);
       return [];
     }
   };
@@ -295,5 +338,6 @@ export const useOrderStore = defineStore("orderStore", () => {
     amountError,
     change,
     fetchOrders,
+    purgeNonPendingOrders,
   };
 });

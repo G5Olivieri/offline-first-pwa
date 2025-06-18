@@ -11,21 +11,27 @@ import Orders from "./pages/orders/orders.vue";
 import ImportProducts from "./pages/products/import.vue";
 import NewProduct from "./pages/products/new.vue";
 import Products from "./pages/products/products.vue";
+import Monitoring from "./pages/utils/monitoring.vue";
 import Utils from "./pages/utils/utils.vue";
 
 const routes: RouteRecordRaw[] = [
   { path: "/", component: Home },
   { path: "/operators", component: Operators },
-  { path: "/operators/new", component: NewOperator },
   { path: "/customers", component: Customers },
   { path: "/customers/new", component: NewCustomer },
-  { path: "/customers/all", component: ListAllCustomers },
-  { path: "/_utils", component: Utils },
   { path: "/products", component: Products },
-  { path: "/products/new", component: NewProduct },
-  { path: "/products/import", component: ImportProducts },
   { path: "/checkout", component: Checkout },
   { path: "/orders", component: Orders },
+  ...(import.meta.env.DEV
+    ? [
+        { path: "/customers/all", component: ListAllCustomers },
+        { path: "/operators/new", component: NewOperator },
+        { path: "/products/import", component: ImportProducts },
+        { path: "/products/new", component: NewProduct },
+        { path: "/_utils", component: Utils },
+        { path: "/_utils/monitoring", component: Monitoring },
+      ]
+    : []),
 ];
 
 export const router = createRouter({

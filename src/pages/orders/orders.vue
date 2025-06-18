@@ -24,7 +24,7 @@ onMounted(() => {
     <h2>Order List</h2>
     <ul>
       <li v-for="order in orders" :key="order._id">
-        Order ID: {{ order._id }} - {{ order.status }} - Total: {{ order.total }} - {{ order.updatedAt }}
+        Order ID: {{ order._id }} - {{ order.status }} - Total: {{ order.total }} - {{ order.updated_at }}
       </li>
     </ul>
   </div>

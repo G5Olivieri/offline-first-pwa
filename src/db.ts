@@ -3,6 +3,7 @@ import PouchDBFind from "pouchdb-find";
 import type { Customer } from "./stores/customer-store";
 import type { Operator } from "./types/operator";
 import type { Order } from "./types/order";
+import { OrderStatus } from "./types/order";
 import type { Product } from "./types/product";
 import { config, log } from "./config/env";
 
@@ -70,24 +71,57 @@ export const getOrderDB = (): PouchDB.Database<Order> => {
   _orderDB = new PouchDB("orders");
 
   if (SYNCING) {
-    const remoteOrderDB = new PouchDB<Order>(`${COUCHDB_URL}/orders`, {
-      auth: {
-        username: config.couchdbUsername,
-        password: config.couchdbPassword,
-      },
-    });
+    try {
+      const remoteOrderDB = new PouchDB<Order>(`${COUCHDB_URL}/orders`, {
+        auth: {
+          username: config.couchdbUsername,
+          password: config.couchdbPassword,
+        },
+      });
 
-    remoteOrderDB
-      .sync(_orderDB, {
+      // One-way sync: only push ALL local orders to remote, never pull
+      _orderDB.replicate.to(remoteOrderDB, {
         live: true,
         retry: true,
+        // Push all orders regardless of status
       })
-      .on("change", (info) => {
-        console.log("[orders] Sync change:", info);
-      })
-      .on("error", (err) => {
-        console.error("[orders] Sync error:", err);
-      });
+        .on("change", async (info) => {
+          log('debug', "[orders] Pushed orders to remote:", info);
+
+          // After successful push, purge all non-pending orders from local storage
+          if (info.docs && info.docs.length > 0) {
+            for (const doc of info.docs) {
+              const order = doc as Order;
+              // Purge completed and cancelled orders, keep pending orders
+              if (order.status === OrderStatus.COMPLETED || order.status === OrderStatus.CANCELLED) {
+                try {
+                  if (doc._rev) {
+                    await _orderDB!.remove(doc._id, doc._rev);
+                    log('debug', `[orders] Purged ${order.status} order ${doc._id} from local storage`);
+                  }
+                } catch (error) {
+                  log('error', `[orders] Failed to purge order ${doc._id}:`, error);
+                }
+              }
+            }
+          }
+        })
+        .on("error", (err) => {
+          log('error', "[orders] Sync error:", err);
+        })
+        .on("active", () => {
+          log('debug', "[orders] Sync active");
+        })
+        .on("paused", () => {
+          log('debug', "[orders] Sync paused");
+        });
+
+      log('info', `[orders] One-way sync enabled with ${COUCHDB_URL}/orders (push all orders, never pull)`);
+    } catch (error) {
+      log('error', "[orders] Failed to setup sync:", error);
+    }
+  } else {
+    log('info', "[orders] Sync disabled");
   }
 
   return _orderDB;

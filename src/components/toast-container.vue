@@ -80,7 +80,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const now = ref(Date.now())
-let intervalId: number | undefined
+let intervalId: ReturnType<typeof setInterval> | undefined
 
 onMounted(() => {
   intervalId = setInterval(() => {

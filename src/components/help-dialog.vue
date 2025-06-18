@@ -1,38 +1,56 @@
 <template>
   <Teleport to="body">
-    <div
-      v-if="show"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      @click="$emit('close')"
+    <Transition
+      name="modal"
+      enter-active-class="transition-all duration-300 ease-out"
+      leave-active-class="transition-all duration-200 ease-in"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
     >
       <div
-        class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl mx-4 max-w-4xl w-full max-h-[90vh] overflow-hidden"
-        @click.stop
+        v-if="show"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        @click="emit('close')"
       >
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-white">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-              <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h2 class="text-xl font-bold">Keyboard Shortcuts & Help</h2>
-                <p class="text-blue-100 text-sm">Quick reference guide</p>
+        <Transition
+          name="modal-content"
+          enter-active-class="transition-all duration-300 ease-out"
+          leave-active-class="transition-all duration-200 ease-in"
+          enter-from-class="opacity-0 scale-95 translate-y-4"
+          enter-to-class="opacity-100 scale-100 translate-y-0"
+          leave-from-class="opacity-100 scale-100 translate-y-0"
+          leave-to-class="opacity-0 scale-95 translate-y-4"
+        >          <div
+            v-if="show"
+            class="help-dialog bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl mx-4 max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            @click.stop
+          >
+            <!-- Header -->
+            <div class="gradient-header px-6 py-4 text-white">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 class="text-xl font-bold">Keyboard Shortcuts & Help</h2>
+                    <p class="text-blue-100 text-sm">Quick reference guide</p>
+                  </div>
+                </div>
+                <button
+                  @click="emit('close')"
+                  class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             </div>
-            <button
-              @click="$emit('close')"
-              class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
 
         <!-- Content -->
         <div class="overflow-y-auto max-h-[calc(90vh-5rem)]">
@@ -135,18 +153,38 @@
                   <p class="text-gray-600 text-sm">{{ environment }}</p>
                 </div>
                 <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <h4 class="font-medium text-gray-900 mb-2">Database Status</h4>
+                  <h4 class="font-medium text-gray-900 mb-2">Terminal ID</h4>
+                  <p class="text-gray-600 text-xs font-mono">{{ terminalStore.terminalId }}</p>
+                </div>                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 class="font-medium text-gray-900 mb-2">Connection Status</h4>
                   <div class="flex items-center space-x-2">
                     <div
-                      class="w-2 h-2 rounded-full"
+                      class="w-2 h-2 rounded-full status-indicator"
                       :class="isOnline ? 'bg-green-500' : 'bg-red-500'"
                     ></div>
-                    <span class="text-gray-600 text-sm">{{ isOnline ? 'Connected' : 'Offline' }}</span>
+                    <span class="text-gray-600 text-sm">{{ isOnline ? 'Online' : 'Offline' }}</span>
                   </div>
                 </div>
-                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <h4 class="font-medium text-gray-900 mb-2">Last Updated</h4>
-                  <p class="text-gray-600 text-sm">{{ new Date().toLocaleDateString() }}</p>
+              </div>
+
+              <!-- Database Status Section -->
+              <div class="mt-6">
+                <h4 class="font-medium text-gray-900 mb-4">Database Sync Status</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div
+                    v-for="db in databaseStatus"
+                    :key="db.name"
+                    class="database-status-card p-3 border border-gray-200 rounded-lg bg-white"
+                  >
+                    <div class="flex items-center justify-between mb-2">
+                      <h5 class="font-medium text-gray-900 text-sm">{{ db.name }}</h5>
+                      <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 rounded-full status-indicator" :class="db.syncStatus.color"></div>
+                        <span class="text-xs" :class="db.syncStatus.textColor">{{ db.syncStatus.text }}</span>
+                      </div>
+                    </div>
+                    <p class="text-xs text-gray-600">{{ db.status }}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -157,26 +195,39 @@
         <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
           <div class="flex items-center justify-between">
             <p class="text-sm text-gray-500">
-              Press <kbd class="px-1 bg-white border rounded text-xs">Shift + ?</kbd> to open this help dialog anytime
+              Press <kbd class="px-2 py-1 bg-white border rounded text-xs font-mono shadow-sm">Shift + ?</kbd> to open this help dialog anytime
             </p>
             <button
-              @click="$emit('close')"
-              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              @click="emit('close')"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 hover:shadow-lg focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Close
             </button>
           </div>
         </div>
+          </div>
+        </Transition>
       </div>
-    </div>
+    </Transition>
   </Teleport>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useOnlineStatusStore } from '../stores/online-status-store'
+import { useTerminalStore } from '../stores/terminal-store'
 import { config as envConfig } from '../config/env'
 import type { KeyboardShortcut } from '../composables/use-keyboard-shortcuts'
+
+interface DatabaseInfo {
+  name: string
+  status: string
+  syncStatus: {
+    text: string
+    color: string
+    textColor: string
+  }
+}
 
 interface Props {
   show: boolean
@@ -187,7 +238,12 @@ const props = withDefaults(defineProps<Props>(), {
   shortcuts: () => []
 })
 
+const emit = defineEmits<{
+  close: []
+}>()
+
 const onlineStore = useOnlineStatusStore()
+const terminalStore = useTerminalStore()
 
 const isOnline = computed(() => onlineStore.isOnline)
 const appVersion = computed(() => envConfig.appVersion)
@@ -200,6 +256,68 @@ const functionKeyShortcuts = computed(() =>
 const navigationShortcuts = computed(() =>
   props.shortcuts.filter(s => !s.key.startsWith('F'))
 )
+
+// Database status helper
+const getSyncStatus = (dbName: string) => {
+  const isOnline = onlineStore.isOnline
+  const isSyncEnabled = onlineStore.isSyncEnabled
+
+  if (!isOnline) {
+    return {
+      text: 'Offline',
+      color: 'bg-yellow-400',
+      textColor: 'text-yellow-700'
+    }
+  }
+
+  if (!isSyncEnabled) {
+    return {
+      text: 'Disabled',
+      color: 'bg-gray-400',
+      textColor: 'text-gray-700'
+    }
+  }
+
+  // Special case for orders - they use one-way sync (push only)
+  if (dbName === 'orders') {
+    return {
+      text: 'Push Only',
+      color: 'bg-blue-400',
+      textColor: 'text-blue-700'
+    }
+  }
+
+  return {
+    text: 'Ready',
+    color: 'bg-green-400',
+    textColor: 'text-green-700'
+  }
+}
+
+const databaseStatus = computed<DatabaseInfo[]>(() => {
+  return [
+    {
+      name: 'Products',
+      status: 'Two-way sync enabled',
+      syncStatus: getSyncStatus('products')
+    },
+    {
+      name: 'Orders',
+      status: 'Push all, keep pending only',
+      syncStatus: getSyncStatus('orders')
+    },
+    {
+      name: 'Customers',
+      status: 'Two-way sync enabled',
+      syncStatus: getSyncStatus('customers')
+    },
+    {
+      name: 'Operators',
+      status: 'Two-way sync enabled',
+      syncStatus: getSyncStatus('operators')
+    }
+  ]
+})
 
 const getShortcutDisplay = (shortcut: KeyboardShortcut): string => {
   const parts: string[] = []
@@ -214,3 +332,102 @@ const getShortcutDisplay = (shortcut: KeyboardShortcut): string => {
   return parts.join(' + ')
 }
 </script>
+
+<style scoped>
+/* Modal backdrop transitions */
+.modal-enter-active,
+.modal-leave-active {
+  transition: all 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+  backdrop-filter: blur(0px);
+}
+
+.modal-enter-to,
+.modal-leave-from {
+  opacity: 1;
+  backdrop-filter: blur(4px);
+}
+
+/* Modal content transitions */
+.modal-content-enter-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-content-leave-active {
+  transition: all 0.2s ease-in;
+}
+
+.modal-content-enter-from {
+  opacity: 0;
+  transform: scale(0.9) translateY(20px);
+}
+
+.modal-content-leave-to {
+  opacity: 0;
+  transform: scale(0.95) translateY(-10px);
+}
+
+.modal-content-enter-to,
+.modal-content-leave-from {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* Enhanced hover effects */
+.help-dialog button {
+  transition: all 0.2s ease;
+}
+
+.help-dialog button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Keyboard shortcut styling */
+.help-dialog kbd {
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.help-dialog kbd:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Database status cards animations */
+.help-dialog .database-status-card {
+  transition: all 0.2s ease;
+}
+
+.help-dialog .database-status-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Header gradient animation */
+.help-dialog .gradient-header {
+  background: linear-gradient(45deg, #3b82f6, #6366f1, #8b5cf6);
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Status indicator pulse animation */
+.status-indicator {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+</style>

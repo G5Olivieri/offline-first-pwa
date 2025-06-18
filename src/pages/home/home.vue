@@ -2,12 +2,14 @@
 import { onMounted, ref } from "vue";
 import { useOrderStore } from "../../stores/order-store";
 import { useProductStore } from "../../stores/product-store";
+import { useTerminalStore } from "../../stores/terminal-store";
 import { useUpsellCrossSell } from "../../composables/use-upsell-cross-sell";
 import ProductSuggestions from "../../components/product-suggestions.vue";
 import type { Product } from "../../types/product";
 
 const orderStore = useOrderStore();
 const productStore = useProductStore();
+const terminalStore = useTerminalStore();
 const allProducts = ref<Product[]>([]);
 const loading = ref(true);
 
@@ -68,6 +70,7 @@ onMounted(() => {
                 Point of Sale
               </h1>
               <p class="text-gray-500 text-sm">Modern retail solution</p>
+              <p class="text-xs text-gray-400 font-mono">Terminal: {{ terminalStore.terminalId }}</p>
             </div>
           </div>
           <div class="flex items-center space-x-4">

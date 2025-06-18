@@ -1,0 +1,156 @@
+# Istio-specific values for POS Frontend
+# Use this file to override default values when deploying with Istio
+
+# Enable Istio features
+istio:
+  enabled: true
+
+# Disable regular ingress when using Istio
+ingress:
+  enabled: false
+
+# Service configuration for Istio
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+  portName: http
+
+# Pod labels for Istio
+podLabels:
+  app: pos-frontend
+  version: v1
+
+# Istio sidecar injection
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  # Optional: Configure Istio proxy settings
+  sidecar.istio.io/proxyCPU: "100m"
+  sidecar.istio.io/proxyMemory: "128Mi"
+  sidecar.istio.io/proxyCPULimit: "200m"
+  sidecar.istio.io/proxyMemoryLimit: "256Mi"
+
+# Disable ServiceMonitor for environments without Prometheus Operator
+serviceMonitor:
+  enabled: false
+
+monitoring:
+  serviceMonitor:
+    enabled: false
+
+# Environment-specific overrides
+environments:
+  development:
+    istio:
+      gateway:
+        servers:
+          - port:
+              number: 80
+              name: http
+              protocol: HTTP
+            hosts:
+              - pos-frontend.localhost
+              - dev.pos-frontend.localhost
+
+      virtualService:
+        hosts:
+          - pos-frontend.localhost
+          - dev.pos-frontend.localhost
+        http:
+          - match:
+              - uri:
+                  prefix: /
+            route:
+              - destination:
+                  host: pos-frontend
+                  port:
+                    number: 80
+            fault:
+              delay:
+                percentage:
+                  value: 0.1
+                fixedDelay: 5s
+
+  staging:
+    istio:
+      gateway:
+        servers:
+          - port:
+              number: 80
+              name: http
+              protocol: HTTP
+            hosts:
+              - staging.pos-frontend.localhost
+          - port:
+              number: 443
+              name: https
+              protocol: HTTPS
+            hosts:
+              - staging.pos-frontend.localhost
+            tls:
+              mode: SIMPLE
+              credentialName: pos-frontend-staging-tls
+
+      virtualService:
+        hosts:
+          - staging.pos-frontend.localhost
+
+  production:
+    istio:
+      gateway:
+        servers:
+          - port:
+              number: 443
+              name: https
+              protocol: HTTPS
+            hosts:
+              - pos-frontend.localhost
+            tls:
+              mode: SIMPLE
+              credentialName: pos-frontend-prod-tls
+
+      virtualService:
+        hosts:
+          - pos-frontend.localhost
+        http:
+          - match:
+              - uri:
+                  prefix: /
+            route:
+              - destination:
+                  host: pos-frontend
+                  port:
+                    number: 80
+            timeout: 15s
+            retries:
+              attempts: 5
+              perTryTimeout: 5s
+
+# Observability settings
+observability:
+  # Enable distributed tracing
+  tracing:
+    enabled: true
+    jaeger:
+      service: jaeger-collector.istio-system.svc.cluster.local
+      port: 14268
+
+  # Enable metrics collection
+  metrics:
+    enabled: true
+    prometheus:
+      configOverride:
+        metric_relabeling_configs:
+          - source_labels: [__name__]
+            regex: istio_.*
+            target_label: __name__
+            replacement: pos_${1}
+
+  # Access logging
+  accessLogging:
+    enabled: true
+    format: |
+      [%START_TIME%] "%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%"
+      %RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%
+      %DURATION% %RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)% "%REQ(X-FORWARDED-FOR)%"
+      "%REQ(USER-AGENT)%" "%REQ(X-REQUEST-ID)%" "%REQ(:AUTHORITY)%" "%UPSTREAM_HOST%"

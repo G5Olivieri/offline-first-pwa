@@ -1,0 +1,457 @@
+<script lang="ts" setup>
+import { onMounted, ref } from "vue";
+import { useOrderStore } from "../../stores/order-store";
+import { useProductStore } from "../../stores/product-store";
+import { useUpsellCrossSell } from "../../composables/use-upsell-cross-sell";
+import ProductSuggestions from "../../components/product-suggestions.vue";
+import type { Product } from "../../types/product";
+
+const orderStore = useOrderStore();
+const productStore = useProductStore();
+const allProducts = ref<Product[]>([]);
+const loading = ref(true);
+
+// Load all products for suggestions
+const loadProducts = async () => {
+  try {
+    loading.value = true;
+    const result = await productStore.listProducts({ limit: 200 });
+    allProducts.value = result.products;
+  } catch (error) {
+    console.error("Error loading products:", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Get suggestions using the composable
+const { crossSellSuggestions, upsellSuggestions, popularProducts } =
+  useUpsellCrossSell(orderStore.values, allProducts);
+
+onMounted(() => {
+  loadProducts();
+});
+</script>
+
+<template>
+  <main
+    class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100"
+  >
+    <!-- Header Section -->
+    <div
+      class="bg-white/80 backdrop-blur-sm border-b border-white/20 sticky top-0 z-10"
+    >
+      <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div
+              class="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center"
+            >
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                />
+              </svg>
+            </div>
+            <div>
+              <h1
+                class="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent"
+              >
+                Point of Sale
+              </h1>
+              <p class="text-gray-500 text-sm">Modern retail solution</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="text-right">
+              <p class="text-sm text-gray-500">Current Total</p>
+              <div
+                class="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent"
+              >
+                ${{ orderStore.total.toFixed(2) }}
+              </div>
+            </div>
+            <div
+              class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center"
+            >
+              <span class="text-white font-bold text-lg">{{
+                orderStore.values.length
+              }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <!-- Current Order Section -->
+      <div class="mb-12">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center"
+            >
+              <svg
+                class="w-4 h-4 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                />
+              </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Shopping Cart</h2>
+            <span
+              class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
+            >
+              {{ orderStore.values.length }}
+              {{ orderStore.values.length === 1 ? "item" : "items" }}
+            </span>
+          </div>
+        </div>
+
+        <div v-if="orderStore.values.length === 0" class="text-center py-16">
+          <div
+            class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <svg
+              class="w-12 h-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+              />
+            </svg>
+          </div>
+          <p class="text-xl font-semibold text-gray-600 mb-2">
+            Your cart is empty
+          </p>
+          <p class="text-gray-500">Browse our products below to get started</p>
+        </div>
+
+        <div
+          v-else
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        >
+          <div
+            v-for="item in orderStore.values"
+            :key="item.product._id"
+            class="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group"
+          >
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex-1">
+                <h3
+                  class="text-lg font-bold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors line-clamp-2"
+                >
+                  {{ item.product.name }}
+                </h3>
+                <p
+                  class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-block"
+                >
+                  {{ item.product.barcode }}
+                </p>
+              </div>
+              <div
+                class="w-2 h-2 bg-green-400 rounded-full flex-shrink-0 mt-2"
+              ></div>
+            </div>
+
+            <div class="space-y-2 mb-4">
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Unit Price</span>
+                <span class="font-semibold text-gray-800"
+                  >${{ item.product.price }}</span
+                >
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">In Stock</span>
+                <span class="text-sm font-medium text-green-600">{{
+                  item.product.stock
+                }}</span>
+              </div>
+              <div class="border-t pt-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-700"
+                    >Subtotal</span
+                  >
+                  <span class="text-lg font-bold text-blue-600"
+                    >${{ orderStore.calculateTotal(item).toFixed(2) }}</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="flex items-center justify-between bg-gray-50 rounded-xl p-3"
+            >
+              <button
+                type="button"
+                class="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl transition-all duration-200 hover:scale-110 shadow-lg"
+                @click="orderStore.decrease(item)"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M20 12H4"
+                  />
+                </svg>
+              </button>
+              <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-500">Qty</span>
+                <span
+                  class="px-4 py-2 bg-white rounded-lg font-bold text-gray-800 shadow-sm min-w-[3rem] text-center"
+                >
+                  {{ item.quantity }}
+                </span>
+              </div>
+              <button
+                type="button"
+                class="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl transition-all duration-200 hover:scale-110 shadow-lg"
+                @click="orderStore.increase(item)"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div v-if="loading" class="text-center py-16">
+        <div
+          class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl mb-4"
+        >
+          <svg
+            class="animate-spin w-8 h-8 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        </div>
+        <p class="text-lg font-semibold text-gray-600">
+          Loading suggestions...
+        </p>
+        <p class="text-gray-500">Finding the perfect products for you</p>
+      </div>
+
+      <!-- Suggestions Section -->
+      <div v-else class="space-y-12">
+        <!-- Upsell Suggestions -->
+        <div v-if="orderStore.values.length > 0" class="relative">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-3xl"
+          ></div>
+          <div
+            class="relative bg-white/40 backdrop-blur-sm rounded-3xl p-8 border border-white/20"
+          >
+            <ProductSuggestions
+              :products="upsellSuggestions"
+              title="🚀 Upgrade Your Selection"
+              subtitle="Consider these premium alternatives"
+              type="upsell"
+            />
+          </div>
+        </div>
+
+        <!-- Cross-sell Suggestions -->
+        <div v-if="orderStore.values.length > 0" class="relative">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-3xl"
+          ></div>
+          <div
+            class="relative bg-white/40 backdrop-blur-sm rounded-3xl p-8 border border-white/20"
+          >
+            <ProductSuggestions
+              :products="crossSellSuggestions"
+              title="🛍️ You Might Also Like"
+              subtitle="Products that go great together"
+              type="crosssell"
+            />
+          </div>
+        </div>
+
+        <!-- Popular Products (shown when cart is empty) -->
+        <div v-if="orderStore.values.length === 0" class="relative">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-3xl"
+          ></div>
+          <div
+            class="relative bg-white/40 backdrop-blur-sm rounded-3xl p-8 border border-white/20"
+          >
+            <ProductSuggestions
+              :products="popularProducts"
+              title="⭐ Popular Products"
+              subtitle="Customer favorites to get you started"
+              type="popular"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</template>
+
+<style scoped>
+/* Custom animations and effects */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 20px rgba(59, 130, 246, 0);
+  }
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Hover effects */
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.3);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.5);
+  background-clip: content-box;
+}
+
+/* Enhanced button effects */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Floating animation for empty state */
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Shimmer effect for loading */
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+</style>

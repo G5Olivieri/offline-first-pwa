@@ -1,0 +1,21 @@
+apiVersion: v2
+name: pos-frontend
+description: A Helm chart for POS Frontend Vue PWA
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+home: https://github.com/your-org/pos-frontend
+sources:
+  - https://github.com/your-org/pos-frontend
+maintainers:
+  - name: Development Team
+    email: dev@yourcompany.com
+keywords:
+  - pos
+  - frontend
+  - vue
+  - pwa
+  - retail
+annotations:
+  category: Application
+dependencies: []

@@ -1,0 +1,30 @@
+{{- if .Values.istio.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "pos-frontend.fullname" . }}-dr
+  labels:
+    {{- include "pos-frontend.labels" . | nindent 4 }}
+  {{- with .Values.istio.destinationRule.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  host: {{ .Values.istio.destinationRule.host | quote }}
+  {{- if .Values.istio.destinationRule.trafficPolicy }}
+  trafficPolicy:
+    {{- toYaml .Values.istio.destinationRule.trafficPolicy | nindent 4 }}
+  {{- end }}
+  {{- if .Values.istio.destinationRule.subsets }}
+  subsets:
+  {{- range .Values.istio.destinationRule.subsets }}
+  - name: {{ .name | quote }}
+    labels:
+      {{- toYaml .labels | nindent 6 }}
+    {{- if .trafficPolicy }}
+    trafficPolicy:
+      {{- toYaml .trafficPolicy | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end }}

@@ -16,7 +16,9 @@ import { useOperatorStore } from "./stores/operator-store";
 import { useOrderStore } from "./stores/order-store";
 import { useProductStore } from "./stores/product-store";
 import { useSetupStore } from "./stores/setup-store";
+import { createLogger } from "./services/logger-service";
 
+const logger = createLogger('App');
 const barcode = ref("");
 const router = useRouter();
 const clock = ref(
@@ -258,7 +260,7 @@ const addProduct = async () => {
       );
     }
   } catch (error) {
-    console.error("Error fetching product:", error);
+    logger.error("Error fetching product:", error);
     notificationStore.showError(
       "Error",
       "Failed to fetch product. Please try again."
@@ -281,7 +283,7 @@ onMounted(() => {
 
   // Initialize system setup
   setupStore.initializeSystem().catch((error) => {
-    console.error("Failed to initialize system:", error);
+    logger.error("Failed to initialize system:", error);
   });
 });
 

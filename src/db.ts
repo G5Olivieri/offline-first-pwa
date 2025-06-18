@@ -1,6 +1,7 @@
 import PouchDB from "pouchdb-browser";
 import PouchDBFind from "pouchdb-find";
-import { config, log } from "./config/env";
+import { config } from "./config/env";
+import { createLogger } from "./services/logger-service";
 import type { Customer } from "./stores/customer-store";
 import type { Operator } from "./types/operator";
 import type { Order } from "./types/order";
@@ -9,6 +10,8 @@ import type { Product } from "./types/product";
 
 // Initialize PouchDB with plugins
 PouchDB.plugin(PouchDBFind);
+
+const logger = createLogger('DB');
 
 export const SYNCING = config.enableSync;
 const COUCHDB_URL = config.couchdbUrl;
@@ -39,24 +42,24 @@ export const getProductDB = (): PouchDB.Database<Product> => {
           retry: true,
         })
         .on("change", (info) => {
-          log("debug", "[products] Sync change:", info);
+          logger.debug("[products] Sync change:", info);
         })
         .on("error", (err) => {
-          log("error", "[products] Sync error:", err);
+          logger.error("[products] Sync error:", err);
         })
         .on("active", () => {
-          log("debug", "[products] Sync active");
+          logger.debug("[products] Sync active");
         })
         .on("paused", () => {
-          log("debug", "[products] Sync paused");
+          logger.debug("[products] Sync paused");
         });
 
-      log("info", `[products] Sync enabled with ${COUCHDB_URL}/products`);
+      logger.info(`[products] Sync enabled with ${COUCHDB_URL}/products`);
     } catch (error) {
-      log("error", "[products] Failed to setup sync:", error);
+      logger.error("[products] Failed to setup sync:", error);
     }
   } else {
-    log("info", "[products] Sync disabled");
+    logger.info("[products] Sync disabled");
   }
 
   return _productDB;
@@ -87,7 +90,7 @@ export const getOrderDB = (): PouchDB.Database<Order> => {
           // Push all orders regardless of status
         })
         .on("change", async (info) => {
-          log("debug", "[orders] Pushed orders to remote:", info);
+          logger.debug("[orders] Pushed orders to remote:", info);
 
           // After successful push, purge all non-pending orders from local storage
           if (info.docs && info.docs.length > 0) {
@@ -101,41 +104,31 @@ export const getOrderDB = (): PouchDB.Database<Order> => {
                 try {
                   if (doc._rev) {
                     await _orderDB!.remove(doc._id, doc._rev);
-                    log(
-                      "debug",
-                      `[orders] Purged ${order.status} order ${doc._id} from local storage`
-                    );
+                    logger.debug(`[orders] Purged ${order.status} order ${doc._id} from local storage`);
                   }
                 } catch (error) {
-                  log(
-                    "error",
-                    `[orders] Failed to purge order ${doc._id}:`,
-                    error
-                  );
+                  logger.error(`[orders] Failed to purge order ${doc._id}:`, error);
                 }
               }
             }
           }
         })
         .on("error", (err) => {
-          log("error", "[orders] Sync error:", err);
+          logger.error("[orders] Sync error:", err);
         })
         .on("active", () => {
-          log("debug", "[orders] Sync active");
+          logger.debug("[orders] Sync active");
         })
         .on("paused", () => {
-          log("debug", "[orders] Sync paused");
+          logger.debug("[orders] Sync paused");
         });
 
-      log(
-        "info",
-        `[orders] One-way sync enabled with ${COUCHDB_URL}/orders (push all orders, never pull)`
-      );
+      logger.info(`[orders] One-way sync enabled with ${COUCHDB_URL}/orders (push all orders, never pull)`);
     } catch (error) {
-      log("error", "[orders] Failed to setup sync:", error);
+      logger.error("[orders] Failed to setup sync:", error);
     }
   } else {
-    log("info", "[orders] Sync disabled");
+    logger.info("[orders] Sync disabled");
   }
 
   return _orderDB;

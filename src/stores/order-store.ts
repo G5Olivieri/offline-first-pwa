@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { log } from "../config/env";
+import { createLogger } from "../services/logger-service";
 import { getOrderDB } from "../db";
 import type { Item, Order, PaymentMethod } from "../types/order";
 import { OrderStatus } from "../types/order";
@@ -10,6 +10,8 @@ import { useCustomerStore } from "./customer-store";
 import { useOperatorStore } from "./operator-store";
 import { useProductStore } from "./product-store";
 import { useTerminalStore } from "./terminal-store";
+
+const logger = createLogger('OrderStore');
 
 export const useOrderStore = defineStore("orderStore", () => {
   const router = useRouter();
@@ -85,11 +87,11 @@ export const useOrderStore = defineStore("orderStore", () => {
 
   const abandon = async () => {
     if (!currentOrderId.value) {
-      log("warn", "No current order to abandon.");
+      logger.warn("No current order to abandon.");
       return;
     }
     if (order.size === 0) {
-      log("warn", "Cannot abandon an empty order.");
+      logger.warn("Cannot abandon an empty order.");
       return;
     }
 
@@ -102,21 +104,21 @@ export const useOrderStore = defineStore("orderStore", () => {
         await customerStore.clearCustomer();
         syncOrder();
       } catch (error) {
-        log("error", "Error abandoning order:", error);
+        logger.error("Error abandoning order:", error);
       }
     }
   };
 
   const syncOrder = async () => {
-    log("debug", "Syncing order...");
+    logger.debug("Syncing order...");
     if (syncing.value) {
-      log("warn", "Sync already in progress, skipping.");
+      logger.warn("Sync already in progress, skipping.");
       return;
     }
     syncing.value = true;
 
     if (currentOrderId.value === "") {
-      log("debug", "No current order ID found, generating a new one.");
+      logger.debug("No current order ID found, generating a new one.");
       currentOrderId.value = crypto.randomUUID();
       localStorage.setItem("currentOrderId", currentOrderId.value);
     }
@@ -126,7 +128,7 @@ export const useOrderStore = defineStore("orderStore", () => {
       currentOrderRev.value = result.rev;
       localStorage.setItem("currentOrderRev", result.rev);
     } catch (error) {
-      log("error", "Error syncing order:", error);
+      logger.error("Error syncing order:", error);
     } finally {
       syncing.value = false;
     }
@@ -138,11 +140,11 @@ export const useOrderStore = defineStore("orderStore", () => {
 
   const complete = async () => {
     if (!currentOrderId.value) {
-      log("warn", "No current order to complete.");
+      logger.warn("No current order to complete.");
       return;
     }
     if (order.size === 0) {
-      log("warn", "Cannot complete an empty order.");
+      logger.warn("Cannot complete an empty order.");
       return;
     }
     if (router.currentRoute.value.path !== "/checkout") {
@@ -189,7 +191,7 @@ export const useOrderStore = defineStore("orderStore", () => {
 
   const loadOrder = async () => {
     if (!currentOrderId.value) {
-      log("debug", "No current order ID found in localStorage.");
+      logger.debug("No current order ID found in localStorage.");
       syncOrder();
       return;
     }
@@ -199,7 +201,7 @@ export const useOrderStore = defineStore("orderStore", () => {
       doc.status === OrderStatus.COMPLETED ||
       doc.status === OrderStatus.CANCELLED
     ) {
-      log("warn", "No document found for current order ID.");
+      logger.warn("No document found for current order ID.");
 
       currentOrderId.value = "";
       currentOrderRev.value = undefined;
@@ -227,10 +229,7 @@ export const useOrderStore = defineStore("orderStore", () => {
       doc.customer_id !== customerStore.customerId ||
       operatorStore.operatorId !== doc.operator_id
     ) {
-      log(
-        "warn",
-        "The current order does not match the current customer or operator, resync."
-      );
+      logger.warn("The current order does not match the current customer or operator, resync.");
       syncOrder();
       return;
     }
@@ -290,16 +289,16 @@ export const useOrderStore = defineStore("orderStore", () => {
           if (order._rev) {
             await orderDB.remove(order._id, order._rev);
             purgedCount++;
-            log("info", `Purged ${order.status} order ${order._id} from local storage`);
+            logger.info(`Purged ${order.status} order ${order._id} from local storage`);
           }
         } catch (error) {
-          log("error", `Failed to purge order ${order._id}:`, error);
+          logger.error(`Failed to purge order ${order._id}:`, error);
         }
       }
 
       return purgedCount;
     } catch (error) {
-      log("error", "Error purging non-pending orders:", error);
+      logger.error("Error purging non-pending orders:", error);
       return 0;
     }
   };
@@ -318,7 +317,7 @@ export const useOrderStore = defineStore("orderStore", () => {
           );
         });
     } catch (error) {
-      log("error", "Error fetching orders:", error);
+      logger.error("Error fetching orders:", error);
       return [];
     }
   };

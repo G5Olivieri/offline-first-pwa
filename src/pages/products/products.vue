@@ -4,13 +4,14 @@ defineOptions({
 });
 
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { log } from "../../config/env";
+import { createLogger } from "../../services/logger-service";
 import { useNotificationStore } from "../../stores/notification-store";
 import { useProductStore } from "../../stores/product-store";
 import { useOrderStore } from "../../stores/order-store";
 import { searchService } from "../../services/search-service";
 import type { Product } from "../../types/product";
 
+const logger = createLogger('ProductsPage');
 const productStore = useProductStore();
 const notificationStore = useNotificationStore();
 const orderStore = useOrderStore();
@@ -111,7 +112,7 @@ const loadProducts = async () => {
     // Check if search service is ready
     isSearchIndexReady.value = searchService.isReady();
   } catch (error) {
-    log("error", "Error loading products:", error);
+    logger.error("Error loading products:", error);
     notificationStore.showError(
       "Loading Error",
       "Failed to load products. Please try again."
@@ -137,7 +138,7 @@ const deleteProduct = async (product: Product) => {
       );
       await loadProducts();
     } catch (error) {
-      log("error", "Error deleting product:", error);
+      logger.error("Error deleting product:", error);
       notificationStore.showError(
         "Delete Error",
         "Failed to delete product. Please try again."
@@ -154,7 +155,7 @@ const addToOrder = async (product: Product) => {
       `${product.name} has been added to the order.`
     );
   } catch (error) {
-    log("error", "Error adding product to order:", error);
+    logger.error("Error adding product to order:", error);
     notificationStore.showError(
       "Add to Order Error",
       "Failed to add product to order. Please try again."

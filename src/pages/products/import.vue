@@ -45,6 +45,7 @@ const importProducts = async () => {
       .map((line) => JSON.parse(line))
       .map((p) => ({
         ...p,
+        price: parseFloat(p.price),
         stock: Math.ceil(Math.random() * 30),
       }));
     await productStore.bulkInsertProducts(products);

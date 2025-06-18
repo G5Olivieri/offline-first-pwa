@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import AppModal from "./components/app-modal.vue";
+import HelpDialog from "./components/help-dialog.vue";
+import ToastContainer from "./components/toast-container.vue";
+import {
+  createPOSShortcuts,
+  useKeyboardShortcuts,
+} from "./composables/use-keyboard-shortcuts";
 import { useCustomerStore } from "./stores/customer-store";
+import { useNotificationStore } from "./stores/notification-store";
 import { useOnlineStatusStore } from "./stores/online-status-store";
 import { useOperatorStore } from "./stores/operator-store";
 import { useOrderStore } from "./stores/order-store";
 import { useProductStore } from "./stores/product-store";
-import { useKeyboardShortcuts, createPOSShortcuts } from "./composables/use-keyboard-shortcuts";
-import { useNotificationStore, $notify, $modal } from "./stores/notification-store";
-import ToastContainer from "./components/toast-container.vue";
-import AppModal from "./components/app-modal.vue";
-import HelpDialog from "./components/help-dialog.vue";
 
 const barcode = ref("");
 const router = useRouter();
@@ -31,6 +34,116 @@ const customerStore = useCustomerStore();
 const notificationStore = useNotificationStore();
 const isHome = computed(() => router.currentRoute.value.path === "/");
 
+// Database status helper
+const getSyncStatus = (dbName: string) => {
+  const isOnline = onlineStatusStore.isOnline;
+  const isSyncEnabled = onlineStatusStore.isSyncEnabled;
+
+  if (!isOnline) {
+    return {
+      text: "Offline",
+      color: "bg-yellow-400",
+      textColor: "text-yellow-700",
+      icon: "●",
+    };
+  }
+
+  if (!isSyncEnabled) {
+    return {
+      text: "Disabled",
+      color: "bg-gray-400",
+      textColor: "text-gray-700",
+      icon: "●",
+    };
+  }
+
+  // Special case for orders - they use one-way sync (push only)
+  if (dbName === "orders") {
+    return {
+      text: "Push Only",
+      color: "bg-blue-400",
+      textColor: "text-blue-700",
+      icon: "↑",
+    };
+  }
+
+  return {
+    text: "Ready",
+    color: "bg-green-400",
+    textColor: "text-green-700",
+    icon: "↕",
+  };
+};
+
+// Database status computed property
+const databaseStatus = computed(() => {
+  return [
+    {
+      name: "Products",
+      status: getSyncStatus("products"),
+    },
+    {
+      name: "Orders",
+      status: getSyncStatus("orders"),
+    },
+    {
+      name: "Customers",
+      status: getSyncStatus("customers"),
+    },
+    {
+      name: "Operators",
+      status: getSyncStatus("operators"),
+    },
+  ];
+});
+
+// Database status summary for compact display
+const dbStatusSummary = computed(() => {
+  const allReady = databaseStatus.value.every(
+    (db) => db.status.text === "Ready" || db.status.text === "Push Only"
+  );
+  const hasOffline = databaseStatus.value.some(
+    (db) => db.status.text === "Offline"
+  );
+  const hasDisabled = databaseStatus.value.some(
+    (db) => db.status.text === "Disabled"
+  );
+
+  if (hasOffline) {
+    return {
+      text: "DB Offline",
+      color: "bg-yellow-500",
+      textColor: "text-yellow-700",
+      icon: "●",
+    };
+  }
+
+  if (hasDisabled) {
+    return {
+      text: "DB Disabled",
+      color: "bg-gray-500",
+      textColor: "text-gray-700",
+      icon: "●",
+    };
+  }
+
+  if (allReady) {
+    return {
+      text: "DB Ready",
+      color: "bg-green-500",
+      textColor: "text-green-700",
+      icon: "✓",
+    };
+  }
+
+  return {
+    text: "DB Mixed",
+    color: "bg-blue-500",
+    textColor: "text-blue-700",
+    icon: "~",
+  };
+});
+
 // Notification system - removed unused modal variable
 
 // Keyboard shortcuts
@@ -42,53 +155,62 @@ const posShortcuts = createPOSShortcuts({
   },
   clearOperator: () => {
     operatorStore.clearOperator();
-    $notify.info("Operator cleared", "Please select a new operator");
+    notificationStore.showInfo(
+      "Operator cleared",
+      "Please select a new operator"
+    );
   },
   selectOperator: () => {
     router.push("/operators");
   },
   clearCustomer: () => {
     customerStore.clearCustomer();
-    $notify.info("Customer cleared");
+    notificationStore.showInfo("Customer cleared");
   },
   selectCustomer: () => {
     router.push("/customers");
   },
   completeOrder: async () => {
     if (orderStore.id) {
-      const result = await $modal.confirm(
+      const result = await notificationStore.showConfirm(
         "Complete Order",
         "Are you sure you want to complete this order?"
       );
       if (result.confirmed) {
         try {
           await orderStore.complete();
-          $notify.success("Order completed", "Order has been processed successfully");
+          notificationStore.showSuccess(
+            "Order completed",
+            "Order has been processed successfully"
+          );
         } catch (error) {
-          $notify.error("Error", "Failed to complete order");
+          notificationStore.showError("Error", "Failed to complete order");
         }
       }
     } else {
-      $notify.warning("No Order", "No active order to complete");
+      notificationStore.showWarning("No Order", "No active order to complete");
     }
   },
   abandonOrder: async () => {
     if (orderStore.id) {
-      const result = await $modal.confirm(
+      const result = await notificationStore.showConfirm(
         "Abandon Order",
         "Are you sure you want to abandon this order? All items will be lost.",
-        { type: 'warning' }
+        { type: "warning" }
       );
       if (result.confirmed) {
         try {
           await orderStore.abandon();
-          $notify.info("Order abandoned", "Order has been cancelled");
+          notificationStore.showInfo(
+            "Order abandoned",
+            "Order has been cancelled"
+          );
         } catch (error) {
-          $notify.error("Error", "Failed to abandon order");
+          notificationStore.showError("Error", "Failed to abandon order");
         }
       }
     } else {
-      $notify.warning("No Order", "No active order to abandon");
+      notificationStore.showWarning("No Order", "No active order to abandon");
     }
   },
   openProducts: () => {
@@ -102,31 +224,42 @@ const posShortcuts = createPOSShortcuts({
   },
   showHelp: () => {
     showHelpDialog.value = true;
-  }
+  },
 });
 
 useKeyboardShortcuts(posShortcuts);
 
 const addProduct = async () => {
   if (barcode.value.trim() === "") {
-    $notify.warning("Invalid Input", "Please enter a barcode.");
+    notificationStore.showWarning("Invalid Input", "Please enter a barcode.");
     return;
   }
 
   try {
-    const fetchedProduct = await productStore.findProductByBarcode(barcode.value);
+    const fetchedProduct = await productStore.findProductByBarcode(
+      barcode.value
+    );
     if (fetchedProduct) {
       await orderStore.addProduct(fetchedProduct);
-      $notify.success("Product Added", `${fetchedProduct.name} added to order`);
+      notificationStore.showSuccess(
+        "Product Added",
+        `${fetchedProduct.name} added to order`
+      );
       if (!isHome.value) {
         router.push("/");
       }
     } else {
-      $notify.warning("Product Not Found", "No product found with this barcode");
+      notificationStore.showWarning(
+        "Product Not Found",
+        "No product found with this barcode"
+      );
     }
   } catch (error) {
     console.error("Error fetching product:", error);
-    $notify.error("Error", "Failed to fetch product. Please try again.");
+    notificationStore.showError(
+      "Error",
+      "Failed to fetch product. Please try again."
+    );
   }
 
   barcode.value = "";
@@ -465,6 +598,25 @@ onUnmounted(() => {
                   ></div>
                   <span class="font-medium text-red-700">Offline</span>
                 </div>
+              </div>
+
+              <!-- Database Status Summary -->
+              <div
+                class="flex items-center gap-1 bg-white/60 backdrop-blur-sm rounded-lg px-2 py-1 text-xs cursor-help"
+                :title="`Database Status: ${databaseStatus
+                  .map((db) => `${db.name}: ${db.status.text}`)
+                  .join(', ')}`"
+              >
+                <div
+                  class="w-2 h-2 rounded-full animate-pulse"
+                  :class="dbStatusSummary.color"
+                ></div>
+                <span class="font-medium" :class="dbStatusSummary.textColor">{{
+                  dbStatusSummary.text
+                }}</span>
+                <span class="text-gray-500 ml-1">{{
+                  dbStatusSummary.icon
+                }}</span>
               </div>
             </div>
           </div>

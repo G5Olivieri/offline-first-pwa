@@ -1,17 +1,33 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { useNotificationStore } from "../../stores/notification-store";
 import { useProductStore } from "../../stores/product-store";
 import type { Product } from "../../types/product";
 
 const productStore = useProductStore();
+const notificationStore = useNotificationStore();
+
 const products = ref<{ count: number; products: Product[] }>({
   count: 0,
   products: [],
 });
-const limit = ref(10);
+const limit = ref(12);
 const skip = ref(0);
+const isLoading = ref(false);
+const searchQuery = ref("");
+
+// Computed properties
+const totalPages = computed(() =>
+  Math.ceil(products.value.count / limit.value)
+);
+const currentPage = computed(() => Math.floor(skip.value / limit.value) + 1);
+const hasNextPage = computed(
+  () => skip.value + limit.value < products.value.count
+);
+const hasPreviousPage = computed(() => skip.value > 0);
 
 const loadProducts = async () => {
+  isLoading.value = true;
   try {
     products.value = await productStore.listProducts({
       limit: limit.value,
@@ -19,79 +35,528 @@ const loadProducts = async () => {
     });
   } catch (error) {
     console.error("Error loading products:", error);
-    alert("Failed to load products. Please try again.");
+    notificationStore.showError(
+      "Loading Error",
+      "Failed to load products. Please try again."
+    );
+  } finally {
+    isLoading.value = false;
   }
 };
 
-const deleteProduct = async (id: string) => {
-  try {
-    await productStore.deleteProduct(id);
+const deleteProduct = async (product: Product) => {
+  const result = await notificationStore.showConfirm(
+    "Delete Product",
+    `Are you sure you want to delete "${product.name}"? This action cannot be undone.`,
+    { type: "error" }
+  );
+
+  if (result.confirmed) {
+    try {
+      await productStore.deleteProduct(product._id);
+      notificationStore.showSuccess(
+        "Product Deleted",
+        `${product.name} has been deleted successfully.`
+      );
+      await loadProducts();
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      notificationStore.showError(
+        "Delete Error",
+        "Failed to delete product. Please try again."
+      );
+    }
+  }
+};
+
+const searchProducts = async () => {
+  skip.value = 0; // Reset to first page when searching
+  await loadProducts();
+};
+
+const nextPage = () => {
+  if (hasNextPage.value) {
+    skip.value += limit.value;
     loadProducts();
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    alert("Failed to delete product. Please try again.");
   }
 };
 
-const next = () => {
-  skip.value += limit.value;
-  loadProducts();
-};
-const previous = () => {
-  if (skip.value >= limit.value) {
+const previousPage = () => {
+  if (hasPreviousPage.value) {
     skip.value -= limit.value;
     loadProducts();
   }
 };
+
+const goToPage = (page: number) => {
+  skip.value = (page - 1) * limit.value;
+  loadProducts();
+};
+
+// Watch for search query changes
+watch(searchQuery, () => {
+  // Debounce search
+  if (searchQuery.value.trim() === "") {
+    searchProducts();
+  }
+});
+
 onMounted(() => loadProducts());
 </script>
 <template>
-  <nav>
-    <ul>
-      <li>
-        <RouterLink
-          to="/products/new"
-          class="inline-block bg-black text-white py-2 px-3 rounded mb-4"
-          >Add a new product</RouterLink
+  <div
+    class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6"
+  >
+    <div class="max-w-7xl mx-auto">
+      <!-- Header Section -->
+      <div class="mb-8">
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
         >
-      </li>
-      <li>
-        <RouterLink
-          to="/products/import"
-          class="inline-block bg-black text-white py-2 px-3 rounded mb-4"
-          >Import products</RouterLink
+          <div>
+            <h1
+              class="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent"
+            >
+              Products
+            </h1>
+            <p class="text-gray-600 mt-1">
+              Manage your product inventory and catalog
+            </p>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-3">
+            <RouterLink
+              to="/products/new"
+              class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              Add Product
+            </RouterLink>
+
+            <RouterLink
+              to="/products/import"
+              class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+                />
+              </svg>
+              Import Products
+            </RouterLink>
+          </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div
+          class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/20"
         >
-      </li>
-    </ul>
-  </nav>
-  <div>{{ products.count }} products found</div>
-  <div>
-    <button class="bg-black text-white py-2 px-3 rounded" @click="previous">
-      previous
-    </button>
-    <div>{{ skip }} - {{ skip + limit }}</div>
-    <button class="bg-black text-white py-2 px-3 rounded" @click="next">
-      next
-    </button>
-  </div>
-  <ul class="flex gap-2 flex-wrap">
-    <li
-      v-for="product in products.products"
-      :key="product._id"
-      class="flex flex-col p-2 border rounded"
-    >
-      <span>ID: {{ product._id }}</span>
-      <span>Name: {{ product.name }}</span>
-      <span>Barcode: {{ product.barcode }}</span>
-      <span>Price: {{ product.price }}</span>
-      <span>Stock: {{ product.stock }}</span>
-      <button
-        @click="deleteProduct(product._id)"
-        type="button"
-        class="bg-red-800 text-white rounded py-2 px-3"
+          <div
+            class="flex flex-col sm:flex-row gap-4 items-start sm:items-center"
+          >
+            <!-- Search Bar -->
+            <div class="flex-1 relative">
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+              >
+                <svg
+                  class="h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              <input
+                v-model="searchQuery"
+                @keyup.enter="searchProducts"
+                type="text"
+                placeholder="Search products by name or barcode..."
+                class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-200"
+              />
+            </div>
+
+            <!-- Search Button -->
+            <button
+              @click="searchProducts"
+              :disabled="isLoading"
+              class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:transform-none disabled:cursor-not-allowed"
+            >
+              <svg
+                v-if="!isLoading"
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <svg
+                v-else
+                class="w-5 h-5 animate-spin"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              {{ isLoading ? "Searching..." : "Search" }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products Count and Status -->
+      <div class="mb-6">
+        <div
+          class="bg-white/50 backdrop-blur-sm rounded-lg px-4 py-3 border border-white/20"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              <span class="text-sm font-medium text-gray-700">
+                {{ products.count }}
+                {{ products.count === 1 ? "product" : "products" }} found
+              </span>
+            </div>
+            <div v-if="totalPages > 1" class="text-sm text-gray-500">
+              Page {{ currentPage }} of {{ totalPages }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div
+        v-if="isLoading && products.products.length === 0"
+        class="flex items-center justify-center py-12"
       >
-        delete
-      </button>
-    </li>
-  </ul>
+        <div class="text-center">
+          <svg
+            class="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <p class="text-gray-600 font-medium">Loading products...</p>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div
+        v-else-if="!isLoading && products.products.length === 0"
+        class="text-center py-12"
+      >
+        <div
+          class="bg-white/50 backdrop-blur-sm rounded-xl p-8 border border-white/20"
+        >
+          <svg
+            class="w-24 h-24 text-gray-300 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1"
+              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+            />
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-600 mb-2">
+            No products found
+          </h3>
+          <p class="text-gray-500 mb-6">
+            {{
+              searchQuery
+                ? "Try adjusting your search terms or"
+                : "Get started by adding your first product or"
+            }}
+            <br />import products from a file.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <RouterLink
+              to="/products/new"
+              class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              Add Product
+            </RouterLink>
+            <RouterLink
+              to="/products/import"
+              class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+                />
+              </svg>
+              Import Products
+            </RouterLink>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div
+        v-else
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8"
+      >
+        <div
+          v-for="product in products.products"
+          :key="product._id"
+          class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-hidden hover:shadow-xl hover:border-white/40 transition-all duration-300 transform hover:-translate-y-1"
+        >
+          <!-- Product Header -->
+          <div class="p-6 pb-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex-1 min-w-0">
+                <h3
+                  class="text-lg font-semibold text-gray-800 truncate mb-1"
+                  :title="product.name"
+                >
+                  {{ product.name }}
+                </h3>
+                <div class="flex items-center gap-2 text-sm text-gray-500">
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                    />
+                  </svg>
+                  <span class="font-mono">{{ product.barcode }}</span>
+                </div>
+              </div>
+              <!-- Stock Status Badge -->
+              <div
+                class="flex-shrink-0 px-2 py-1 rounded-full text-xs font-medium"
+                :class="{
+                  'bg-green-100 text-green-700': product.stock > 10,
+                  'bg-yellow-100 text-yellow-700':
+                    product.stock > 0 && product.stock <= 10,
+                  'bg-red-100 text-red-700': product.stock === 0,
+                }"
+              >
+                {{
+                  product.stock === 0
+                    ? "Out of Stock"
+                    : `${product.stock} in stock`
+                }}
+              </div>
+            </div>
+
+            <!-- Product Details -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Price:</span>
+                <span class="text-xl font-bold text-green-600">
+                  ${{ product.price }}
+                </span>
+              </div>
+
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">Product ID:</span>
+                <span
+                  class="font-mono text-gray-800 text-xs bg-gray-100 px-2 py-1 rounded"
+                >
+                  {{ product._id.slice(-8) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product Actions -->
+          <div class="px-6 pb-6">
+            <div class="flex gap-2">
+              <button
+                @click="deleteProduct(product)"
+                class="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1-1H6a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div
+        v-if="totalPages > 1"
+        class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/20"
+      >
+        <div
+          class="flex flex-col sm:flex-row items-center justify-between gap-4"
+        >
+          <!-- Pagination Info -->
+          <div class="text-sm text-gray-600">
+            Showing {{ skip + 1 }} to
+            {{ Math.min(skip + limit, products.count) }} of
+            {{ products.count }} products
+          </div>
+
+          <!-- Pagination Controls -->
+          <div class="flex items-center gap-2">
+            <!-- Previous Button -->
+            <button
+              @click="previousPage"
+              :disabled="!hasPreviousPage || isLoading"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 disabled:bg-gray-100 border border-gray-200 rounded-lg font-medium text-gray-700 disabled:text-gray-400 transition-colors disabled:cursor-not-allowed"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              Previous
+            </button>
+
+            <!-- Page Numbers -->
+            <div class="hidden sm:flex items-center gap-1">
+              <template v-for="page in Math.min(totalPages, 5)" :key="page">
+                <button
+                  @click="goToPage(page)"
+                  :disabled="isLoading"
+                  :class="{
+                    'bg-blue-600 text-white': currentPage === page,
+                    'bg-white hover:bg-gray-50 text-gray-700':
+                      currentPage !== page,
+                  }"
+                  class="w-10 h-10 rounded-lg border border-gray-200 font-medium transition-colors disabled:cursor-not-allowed"
+                >
+                  {{ page }}
+                </button>
+              </template>
+              <span v-if="totalPages > 5" class="px-2 text-gray-500">...</span>
+            </div>
+
+            <!-- Next Button -->
+            <button
+              @click="nextPage"
+              :disabled="!hasNextPage || isLoading"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 disabled:bg-gray-100 border border-gray-200 rounded-lg font-medium text-gray-700 disabled:text-gray-400 transition-colors disabled:cursor-not-allowed"
+            >
+              Next
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>

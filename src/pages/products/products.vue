@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { log } from "../../config/env";
 import { useNotificationStore } from "../../stores/notification-store";
 import { useProductStore } from "../../stores/product-store";
+import { useOrderStore } from "../../stores/order-store";
 import { searchService } from "../../services/search-service";
 import type { Product } from "../../types/product";
 
 const productStore = useProductStore();
 const notificationStore = useNotificationStore();
+const orderStore = useOrderStore();
 
 const products = ref<{ count: number; products: Product[] }>({
   count: 0,
@@ -54,29 +56,29 @@ const paginationRange = computed(() => {
 // Computed property to determine search type
 const searchType = computed(() => {
   const query = searchQuery.value.trim();
-  if (!query) return 'all';
-  return /^\d+$/.test(query) ? 'barcode' : 'name';
+  if (!query) return "all";
+  return /^\d+$/.test(query) ? "barcode" : "name";
 });
 
 // Search status computed property
 const searchStatus = computed(() => {
   if (isSearchIndexReady.value) {
     return {
-      text: 'Fuzzy Search Ready',
-      color: 'bg-green-100 text-green-700',
-      icon: '⚡'
+      text: "Fuzzy Search Ready",
+      color: "bg-green-100 text-green-700",
+      icon: "⚡",
     };
   } else if (searchService.isReady()) {
     return {
-      text: 'Search Index Ready',
-      color: 'bg-blue-100 text-blue-700',
-      icon: '🔍'
+      text: "Search Index Ready",
+      color: "bg-blue-100 text-blue-700",
+      icon: "🔍",
     };
   } else {
     return {
-      text: 'Building Search Index...',
-      color: 'bg-yellow-100 text-yellow-700',
-      icon: '⏳'
+      text: "Building Search Index...",
+      color: "bg-yellow-100 text-yellow-700",
+      icon: "⏳",
     };
   }
 });
@@ -86,10 +88,13 @@ const loadProducts = async () => {
   try {
     if (searchQuery.value.trim()) {
       // Use search function when there's a query
-      products.value = await productStore.searchProducts(searchQuery.value.trim(), {
-        limit: limit.value,
-        skip: skip.value,
-      });
+      products.value = await productStore.searchProducts(
+        searchQuery.value.trim(),
+        {
+          limit: limit.value,
+          skip: skip.value,
+        }
+      );
     } else {
       // Use regular list when no search query
       products.value = await productStore.listProducts({
@@ -136,6 +141,22 @@ const deleteProduct = async (product: Product) => {
   }
 };
 
+const addToOrder = async (product: Product) => {
+  try {
+    await orderStore.addProduct(product);
+    notificationStore.showSuccess(
+      "Product Added",
+      `${product.name} has been added to the order.`
+    );
+  } catch (error) {
+    log("error", "Error adding product to order:", error);
+    notificationStore.showError(
+      "Add to Order Error",
+      "Failed to add product to order. Please try again."
+    );
+  }
+};
+
 // Real-time search with debouncing
 const performSearch = () => {
   if (searchTimeout.value) {
@@ -145,7 +166,7 @@ const performSearch = () => {
   searchTimeout.value = setTimeout(async () => {
     skip.value = 0; // Reset to first page when searching
     await loadProducts();
-  }, 300); // 300ms debounce delay
+  }, 200);
 };
 
 const nextPage = () => {
@@ -167,12 +188,40 @@ const goToPage = (page: number) => {
   loadProducts();
 };
 
+const copyEAN = async (barcode: string) => {
+  try {
+    await navigator.clipboard.writeText(barcode);
+    notificationStore.showSuccess(
+      "EAN Copied",
+      `Barcode ${barcode} copied to clipboard`
+    );
+  } catch (error) {
+    // Fallback for older browsers or when clipboard API is not available
+    const textArea = document.createElement("textarea");
+    textArea.value = barcode;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
+
+    notificationStore.showSuccess(
+      "EAN Copied",
+      `Barcode ${barcode} copied to clipboard`
+    );
+  }
+};
+
 // Watch for search query changes for real-time search
 watch(searchQuery, () => {
   performSearch();
 });
 
 onMounted(() => loadProducts());
+onUnmounted(() => {
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value);
+  }
+});
 </script>
 <template>
   <div
@@ -268,16 +317,28 @@ onMounted(() => loadProducts());
               <input
                 v-model="searchQuery"
                 type="text"
-                :placeholder="searchType === 'barcode' ? 'Searching by barcode...' : searchType === 'name' ? 'Searching by name...' : 'Search products by name or barcode...'"
+                :placeholder="
+                  searchType === 'barcode'
+                    ? 'Searching by barcode...'
+                    : searchType === 'name'
+                    ? 'Searching by name...'
+                    : 'Search products by name or barcode...'
+                "
                 class="block w-full pl-10 pr-12 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-200"
               />
               <!-- Search type indicator -->
-              <div v-if="searchQuery.trim()" class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <span class="text-xs font-medium px-2 py-1 rounded-full" :class="{
-                  'bg-blue-100 text-blue-700': searchType === 'name',
-                  'bg-green-100 text-green-700': searchType === 'barcode',
-                }">
-                  {{ searchType === 'barcode' ? 'Barcode' : 'Name' }}
+              <div
+                v-if="searchQuery.trim()"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                <span
+                  class="text-xs font-medium px-2 py-1 rounded-full"
+                  :class="{
+                    'bg-blue-100 text-blue-700': searchType === 'name',
+                    'bg-green-100 text-green-700': searchType === 'barcode',
+                  }"
+                >
+                  {{ searchType === "barcode" ? "Barcode" : "Name" }}
                 </span>
               </div>
             </div>
@@ -288,8 +349,18 @@ onMounted(() => loadProducts());
               @click="searchQuery = ''"
               class="inline-flex items-center gap-2 px-4 py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
               Clear
             </button>
@@ -305,7 +376,9 @@ onMounted(() => loadProducts());
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
               <div class="flex items-center gap-2">
-                <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <div
+                  class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"
+                ></div>
                 <span class="text-sm font-medium text-gray-700">
                   {{ products.count }}
                   {{ products.count === 1 ? "product" : "products" }} found
@@ -313,7 +386,10 @@ onMounted(() => loadProducts());
               </div>
               <!-- Search Status Indicator -->
               <div class="flex items-center gap-2">
-                <span class="text-xs px-2 py-1 rounded-full font-medium" :class="searchStatus.color">
+                <span
+                  class="text-xs px-2 py-1 rounded-full font-medium"
+                  :class="searchStatus.color"
+                >
                   {{ searchStatus.icon }} {{ searchStatus.text }}
                 </span>
               </div>
@@ -506,7 +582,47 @@ onMounted(() => loadProducts());
 
           <!-- Product Actions -->
           <div class="px-6 pb-6">
-            <div class="flex gap-2">
+            <div class="flex flex-col gap-2">
+              <button
+                @click="copyEAN(product.barcode)"
+                class="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                :title="`Copy EAN: ${product.barcode}`"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+                Copy EAN
+              </button>
+              <button
+                @click="addToOrder(product)"
+                class="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                :title="`Add ${product.name} to order`"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L4 3H2m5 10v6a1 1 0 001 1h10a1 1 0 001-1v-6m-4 3a1 1 0 11-2 0 1 1 0 012 0zm-6 0a1 1 0 11-2 0 1 1 0 012 0z"
+                  />
+                </svg>
+                Add to Order
+              </button>
               <button
                 @click="deleteProduct(product)"
                 class="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5"

@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { getCustomerDB, getOperatorDB, getOrderDB, getProductDB } from "../../db";
+import {
+  getCustomerDB,
+  getOperatorDB,
+  getOrderDB,
+  getProductDB,
+} from "../../db";
+import { searchService } from "../../services/search-service";
 
 const cleanDbs = async () => {
   const orderDB = await getOrderDB();
@@ -11,6 +17,7 @@ const cleanDbs = async () => {
   await productDB.destroy();
   await customerDB.destroy();
   await operatorDB.destroy();
+  await searchService.clearCache();
 
   console.log("All databases have been cleaned.");
   localStorage.clear();

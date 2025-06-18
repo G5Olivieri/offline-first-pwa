@@ -329,7 +329,7 @@ onUnmounted(() => {
               </svg>
             </div>
             <h1
-              class="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300"
+              class="text-lg font-bold text-zinc-300 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300 group-hover:text-white"
             >
               POS
             </h1>

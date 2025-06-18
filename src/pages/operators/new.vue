@@ -1,4 +1,8 @@
 <script setup lang="ts">
+defineOptions({
+  name: 'NewOperator'
+});
+
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import * as z from "zod";

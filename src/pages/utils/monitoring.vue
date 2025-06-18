@@ -318,6 +318,10 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({
+  name: 'MonitoringPage'
+});
+
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useOnlineStatusStore } from '../../stores/online-status-store'
 import { usePerformanceStore } from '../../stores/performance-store'
@@ -356,6 +360,20 @@ interface MemoryPoint {
   percentage: number
 }
 
+interface NetworkConnection {
+  type?: string
+  effectiveType?: string
+  downlink?: number
+  rtt?: number
+  saveData?: boolean
+  addEventListener?: (event: string, handler: () => void) => void
+  removeEventListener?: (event: string, handler: () => void) => void
+}
+
+interface ExtendedNavigator extends Navigator {
+  connection?: NetworkConnection
+}
+
 const onlineStore = useOnlineStatusStore()
 const performanceStore = usePerformanceStore()
 const systemInfoStore = useSystemInfoStore()
@@ -367,13 +385,13 @@ const isRunningDiagnostics = ref(false)
 const errors = ref<ErrorLog[]>([])
 const performanceHistory = ref<PerformancePoint[]>([])
 const memoryHistory = ref<MemoryPoint[]>([])
-const networkInfo = ref<any>(null)
+const networkInfo = ref<NetworkConnection | null>(null)
 let refreshInterval: ReturnType<typeof setInterval> | undefined
 
 // Initialize network information
 const initNetworkInfo = () => {
   if ('connection' in navigator) {
-    networkInfo.value = (navigator as any).connection
+    networkInfo.value = (navigator as ExtendedNavigator).connection || null
   }
 }
 
@@ -741,7 +759,7 @@ const refreshData = async () => {
 
 const updateNetworkInfo = () => {
   if ('connection' in navigator) {
-    networkInfo.value = (navigator as any).connection
+    networkInfo.value = (navigator as ExtendedNavigator).connection || null
   }
 }
 
@@ -859,7 +877,7 @@ onMounted(() => {
   })
 
   // Listen for network changes
-  if (networkInfo.value) {
+  if (networkInfo.value && networkInfo.value.addEventListener) {
     networkInfo.value.addEventListener('change', updateNetworkInfo)
   }
 
@@ -872,7 +890,7 @@ onUnmounted(() => {
     clearInterval(refreshInterval)
   }
 
-  if (networkInfo.value) {
+  if (networkInfo.value && networkInfo.value.removeEventListener) {
     networkInfo.value.removeEventListener('change', updateNetworkInfo)
   }
 })

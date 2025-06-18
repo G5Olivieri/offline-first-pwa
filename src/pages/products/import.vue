@@ -217,6 +217,10 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({
+  name: 'ImportProducts'
+});
+
 import { ref } from "vue";
 import { useNotificationStore } from "../../stores/notification-store";
 import { useProductStore } from "../../stores/product-store";

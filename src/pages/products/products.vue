@@ -1,4 +1,8 @@
 <script setup lang="ts">
+defineOptions({
+  name: 'ProductsPage'
+});
+
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { log } from "../../config/env";
 import { useNotificationStore } from "../../stores/notification-store";
@@ -19,8 +23,9 @@ const limit = ref(12);
 const skip = ref(0);
 const isLoading = ref(false);
 const searchQuery = ref("");
-const searchTimeout = ref<NodeJS.Timeout | null>(null);
+const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 const isSearchIndexReady = ref(false);
+const searchInputRef = ref<HTMLInputElement | null>(null);
 
 // Computed properties
 const totalPages = computed(() =>
@@ -195,7 +200,7 @@ const copyEAN = async (barcode: string) => {
       "EAN Copied",
       `Barcode ${barcode} copied to clipboard`
     );
-  } catch (error) {
+  } catch {
     // Fallback for older browsers or when clipboard API is not available
     const textArea = document.createElement("textarea");
     textArea.value = barcode;
@@ -216,11 +221,28 @@ watch(searchQuery, () => {
   performSearch();
 });
 
-onMounted(() => loadProducts());
+// Keyboard shortcut handler
+const handleKeydown = (event: KeyboardEvent) => {
+  // Alt + Shift + F to focus search
+  if (event.altKey && event.shiftKey && (event.key === 'F' || event.key === 'f')) {
+    event.preventDefault();
+    searchInputRef.value?.focus();
+    notificationStore.showInfo(
+      "Search Focus",
+      "Search input focused. Use Alt+Shift+F to focus search anytime."
+    );
+  }
+};
+
+onMounted(() => {
+  loadProducts();
+  window.addEventListener('keydown', handleKeydown);
+});
 onUnmounted(() => {
   if (searchTimeout.value) {
     clearTimeout(searchTimeout.value);
   }
+  window.removeEventListener('keydown', handleKeydown);
 });
 </script>
 <template>
@@ -315,6 +337,7 @@ onUnmounted(() => {
                 </svg>
               </div>
               <input
+                ref="searchInputRef"
                 v-model="searchQuery"
                 type="text"
                 :placeholder="
@@ -364,6 +387,18 @@ onUnmounted(() => {
               </svg>
               Clear
             </button>
+          </div>
+
+          <!-- Keyboard Shortcut Hint -->
+          <div class="mt-3 text-center">
+            <p class="text-xs text-gray-500">
+              <kbd class="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">Alt</kbd>
+              +
+              <kbd class="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">Shift</kbd>
+              +
+              <kbd class="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">F</kbd>
+              to focus search
+            </p>
           </div>
         </div>
       </div>

@@ -22,7 +22,7 @@ export const useProductStore = defineStore("productStore", () => {
       .then((result) => {
         return result.results.map(
           (r) =>
-            ((r.docs && r.docs[0] && (r.docs[0] as any).ok) ||
+            ((r.docs && r.docs[0] && 'ok' in r.docs[0] && r.docs[0].ok) ||
               null) as Product | null
         );
       })
@@ -69,10 +69,10 @@ export const useProductStore = defineStore("productStore", () => {
         if (Object.getOwnPropertyDescriptor(result.docs[0], "error")) {
           return [
             success,
-            [...errors, new Error((result.docs[0] as any).error)],
+            [...errors, new Error(String((result.docs[0] as { error: unknown }).error))],
           ];
         }
-        success.push((result.docs[0] as any).ok);
+        success.push((result.docs[0] as { ok: Product }).ok);
         return [success, errors];
       },
       [[], []] as [Product[], Error[]]

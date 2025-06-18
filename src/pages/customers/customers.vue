@@ -1,4 +1,8 @@
 <script lang="ts" setup>
+defineOptions({
+  name: 'CustomersPage'
+});
+
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useCustomerStore, type Customer } from "../../stores/customer-store";

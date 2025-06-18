@@ -11,9 +11,9 @@ PouchDB.plugin(PouchDBMemoryAdapter);
 PouchDB.plugin(PouchDBFind);
 
 export class TestDatabaseManager {
-  private databases: Map<string, PouchDB.Database<any>> = new Map();
+  private databases: Map<string, PouchDB.Database<unknown>> = new Map();
 
-  createTestDB<T extends {} = any>(name: string): PouchDB.Database<T> {
+  createTestDB<T extends Record<string, unknown> = Record<string, unknown>>(name: string): PouchDB.Database<T> {
     const dbName = `test-${name}-${Date.now()}-${Math.random()}`;
     const db = new PouchDB<T>(dbName, { adapter: 'memory' });
     this.databases.set(dbName, db);

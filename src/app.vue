@@ -186,7 +186,7 @@ const posShortcuts = createPOSShortcuts({
             "Order completed",
             "Order has been processed successfully"
           );
-        } catch (error) {
+        } catch {
           notificationStore.showError("Error", "Failed to complete order");
         }
       }
@@ -208,7 +208,7 @@ const posShortcuts = createPOSShortcuts({
             "Order abandoned",
             "Order has been cancelled"
           );
-        } catch (error) {
+        } catch {
           notificationStore.showError("Error", "Failed to abandon order");
         }
       }

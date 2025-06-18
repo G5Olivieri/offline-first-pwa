@@ -1,4 +1,8 @@
 <script setup lang="ts">
+defineOptions({
+  name: 'AllCustomers'
+});
+
 import { onMounted, ref } from "vue";
 import { useCustomerStore, type Customer } from "../../stores/customer-store";
 
@@ -41,7 +45,7 @@ onMounted(() => {
       Refresh
     </button>
     <ul>
-      <li v-for="customer in customers">
+      <li v-for="customer in customers" :key="customer._id">
         <span>{{ customer.name }} - {{ customer.document }}</span>
         <button
           type="button"

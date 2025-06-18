@@ -4,7 +4,7 @@ import { createPinia } from 'pinia';
 import ToastContainer from '../toast-container.vue';
 
 describe('ToastContainer Component', () => {
-  let wrapper: any;
+  let wrapper: ReturnType<typeof mount>;
 
   beforeEach(() => {
     wrapper = mount(ToastContainer, {

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+defineOptions({
+  name: 'NewCustomer'
+});
+
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { ref } from "vue";

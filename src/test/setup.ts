@@ -1,21 +1,19 @@
-import { vi } from 'vitest';
-import PouchDB from 'pouchdb-browser';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import PouchDBMemoryAdapter from 'pouchdb-adapter-memory';
-import type { Product } from '../types/product';
+import PouchDB from 'pouchdb-browser';
+import { vi } from 'vitest';
+import type { Operator } from '../types/operator';
 import type { Order } from '../types/order';
 import { OrderStatus } from '../types/order';
-import type { Operator } from '../types/operator';
+import type { Product } from '../types/product';
 
-// Add memory adapter for testing
 PouchDB.plugin(PouchDBMemoryAdapter);
 
-// Mock navigator.onLine for offline/online tests
 Object.defineProperty(navigator, 'onLine', {
   writable: true,
   value: true,
 });
 
-// Mock service worker registration
 Object.defineProperty(navigator, 'serviceWorker', {
   value: {
     register: vi.fn(() => Promise.resolve({})),
@@ -24,7 +22,6 @@ Object.defineProperty(navigator, 'serviceWorker', {
   writable: true,
 });
 
-// Mock window.matchMedia for responsive design tests
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
@@ -39,13 +36,11 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mock performance.now() for timing tests
 Object.defineProperty(performance, 'now', {
   value: vi.fn(() => Date.now()),
   writable: true,
 });
 
-// Global test utilities
 (globalThis as any).createMockProduct = (overrides: Partial<Product> = {}): Product => ({
   _id: 'test-product-1',
   name: 'Test Product',

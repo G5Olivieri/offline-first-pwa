@@ -111,7 +111,7 @@ export const usePerformanceStore = defineStore('performance', () => {
     try {
       paintObserver.observe({ entryTypes: ['paint'] });
       observers.value.push(paintObserver);
-    } catch (e) {
+    } catch {
       console.warn('Paint metrics not supported');
     }
   };
@@ -129,7 +129,7 @@ export const usePerformanceStore = defineStore('performance', () => {
     try {
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
       observers.value.push(lcpObserver);
-    } catch (e) {
+    } catch {
       console.warn('LCP metrics not supported');
     }
 
@@ -137,7 +137,7 @@ export const usePerformanceStore = defineStore('performance', () => {
     const fidObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       for (const entry of entries) {
-        const fidEntry = entry as any;
+        const fidEntry = entry as PerformanceEventTiming;
         if (fidEntry.processingStart && fidEntry.startTime) {
           metrics.value.firstInputDelay = fidEntry.processingStart - fidEntry.startTime;
         }
@@ -147,7 +147,7 @@ export const usePerformanceStore = defineStore('performance', () => {
     try {
       fidObserver.observe({ entryTypes: ['first-input'] });
       observers.value.push(fidObserver);
-    } catch (e) {
+    } catch {
       console.warn('FID metrics not supported');
     }
 
@@ -156,9 +156,9 @@ export const usePerformanceStore = defineStore('performance', () => {
     const clsObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       for (const entry of entries) {
-        const layoutShiftEntry = entry as any;
+        const layoutShiftEntry = entry as PerformanceEntry & { hadRecentInput?: boolean; value?: number };
         if (!layoutShiftEntry.hadRecentInput) {
-          clsValue += layoutShiftEntry.value;
+          clsValue += layoutShiftEntry.value || 0;
           metrics.value.cumulativeLayoutShift = clsValue;
         }
       }
@@ -167,19 +167,21 @@ export const usePerformanceStore = defineStore('performance', () => {
     try {
       clsObserver.observe({ entryTypes: ['layout-shift'] });
       observers.value.push(clsObserver);
-    } catch (e) {
+    } catch {
       console.warn('CLS metrics not supported');
     }
   };
 
   const collectMemoryMetrics = () => {
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
-      metrics.value.memoryUsage = {
-        used: Math.round(memory.usedJSHeapSize),
-        total: Math.round(memory.totalJSHeapSize),
-        limit: Math.round(memory.jsHeapSizeLimit)
-      };
+      const memory = (performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
+      if (memory) {
+        metrics.value.memoryUsage = {
+          used: Math.round(memory.usedJSHeapSize),
+          total: Math.round(memory.totalJSHeapSize),
+          limit: Math.round(memory.jsHeapSizeLimit)
+        };
+      }
     }
   };
 
@@ -230,8 +232,8 @@ export const usePerformanceStore = defineStore('performance', () => {
     metrics.value = {};
   };
 
-  const updateMetric = (key: keyof PerformanceMetrics, value: any) => {
-    metrics.value[key] = value;
+  const updateMetric = <K extends keyof PerformanceMetrics>(key: K, value: PerformanceMetrics[K]) => {
+    (metrics.value as PerformanceMetrics)[key] = value;
   };
 
   // Initialize monitoring when store is created

@@ -1,4 +1,8 @@
 <script lang="ts" setup>
+defineOptions({
+  name: 'OrdersPage'
+});
+
 import { onMounted, ref } from "vue";
 import { useOrderStore } from "../../stores/order-store";
 import type { Order } from "../../types/order";

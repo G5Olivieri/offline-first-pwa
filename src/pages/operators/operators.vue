@@ -1,4 +1,8 @@
 <script setup lang="ts">
+defineOptions({
+  name: 'OperatorsPage'
+});
+
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useOperatorStore } from "../../stores/operator-store";

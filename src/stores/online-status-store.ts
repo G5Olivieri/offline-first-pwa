@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { SYNCING } from "../db";
 
 export const useOnlineStatusStore = defineStore("onlineStatus", () => {
@@ -8,14 +8,16 @@ export const useOnlineStatusStore = defineStore("onlineStatus", () => {
   const isSyncEnabled = ref(SYNCING);
   const lastOnlineTime = ref<Date | null>(null);
   const lastOfflineTime = ref<Date | null>(null);
-  const connectionHistory = ref<Array<{ timestamp: Date; status: 'online' | 'offline' }>>([]);
+  const connectionHistory = ref<
+    Array<{ timestamp: Date; status: "online" | "offline" }>
+  >([]);
 
   // Getters
   const isFullyOnline = computed(() => isSyncEnabled.value && isOnline.value);
 
   const connectionStatus = computed(() => {
-    if (!isSyncEnabled.value) return 'sync-disabled';
-    return isOnline.value ? 'online' : 'offline';
+    if (!isSyncEnabled.value) return "sync-disabled";
+    return isOnline.value ? "online" : "offline";
   });
 
   const downtime = computed(() => {
@@ -27,12 +29,14 @@ export const useOnlineStatusStore = defineStore("onlineStatus", () => {
     if (connectionHistory.value.length < 2) return 100;
 
     const last24Hours = connectionHistory.value.filter(
-      entry => Date.now() - entry.timestamp.getTime() < 24 * 60 * 60 * 1000
+      (entry) => Date.now() - entry.timestamp.getTime() < 24 * 60 * 60 * 1000
     );
 
     if (last24Hours.length === 0) return 100;
 
-    const onlineEntries = last24Hours.filter(entry => entry.status === 'online');
+    const onlineEntries = last24Hours.filter(
+      (entry) => entry.status === "online"
+    );
     return Math.round((onlineEntries.length / last24Hours.length) * 100);
   });
 
@@ -54,7 +58,7 @@ export const useOnlineStatusStore = defineStore("onlineStatus", () => {
       // Add to history
       connectionHistory.value.push({
         timestamp: new Date(),
-        status: nowOnline ? 'online' : 'offline'
+        status: nowOnline ? "online" : "offline",
       });
 
       // Keep only last 100 entries
@@ -63,9 +67,11 @@ export const useOnlineStatusStore = defineStore("onlineStatus", () => {
       }
 
       // Emit custom events for other parts of the app
-      window.dispatchEvent(new CustomEvent('connection-status-changed', {
-        detail: { isOnline: nowOnline, isSyncEnabled: isSyncEnabled.value }
-      }));
+      window.dispatchEvent(
+        new CustomEvent("connection-status-changed", {
+          detail: { isOnline: nowOnline, isSyncEnabled: isSyncEnabled.value },
+        })
+      );
     }
   };
 
@@ -83,7 +89,7 @@ export const useOnlineStatusStore = defineStore("onlineStatus", () => {
     lastOfflineTime: lastOfflineTime.value,
     downtime: downtime.value,
     uptimePercentage: uptimePercentage.value,
-    historyCount: connectionHistory.value.length
+    historyCount: connectionHistory.value.length,
   });
 
   const clearHistory = () => {
@@ -103,6 +109,14 @@ export const useOnlineStatusStore = defineStore("onlineStatus", () => {
     window.removeEventListener("online", updateOnlineStatus);
     window.removeEventListener("offline", updateOnlineStatus);
   };
+
+  onMounted(() => {
+    initializeListeners();
+  });
+
+  onUnmounted(() => {
+    cleanupListeners();
+  });
 
   return {
     // State
@@ -124,26 +138,6 @@ export const useOnlineStatusStore = defineStore("onlineStatus", () => {
     getConnectionInfo,
     clearHistory,
     initializeListeners,
-    cleanupListeners
+    cleanupListeners,
   };
 });
-
-// Auto-initialize when store is first used
-let initialized = false;
-export const useOnlineStatusStoreWithAutoInit = () => {
-  const store = useOnlineStatusStore();
-
-  if (!initialized) {
-    initialized = true;
-
-    onMounted(() => {
-      store.initializeListeners();
-    });
-
-    onUnmounted(() => {
-      store.cleanupListeners();
-    });
-  }
-
-  return store;
-};

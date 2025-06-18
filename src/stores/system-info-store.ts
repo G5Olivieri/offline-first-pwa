@@ -2,6 +2,25 @@ import { defineStore } from 'pinia';
 import { ref, computed, onMounted } from 'vue';
 import { config } from '../config/env';
 
+// Extend navigator interface for non-standard properties
+interface ExtendedNavigator extends Navigator {
+  connection?: {
+    type?: string;
+    effectiveType?: string;
+    addEventListener?: (event: string, handler: () => void) => void;
+  };
+  deviceMemory?: number;
+}
+
+// Extend performance interface for memory info
+interface ExtendedPerformance extends Performance {
+  memory?: {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  };
+}
+
 interface SystemInfo {
   appName: string;
   appVersion: string;
@@ -170,10 +189,10 @@ export const useSystemInfoStore = defineStore('systemInfo', () => {
 
     // Get connection info if available
     if ('connection' in navigator) {
-      const conn = (navigator as any).connection;
+      const conn = (navigator as ExtendedNavigator).connection;
       connectionInfo.value = {
-        type: conn.type || 'unknown',
-        effectiveType: conn.effectiveType
+        type: conn?.type || 'unknown',
+        effectiveType: conn?.effectiveType
       };
     }
 
@@ -188,7 +207,7 @@ export const useSystemInfoStore = defineStore('systemInfo', () => {
 
     // Get hardware info if available
     if ('deviceMemory' in navigator) {
-      deviceCapabilities.value.memory = (navigator as any).deviceMemory;
+      deviceCapabilities.value.memory = (navigator as ExtendedNavigator).deviceMemory;
     }
     if ('hardwareConcurrency' in navigator) {
       deviceCapabilities.value.cores = navigator.hardwareConcurrency;
@@ -203,17 +222,17 @@ export const useSystemInfoStore = defineStore('systemInfo', () => {
     }
 
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
-      performanceInfo.value.memoryUsage = memory.usedJSHeapSize;
+      const memory = (performance as ExtendedPerformance).memory;
+      performanceInfo.value.memoryUsage = memory?.usedJSHeapSize;
     }
   };
 
   const updateConnectionInfo = () => {
     if ('connection' in navigator) {
-      const conn = (navigator as any).connection;
+      const conn = (navigator as ExtendedNavigator).connection;
       connectionInfo.value = {
-        type: conn.type || 'unknown',
-        effectiveType: conn.effectiveType
+        type: conn?.type || 'unknown',
+        effectiveType: conn?.effectiveType
       };
     }
   };
@@ -255,7 +274,7 @@ export const useSystemInfoStore = defineStore('systemInfo', () => {
 
     // Listen for connection changes
     if ('connection' in navigator) {
-      (navigator as any).connection.addEventListener('change', updateConnectionInfo);
+      (navigator as ExtendedNavigator).connection?.addEventListener?.('change', updateConnectionInfo);
     }
 
     // Listen for orientation changes

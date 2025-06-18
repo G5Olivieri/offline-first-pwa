@@ -5,58 +5,58 @@
  * Validates that all required environment variables are set and have valid values
  */
 
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync } from "fs";
+import { join } from "path";
 
 // Required environment variables with their validation rules
 const requiredVars = {
   VITE_APP_TITLE: {
     required: true,
-    type: 'string',
+    type: "string",
     minLength: 1,
-    maxLength: 100
+    maxLength: 100,
   },
   VITE_COUCHDB_URL: {
     required: true,
-    type: 'url',
-    pattern: /^https?:\/\/.+/
+    type: "url",
+    pattern: /^https?:\/\/.+/,
   },
   VITE_DEFAULT_LOCALE: {
     required: true,
-    type: 'string',
-    pattern: /^[a-z]{2}-[A-Z]{2}$/
+    type: "string",
+    pattern: /^[a-z]{2}-[A-Z]{2}$/,
   },
   VITE_DEFAULT_CURRENCY: {
     required: true,
-    type: 'string',
-    pattern: /^[A-Z]{3}$/
+    type: "string",
+    pattern: /^[A-Z]{3}$/,
   },
   VITE_ENABLE_SYNC: {
     required: true,
-    type: 'boolean'
+    type: "boolean",
   },
   VITE_MAX_SUGGESTIONS: {
     required: true,
-    type: 'number',
+    type: "number",
     min: 1,
-    max: 20
-  }
+    max: 20,
+  },
 };
 
 // Optional environment variables with validation
 const optionalVars = {
   VITE_COUCHDB_USERNAME: {
-    type: 'string',
-    minLength: 1
+    type: "string",
+    minLength: 1,
   },
   VITE_COUCHDB_PASSWORD: {
-    type: 'string',
-    minLength: 1
+    type: "string",
+    minLength: 1,
   },
   VITE_API_BASE_URL: {
-    type: 'url',
-    pattern: /^https?:\/\/.+/
-  }
+    type: "url",
+    pattern: /^https?:\/\/.+/,
+  },
 };
 
 /**
@@ -64,21 +64,21 @@ const optionalVars = {
  */
 function loadEnvFile(filename) {
   try {
-    const content = readFileSync(join(process.cwd(), filename), 'utf8');
+    const content = readFileSync(join(process.cwd(), filename), "utf8");
     const vars = {};
 
-    content.split('\n').forEach(line => {
+    content.split("\n").forEach((line) => {
       const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) return;
+      if (!trimmed || trimmed.startsWith("#")) return;
 
-      const [key, ...valueParts] = trimmed.split('=');
+      const [key, ...valueParts] = trimmed.split("=");
       if (key && valueParts.length > 0) {
-        vars[key.trim()] = valueParts.join('=').trim();
+        vars[key.trim()] = valueParts.join("=").trim();
       }
     });
 
     return vars;
-  } catch (error) {
+  } catch {
     return {};
   }
 }
@@ -89,7 +89,7 @@ function loadEnvFile(filename) {
 function validateVar(name, value, rules) {
   const errors = [];
 
-  if (rules.required && (!value || value.trim() === '')) {
+  if (rules.required && (!value || value.trim() === "")) {
     errors.push(`${name} is required but not set`);
     return errors;
   }
@@ -98,8 +98,8 @@ function validateVar(name, value, rules) {
 
   // Type validation
   switch (rules.type) {
-    case 'string':
-      if (typeof value !== 'string') {
+    case "string":
+      if (typeof value !== "string") {
         errors.push(`${name} must be a string`);
       }
       if (rules.minLength && value.length < rules.minLength) {
@@ -110,27 +110,29 @@ function validateVar(name, value, rules) {
       }
       break;
 
-    case 'number':
-      const num = Number(value);
-      if (isNaN(num)) {
-        errors.push(`${name} must be a valid number`);
-      } else {
-        if (rules.min !== undefined && num < rules.min) {
-          errors.push(`${name} must be at least ${rules.min}`);
-        }
-        if (rules.max !== undefined && num > rules.max) {
-          errors.push(`${name} must be at most ${rules.max}`);
+    case "number":
+      {
+        const num = Number(value);
+        if (isNaN(num)) {
+          errors.push(`${name} must be a valid number`);
+        } else {
+          if (rules.min !== undefined && num < rules.min) {
+            errors.push(`${name} must be at least ${rules.min}`);
+          }
+          if (rules.max !== undefined && num > rules.max) {
+            errors.push(`${name} must be at most ${rules.max}`);
+          }
         }
       }
       break;
 
-    case 'boolean':
-      if (!['true', 'false', '1', '0'].includes(value.toLowerCase())) {
+    case "boolean":
+      if (!["true", "false", "1", "0"].includes(value.toLowerCase())) {
         errors.push(`${name} must be a boolean (true/false/1/0)`);
       }
       break;
 
-    case 'url':
+    case "url":
       try {
         new URL(value);
       } catch {
@@ -151,23 +153,30 @@ function validateVar(name, value, rules) {
  * Main validation function
  */
 function validateEnvironment() {
-  console.log('🔍 Validating environment variables...\n');
+  console.log("🔍 Validating environment variables...\n");
 
   // Load environment files
-  const envFiles = ['.env.example', '.env.development', '.env.production', '.env.local'];
+  const envFiles = [
+    ".env.example",
+    ".env.development",
+    ".env.production",
+    ".env.local",
+  ];
   const allVars = {};
 
-  envFiles.forEach(file => {
+  envFiles.forEach((file) => {
     const vars = loadEnvFile(file);
     Object.assign(allVars, vars);
     if (Object.keys(vars).length > 0) {
-      console.log(`📁 Loaded ${Object.keys(vars).length} variables from ${file}`);
+      console.log(
+        `📁 Loaded ${Object.keys(vars).length} variables from ${file}`
+      );
     }
   });
 
   // Also include process.env variables that start with VITE_
-  Object.keys(process.env).forEach(key => {
-    if (key.startsWith('VITE_')) {
+  Object.keys(process.env).forEach((key) => {
+    if (key.startsWith("VITE_")) {
       allVars[key] = process.env[key];
     }
   });
@@ -185,7 +194,7 @@ function validateEnvironment() {
     if (varErrors.length > 0) {
       errors.push(...varErrors);
     } else {
-      console.log(`✅ ${name}: ${value || '(empty)'}`);
+      console.log(`✅ ${name}: ${value || "(empty)"}`);
     }
   });
 
@@ -206,40 +215,42 @@ function validateEnvironment() {
   });
 
   // Check for unknown VITE_ variables
-  Object.keys(allVars).forEach(name => {
-    if (name.startsWith('VITE_') &&
-        !requiredVars[name] &&
-        !optionalVars[name]) {
+  Object.keys(allVars).forEach((name) => {
+    if (
+      name.startsWith("VITE_") &&
+      !requiredVars[name] &&
+      !optionalVars[name]
+    ) {
       warnings.push(`Unknown variable: ${name}`);
     }
   });
 
   // Report results
-  console.log('\n' + '='.repeat(50));
+  console.log("\n" + "=".repeat(50));
 
   if (errors.length > 0) {
-    console.log('\n❌ Validation FAILED:');
-    errors.forEach(error => console.log(`  • ${error}`));
+    console.log("\n❌ Validation FAILED:");
+    errors.forEach((error) => console.log(`  • ${error}`));
   }
 
   if (warnings.length > 0) {
-    console.log('\n⚠️  Warnings:');
-    warnings.forEach(warning => console.log(`  • ${warning}`));
+    console.log("\n⚠️  Warnings:");
+    warnings.forEach((warning) => console.log(`  • ${warning}`));
   }
 
   if (errors.length === 0) {
-    console.log('\n✨ Environment validation PASSED!');
+    console.log("\n✨ Environment validation PASSED!");
 
     // Show configuration summary
-    console.log('\n📋 Configuration Summary:');
-    console.log(`  App: ${allVars.VITE_APP_TITLE || 'Not set'}`);
-    console.log(`  Database: ${allVars.VITE_COUCHDB_URL || 'Not set'}`);
-    console.log(`  Locale: ${allVars.VITE_DEFAULT_LOCALE || 'Not set'}`);
-    console.log(`  Currency: ${allVars.VITE_DEFAULT_CURRENCY || 'Not set'}`);
-    console.log(`  Sync: ${allVars.VITE_ENABLE_SYNC || 'Not set'}`);
+    console.log("\n📋 Configuration Summary:");
+    console.log(`  App: ${allVars.VITE_APP_TITLE || "Not set"}`);
+    console.log(`  Database: ${allVars.VITE_COUCHDB_URL || "Not set"}`);
+    console.log(`  Locale: ${allVars.VITE_DEFAULT_LOCALE || "Not set"}`);
+    console.log(`  Currency: ${allVars.VITE_DEFAULT_CURRENCY || "Not set"}`);
+    console.log(`  Sync: ${allVars.VITE_ENABLE_SYNC || "Not set"}`);
   }
 
-  console.log('\n' + '='.repeat(50));
+  console.log("\n" + "=".repeat(50));
 
   // Exit with appropriate code
   process.exit(errors.length > 0 ? 1 : 0);

@@ -1,4 +1,8 @@
 <script lang="ts" setup>
+defineOptions({
+  name: 'HomePage'
+});
+
 import { onMounted, ref } from "vue";
 import { useOrderStore } from "../../stores/order-store";
 import { useProductStore } from "../../stores/product-store";

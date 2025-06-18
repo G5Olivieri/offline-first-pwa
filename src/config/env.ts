@@ -219,7 +219,7 @@ export function formatDate(date: Date): string {
 export function log(
   level: "debug" | "info" | "warn" | "error",
   message: string,
-  ...args: any[]
+  ...args: unknown[]
 ): void {
   if (!isDebugMode && level === "debug") {
     return;

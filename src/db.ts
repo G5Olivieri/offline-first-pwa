@@ -1,11 +1,11 @@
 import PouchDB from "pouchdb-browser";
 import PouchDBFind from "pouchdb-find";
+import { config, log } from "./config/env";
 import type { Customer } from "./stores/customer-store";
 import type { Operator } from "./types/operator";
 import type { Order } from "./types/order";
 import { OrderStatus } from "./types/order";
 import type { Product } from "./types/product";
-import { config, log } from "./config/env";
 
 // Initialize PouchDB with plugins
 PouchDB.plugin(PouchDBFind);
@@ -39,24 +39,24 @@ export const getProductDB = (): PouchDB.Database<Product> => {
           retry: true,
         })
         .on("change", (info) => {
-          log('debug', "[products] Sync change:", info);
+          log("debug", "[products] Sync change:", info);
         })
         .on("error", (err) => {
-          log('error', "[products] Sync error:", err);
+          log("error", "[products] Sync error:", err);
         })
         .on("active", () => {
-          log('debug', "[products] Sync active");
+          log("debug", "[products] Sync active");
         })
         .on("paused", () => {
-          log('debug', "[products] Sync paused");
+          log("debug", "[products] Sync paused");
         });
 
-      log('info', `[products] Sync enabled with ${COUCHDB_URL}/products`);
+      log("info", `[products] Sync enabled with ${COUCHDB_URL}/products`);
     } catch (error) {
-      log('error', "[products] Failed to setup sync:", error);
+      log("error", "[products] Failed to setup sync:", error);
     }
   } else {
-    log('info', "[products] Sync disabled");
+    log("info", "[products] Sync disabled");
   }
 
   return _productDB;
@@ -80,48 +80,62 @@ export const getOrderDB = (): PouchDB.Database<Order> => {
       });
 
       // One-way sync: only push ALL local orders to remote, never pull
-      _orderDB.replicate.to(remoteOrderDB, {
-        live: true,
-        retry: true,
-        // Push all orders regardless of status
-      })
+      _orderDB.replicate
+        .to(remoteOrderDB, {
+          live: true,
+          retry: true,
+          // Push all orders regardless of status
+        })
         .on("change", async (info) => {
-          log('debug', "[orders] Pushed orders to remote:", info);
+          log("debug", "[orders] Pushed orders to remote:", info);
 
           // After successful push, purge all non-pending orders from local storage
           if (info.docs && info.docs.length > 0) {
             for (const doc of info.docs) {
               const order = doc as Order;
               // Purge completed and cancelled orders, keep pending orders
-              if (order.status === OrderStatus.COMPLETED || order.status === OrderStatus.CANCELLED) {
+              if (
+                order.status === OrderStatus.COMPLETED ||
+                order.status === OrderStatus.CANCELLED
+              ) {
                 try {
                   if (doc._rev) {
                     await _orderDB!.remove(doc._id, doc._rev);
-                    log('debug', `[orders] Purged ${order.status} order ${doc._id} from local storage`);
+                    log(
+                      "debug",
+                      `[orders] Purged ${order.status} order ${doc._id} from local storage`
+                    );
                   }
                 } catch (error) {
-                  log('error', `[orders] Failed to purge order ${doc._id}:`, error);
+                  log(
+                    "error",
+                    `[orders] Failed to purge order ${doc._id}:`,
+                    error
+                  );
                 }
               }
             }
           }
         })
         .on("error", (err) => {
-          log('error', "[orders] Sync error:", err);
+          log("error", "[orders] Sync error:", err);
         })
         .on("active", () => {
-          log('debug', "[orders] Sync active");
+          log("debug", "[orders] Sync active");
         })
         .on("paused", () => {
-          log('debug', "[orders] Sync paused");
+          log("debug", "[orders] Sync paused");
         });
 
-      log('info', `[orders] One-way sync enabled with ${COUCHDB_URL}/orders (push all orders, never pull)`);
+      log(
+        "info",
+        `[orders] One-way sync enabled with ${COUCHDB_URL}/orders (push all orders, never pull)`
+      );
     } catch (error) {
-      log('error', "[orders] Failed to setup sync:", error);
+      log("error", "[orders] Failed to setup sync:", error);
     }
   } else {
-    log('info', "[orders] Sync disabled");
+    log("info", "[orders] Sync disabled");
   }
 
   return _orderDB;
@@ -169,7 +183,6 @@ export const getCustomerDB = (): PouchDB.Database<Customer> => {
   });
 
   if (SYNCING) {
-    //@ts-ignore PouchDB is added as a global script in index.html
     const remoteCustomersDB = new PouchDB(`${COUCHDB_URL}/customers`, {
       auth: {
         username: config.couchdbUsername,

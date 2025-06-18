@@ -1,4 +1,8 @@
 <script lang="ts" setup>
+defineOptions({
+  name: 'CheckoutPage'
+});
+
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useCustomerStore } from "../../stores/customer-store";

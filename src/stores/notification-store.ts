@@ -21,6 +21,7 @@ interface ModalState {
   show: boolean;
   options: ModalOptions;
   resolve: ((result: ModalResult) => void) | null;
+  keydownHandler: ((event: KeyboardEvent) => void) | null;
 }
 
 export const useNotificationStore = defineStore('notifications', () => {
@@ -37,7 +38,8 @@ export const useNotificationStore = defineStore('notifications', () => {
       showCancel: false,
       persistent: false
     },
-    resolve: null
+    resolve: null,
+    keydownHandler: null
   });
 
   // Getters
@@ -121,6 +123,28 @@ export const useNotificationStore = defineStore('notifications', () => {
         ...options
       };
       modalState.resolve = resolve;
+
+      // Create keyboard event listener for Enter and Escape
+      const handleKeydown = (event: KeyboardEvent) => {
+        if (!modalState.show) return;
+
+        switch (event.key) {
+          case 'Enter':
+            event.preventDefault();
+            confirmModal();
+            break;
+          case 'Escape':
+            if (!modalState.options.persistent) {
+              event.preventDefault();
+              cancelModal();
+            }
+            break;
+        }
+      };
+
+      // Store the handler and add the event listener
+      modalState.keydownHandler = handleKeydown;
+      document.addEventListener('keydown', handleKeydown);
     });
   };
 
@@ -129,6 +153,13 @@ export const useNotificationStore = defineStore('notifications', () => {
       modalState.resolve({ confirmed: false, cancelled: true });
     }
     modalState.show = false;
+
+    // Remove keyboard event listener if it exists
+    if (modalState.keydownHandler) {
+      document.removeEventListener('keydown', modalState.keydownHandler);
+      modalState.keydownHandler = null;
+    }
+
     // Reset options after a short delay to allow component to unmount
     setTimeout(() => {
       modalState.options = {
@@ -149,6 +180,13 @@ export const useNotificationStore = defineStore('notifications', () => {
       modalState.resolve({ confirmed: true, cancelled: false });
     }
     modalState.show = false;
+
+    // Remove keyboard event listener if it exists
+    if (modalState.keydownHandler) {
+      document.removeEventListener('keydown', modalState.keydownHandler);
+      modalState.keydownHandler = null;
+    }
+
     // Reset options after a short delay to allow component to unmount
     setTimeout(() => {
       modalState.options = {
@@ -169,6 +207,13 @@ export const useNotificationStore = defineStore('notifications', () => {
       modalState.resolve({ confirmed: false, cancelled: true });
     }
     modalState.show = false;
+
+    // Remove keyboard event listener if it exists
+    if (modalState.keydownHandler) {
+      document.removeEventListener('keydown', modalState.keydownHandler);
+      modalState.keydownHandler = null;
+    }
+
     // Reset options after a short delay to allow component to unmount
     setTimeout(() => {
       modalState.options = {

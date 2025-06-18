@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useNotificationStore } from "../../stores/notification-store";
 import { useProductStore } from "../../stores/product-store";
 import type { Product } from "../../types/product";
@@ -25,6 +25,27 @@ const hasNextPage = computed(
   () => skip.value + limit.value < products.value.count
 );
 const hasPreviousPage = computed(() => skip.value > 0);
+
+// Pagination display logic
+const paginationRange = computed(() => {
+  const total = totalPages.value;
+  const current = currentPage.value;
+  const maxVisible = 5;
+
+  if (total <= maxVisible) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const half = Math.floor(maxVisible / 2);
+  let start = Math.max(1, current - half);
+  let end = Math.min(total, start + maxVisible - 1);
+
+  if (end - start + 1 < maxVisible) {
+    start = Math.max(1, end - maxVisible + 1);
+  }
+
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+});
 
 const loadProducts = async () => {
   isLoading.value = true;
@@ -71,7 +92,27 @@ const deleteProduct = async (product: Product) => {
 
 const searchProducts = async () => {
   skip.value = 0; // Reset to first page when searching
-  await loadProducts();
+  if (!searchQuery.value.trim()) {
+    // If search query is empty, reload all products
+    await loadProducts();
+    return;
+  }
+  productStore
+    .findProductByBarcode(searchQuery.value)
+    .then((result) => {
+      if (result) {
+        products.value = { count: 1, products: [result] };
+      } else {
+        products.value = { count: 0, products: [] };
+      }
+    })
+    .catch((error) => {
+      console.error("Error searching product:", error);
+      notificationStore.showError(
+        "Search Error",
+        "Failed to search for product. Please try again."
+      );
+    });
 };
 
 const nextPage = () => {
@@ -92,14 +133,6 @@ const goToPage = (page: number) => {
   skip.value = (page - 1) * limit.value;
   loadProducts();
 };
-
-// Watch for search query changes
-watch(searchQuery, () => {
-  // Debounce search
-  if (searchQuery.value.trim() === "") {
-    searchProducts();
-  }
-});
 
 onMounted(() => loadProducts());
 </script>
@@ -198,7 +231,7 @@ onMounted(() => loadProducts());
                 v-model="searchQuery"
                 @keyup.enter="searchProducts"
                 type="text"
-                placeholder="Search products by name or barcode..."
+                placeholder="Search products by barcode..."
                 class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-200"
               />
             </div>
@@ -516,7 +549,20 @@ onMounted(() => loadProducts());
 
             <!-- Page Numbers -->
             <div class="hidden sm:flex items-center gap-1">
-              <template v-for="page in Math.min(totalPages, 5)" :key="page">
+              <!-- First page button if not in range -->
+              <template v-if="paginationRange[0] > 1">
+                <button
+                  @click="goToPage(1)"
+                  :disabled="isLoading"
+                  class="w-10 h-10 rounded-lg border border-gray-200 font-medium transition-colors disabled:cursor-not-allowed bg-white hover:bg-gray-50 text-gray-700"
+                >
+                  1
+                </button>
+                <span v-if="paginationRange[0] > 2" class="px-1 text-gray-500">...</span>
+              </template>
+
+              <!-- Page range -->
+              <template v-for="page in paginationRange" :key="page">
                 <button
                   @click="goToPage(page)"
                   :disabled="isLoading"
@@ -530,7 +576,18 @@ onMounted(() => loadProducts());
                   {{ page }}
                 </button>
               </template>
-              <span v-if="totalPages > 5" class="px-2 text-gray-500">...</span>
+
+              <!-- Last page button if not in range -->
+              <template v-if="paginationRange[paginationRange.length - 1] < totalPages">
+                <span v-if="paginationRange[paginationRange.length - 1] < totalPages - 1" class="px-1 text-gray-500">...</span>
+                <button
+                  @click="goToPage(totalPages)"
+                  :disabled="isLoading"
+                  class="w-10 h-10 rounded-lg border border-gray-200 font-medium transition-colors disabled:cursor-not-allowed bg-white hover:bg-gray-50 text-gray-700"
+                >
+                  {{ totalPages }}
+                </button>
+              </template>
             </div>
 
             <!-- Next Button -->

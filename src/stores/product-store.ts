@@ -1,10 +1,43 @@
 import { defineStore } from "pinia";
 import { getProductDB } from "../db";
+import { searchService } from "../services/search-service";
 import type { Product } from "../types/product";
 
 export const useProductStore = defineStore("productStore", () => {
   const productDB = getProductDB();
 
+  // Main search method - uses search service if available, fallback to database
+  const searchProducts = async (
+    query: string,
+    { limit = 100, skip = 0 } = {}
+  ) => {
+    console.log("Searching products with query:", query);
+
+    const searchResult = searchService.search(query, { limit, skip });
+
+    const products = await productDB
+      .bulkGet({
+        docs: searchResult.productIds.map((id) => ({ id })),
+      })
+      .then((result) => {
+        return result.results.map(
+          (r) =>
+            ((r.docs && r.docs[0] && (r.docs[0] as any).ok) ||
+              null) as Product | null
+        );
+      })
+      .catch((error) => {
+        console.error("Error fetching products:", error);
+        return [];
+      });
+
+    return {
+      count: searchResult.count,
+      products: products.filter((p) => p !== null) as Product[],
+    };
+  };
+
+  // Legacy method for backward compatibility - now uses main search
   const findProductByBarcode = async (barcode: string) => {
     const result = await productDB.find({
       selector: { barcode },
@@ -69,7 +102,8 @@ export const useProductStore = defineStore("productStore", () => {
     console.log("Listing all products");
     const count = await productDB.info().then((info) => info.doc_count);
     console.log(`Total products count: ${count}`);
-    return {
+
+    const result = {
       count,
       products: await productDB
         .allDocs({ include_docs: true, limit, skip })
@@ -81,6 +115,8 @@ export const useProductStore = defineStore("productStore", () => {
           return [];
         }),
     };
+
+    return result;
   };
 
   const createProduct = async (product: Omit<Product, "_id" | "rev">) => {
@@ -90,14 +126,38 @@ export const useProductStore = defineStore("productStore", () => {
       ...product,
     };
     await productDB.put(newProduct);
+
+    await searchService.add({
+      id: newProduct._id,
+      name: newProduct.name,
+      barcode: newProduct.barcode,
+    });
+
     console.log("Product created:", newProduct);
+
     return newProduct;
+  };
+
+  const updateProduct = async (product: Product) => {
+    console.log("Updating product:", product);
+    await productDB.put(product);
+    await searchService.add({
+      id: product._id,
+      name: product.name,
+      barcode: product.barcode,
+    });
+
+    console.log("Product updated:", product);
+    return product;
   };
 
   const deleteProduct = async (id: string) => {
     console.log("Deleting product with ID:", id);
     const productToDelete = await productDB.get(id);
+
     await productDB.remove(productToDelete);
+    await searchService.remove(id);
+
     console.log("Product deleted:", id);
     return id;
   };
@@ -106,11 +166,19 @@ export const useProductStore = defineStore("productStore", () => {
     console.log("Bulk inserting products:", products.length);
     const docs = products.map((product) => ({
       ...product,
-      _id: product._id || crypto.randomUUID(), // Ensure each product has a unique ID
+      _id: product._id || crypto.randomUUID(),
     }));
     try {
       const response = await productDB.bulkDocs(docs);
-      console.log("Bulk insert response:", response.length);
+
+      const indexableProducts = docs.map((product) => ({
+        id: product._id,
+        name: product.name,
+        barcode: product.barcode,
+      }));
+
+      await searchService.bulkAdd(indexableProducts);
+
       return response;
     } catch (error) {
       console.error("Error during bulk insert:", error);
@@ -120,9 +188,11 @@ export const useProductStore = defineStore("productStore", () => {
 
   return {
     findProductByBarcode,
+    searchProducts,
     changeStock,
     listProducts,
     createProduct,
+    updateProduct,
     deleteProduct,
     bulkInsertProducts,
   };

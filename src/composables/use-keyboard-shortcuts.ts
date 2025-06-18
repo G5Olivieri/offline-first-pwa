@@ -168,8 +168,9 @@ export const createPOSShortcuts = (callbacks: {
 
   if (callbacks.openProducts) {
     shortcuts.push({
-      key: 'p',
-      ctrl: true,
+      key: 'l',
+      alt: true,
+      shift: true,
       description: 'Open products',
       action: callbacks.openProducts
     })
@@ -178,7 +179,8 @@ export const createPOSShortcuts = (callbacks: {
   if (callbacks.openOrders) {
     shortcuts.push({
       key: 'o',
-      ctrl: true,
+      alt: true,
+      shift: true,
       description: 'Open orders',
       action: callbacks.openOrders
     })
@@ -186,8 +188,9 @@ export const createPOSShortcuts = (callbacks: {
 
   if (callbacks.openCustomers) {
     shortcuts.push({
-      key: 'c',
-      ctrl: true,
+      key: 'u',
+      alt: true,
+      shift: true,
       description: 'Open customers',
       action: callbacks.openCustomers
     })

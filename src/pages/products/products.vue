@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { log } from "../../config/env";
 import { useNotificationStore } from "../../stores/notification-store";
 import { useProductStore } from "../../stores/product-store";
+import { searchService } from "../../services/search-service";
 import type { Product } from "../../types/product";
 
 const productStore = useProductStore();
@@ -15,6 +17,8 @@ const limit = ref(12);
 const skip = ref(0);
 const isLoading = ref(false);
 const searchQuery = ref("");
+const searchTimeout = ref<NodeJS.Timeout | null>(null);
+const isSearchIndexReady = ref(false);
 
 // Computed properties
 const totalPages = computed(() =>
@@ -47,15 +51,57 @@ const paginationRange = computed(() => {
   return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 });
 
+// Computed property to determine search type
+const searchType = computed(() => {
+  const query = searchQuery.value.trim();
+  if (!query) return 'all';
+  return /^\d+$/.test(query) ? 'barcode' : 'name';
+});
+
+// Search status computed property
+const searchStatus = computed(() => {
+  if (isSearchIndexReady.value) {
+    return {
+      text: 'Fuzzy Search Ready',
+      color: 'bg-green-100 text-green-700',
+      icon: '⚡'
+    };
+  } else if (searchService.isReady()) {
+    return {
+      text: 'Search Index Ready',
+      color: 'bg-blue-100 text-blue-700',
+      icon: '🔍'
+    };
+  } else {
+    return {
+      text: 'Building Search Index...',
+      color: 'bg-yellow-100 text-yellow-700',
+      icon: '⏳'
+    };
+  }
+});
+
 const loadProducts = async () => {
   isLoading.value = true;
   try {
-    products.value = await productStore.listProducts({
-      limit: limit.value,
-      skip: skip.value,
-    });
+    if (searchQuery.value.trim()) {
+      // Use search function when there's a query
+      products.value = await productStore.searchProducts(searchQuery.value.trim(), {
+        limit: limit.value,
+        skip: skip.value,
+      });
+    } else {
+      // Use regular list when no search query
+      products.value = await productStore.listProducts({
+        limit: limit.value,
+        skip: skip.value,
+      });
+    }
+
+    // Check if search service is ready
+    isSearchIndexReady.value = searchService.isReady();
   } catch (error) {
-    console.error("Error loading products:", error);
+    log("error", "Error loading products:", error);
     notificationStore.showError(
       "Loading Error",
       "Failed to load products. Please try again."
@@ -81,7 +127,7 @@ const deleteProduct = async (product: Product) => {
       );
       await loadProducts();
     } catch (error) {
-      console.error("Error deleting product:", error);
+      log("error", "Error deleting product:", error);
       notificationStore.showError(
         "Delete Error",
         "Failed to delete product. Please try again."
@@ -90,29 +136,16 @@ const deleteProduct = async (product: Product) => {
   }
 };
 
-const searchProducts = async () => {
-  skip.value = 0; // Reset to first page when searching
-  if (!searchQuery.value.trim()) {
-    // If search query is empty, reload all products
-    await loadProducts();
-    return;
+// Real-time search with debouncing
+const performSearch = () => {
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value);
   }
-  productStore
-    .findProductByBarcode(searchQuery.value)
-    .then((result) => {
-      if (result) {
-        products.value = { count: 1, products: [result] };
-      } else {
-        products.value = { count: 0, products: [] };
-      }
-    })
-    .catch((error) => {
-      console.error("Error searching product:", error);
-      notificationStore.showError(
-        "Search Error",
-        "Failed to search for product. Please try again."
-      );
-    });
+
+  searchTimeout.value = setTimeout(async () => {
+    skip.value = 0; // Reset to first page when searching
+    await loadProducts();
+  }, 300); // 300ms debounce delay
 };
 
 const nextPage = () => {
@@ -133,6 +166,11 @@ const goToPage = (page: number) => {
   skip.value = (page - 1) * limit.value;
   loadProducts();
 };
+
+// Watch for search query changes for real-time search
+watch(searchQuery, () => {
+  performSearch();
+});
 
 onMounted(() => loadProducts());
 </script>
@@ -229,54 +267,31 @@ onMounted(() => loadProducts());
               </div>
               <input
                 v-model="searchQuery"
-                @keyup.enter="searchProducts"
                 type="text"
-                placeholder="Search products by barcode..."
-                class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-200"
+                :placeholder="searchType === 'barcode' ? 'Searching by barcode...' : searchType === 'name' ? 'Searching by name...' : 'Search products by name or barcode...'"
+                class="block w-full pl-10 pr-12 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-200"
               />
+              <!-- Search type indicator -->
+              <div v-if="searchQuery.trim()" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <span class="text-xs font-medium px-2 py-1 rounded-full" :class="{
+                  'bg-blue-100 text-blue-700': searchType === 'name',
+                  'bg-green-100 text-green-700': searchType === 'barcode',
+                }">
+                  {{ searchType === 'barcode' ? 'Barcode' : 'Name' }}
+                </span>
+              </div>
             </div>
 
-            <!-- Search Button -->
+            <!-- Clear Search Button -->
             <button
-              @click="searchProducts"
-              :disabled="isLoading"
-              class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:transform-none disabled:cursor-not-allowed"
+              v-if="searchQuery.trim()"
+              @click="searchQuery = ''"
+              class="inline-flex items-center gap-2 px-4 py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
-              <svg
-                v-if="!isLoading"
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
-              <svg
-                v-else
-                class="w-5 h-5 animate-spin"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              {{ isLoading ? "Searching..." : "Search" }}
+              Clear
             </button>
           </div>
         </div>
@@ -288,12 +303,20 @@ onMounted(() => loadProducts());
           class="bg-white/50 backdrop-blur-sm rounded-lg px-4 py-3 border border-white/20"
         >
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              <span class="text-sm font-medium text-gray-700">
-                {{ products.count }}
-                {{ products.count === 1 ? "product" : "products" }} found
-              </span>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <span class="text-sm font-medium text-gray-700">
+                  {{ products.count }}
+                  {{ products.count === 1 ? "product" : "products" }} found
+                </span>
+              </div>
+              <!-- Search Status Indicator -->
+              <div class="flex items-center gap-2">
+                <span class="text-xs px-2 py-1 rounded-full font-medium" :class="searchStatus.color">
+                  {{ searchStatus.icon }} {{ searchStatus.text }}
+                </span>
+              </div>
             </div>
             <div v-if="totalPages > 1" class="text-sm text-gray-500">
               Page {{ currentPage }} of {{ totalPages }}
@@ -558,7 +581,9 @@ onMounted(() => loadProducts());
                 >
                   1
                 </button>
-                <span v-if="paginationRange[0] > 2" class="px-1 text-gray-500">...</span>
+                <span v-if="paginationRange[0] > 2" class="px-1 text-gray-500"
+                  >...</span
+                >
               </template>
 
               <!-- Page range -->
@@ -578,8 +603,16 @@ onMounted(() => loadProducts());
               </template>
 
               <!-- Last page button if not in range -->
-              <template v-if="paginationRange[paginationRange.length - 1] < totalPages">
-                <span v-if="paginationRange[paginationRange.length - 1] < totalPages - 1" class="px-1 text-gray-500">...</span>
+              <template
+                v-if="paginationRange[paginationRange.length - 1] < totalPages"
+              >
+                <span
+                  v-if="
+                    paginationRange[paginationRange.length - 1] < totalPages - 1
+                  "
+                  class="px-1 text-gray-500"
+                  >...</span
+                >
                 <button
                   @click="goToPage(totalPages)"
                   :disabled="isLoading"

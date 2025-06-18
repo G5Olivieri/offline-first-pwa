@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import AppModal from "./components/app-modal.vue";
 import HelpDialog from "./components/help-dialog.vue";
+import SetupLoading from "./components/setup-loading.vue";
 import ToastContainer from "./components/toast-container.vue";
 import {
   createPOSShortcuts,
@@ -14,6 +15,7 @@ import { useOnlineStatusStore } from "./stores/online-status-store";
 import { useOperatorStore } from "./stores/operator-store";
 import { useOrderStore } from "./stores/order-store";
 import { useProductStore } from "./stores/product-store";
+import { useSetupStore } from "./stores/setup-store";
 
 const barcode = ref("");
 const router = useRouter();
@@ -32,6 +34,7 @@ const onlineStatusStore = useOnlineStatusStore();
 const operatorStore = useOperatorStore();
 const customerStore = useCustomerStore();
 const notificationStore = useNotificationStore();
+const setupStore = useSetupStore();
 const isHome = computed(() => router.currentRoute.value.path === "/");
 
 // Database status helper
@@ -275,6 +278,11 @@ onMounted(() => {
       second: "2-digit",
     });
   }, 1000);
+
+  // Initialize system setup
+  setupStore.initializeSystem().catch((error) => {
+    console.error("Failed to initialize system:", error);
+  });
 });
 
 onUnmounted(() => {
@@ -284,7 +292,12 @@ onUnmounted(() => {
 });
 </script>
 <template>
+  <!-- Setup Loading Screen -->
+  <SetupLoading v-if="setupStore.shouldBlockUI()" />
+
+  <!-- Main App Content -->
   <div
+    v-else
     class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100"
   >
     <!-- Compact One-Row Header -->

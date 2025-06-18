@@ -2,6 +2,12 @@
  * Environment configuration utility
  * Provides type-safe access to environment variables with defaults
  */
+interface SearchConfig {
+  dbName: string;
+  dbVersion: number;
+  storeName: string;
+  indexKey: string;
+}
 
 interface AppConfig {
   // Application Settings
@@ -49,6 +55,8 @@ interface AppConfig {
   // Development Settings
   mockData: boolean;
   logLevel: string;
+
+  search: SearchConfig;
 }
 
 /**
@@ -157,6 +165,13 @@ export const config: AppConfig = {
   // Development Settings
   mockData: getEnvVar("VITE_MOCK_DATA", false, toBool),
   logLevel: getEnvVar("VITE_LOG_LEVEL", "info"),
+
+  search: {
+    dbName: getEnvVar("VITE_SEARCH_DB_NAME", "search_index"),
+    dbVersion: getEnvVar("VITE_SEARCH_DB_VERSION", 1, toNumber),
+    storeName: getEnvVar("VITE_SEARCH_STORE_NAME", "products"),
+    indexKey: getEnvVar("VITE_SEARCH_INDEX_KEY", "id"),
+  },
 };
 
 /**

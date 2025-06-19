@@ -4,43 +4,22 @@ defineOptions({
 });
 
 import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
 import { useOperatorStore } from "../../stores/operator-store";
-import { useAnalytics } from "../../composables/use-analytics";
+import { useNavigationActions } from "../../composables/use-navigation-actions";
 import type { Operator } from "../../types/operator";
 
 const operatorStore = useOperatorStore();
+const navigation = useNavigationActions();
 const operators = ref<Operator[]>([]);
-const router = useRouter();
-const analytics = useAnalytics();
 
-const selectOperator = (operatorId: string) => {
-  const selectedOperator = operators.value.find(op => op._id === operatorId);
-
-  // Track operator selection from list
-  analytics.trackAction({
-    action: 'operator_selected_from_list',
-    category: 'authentication',
-    label: selectedOperator?.name || 'unknown',
-    metadata: {
-      operatorId,
-      operatorName: selectedOperator?.name || 'unknown',
-      source: 'operators_page',
-    },
-  });
-
-  operatorStore.setOperator(operatorId).then(() => {
-    router.push("/");
-  }).catch((error) => {
-    analytics.trackError({
-      errorType: 'operator_selection_error',
-      errorMessage: error instanceof Error ? error.message : String(error),
-      context: {
-        operatorId,
-        source: 'operators_page',
-      },
-    });
-  });
+const selectOperator = async (operatorId: string) => {
+  try {
+    await operatorStore.selectOperatorFromList(operatorId, operators.value);
+    navigation.goToHomeAfterSuccess('operator', operators.value.find(op => op._id === operatorId)?.name || 'unknown', 'operators_page');
+  } catch (error) {
+    console.error("Error selecting operator:", error);
+    // Error is already tracked in the store
+  }
 };
 
 onMounted(() => {

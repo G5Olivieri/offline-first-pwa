@@ -505,26 +505,6 @@ onUnmounted(() => {
                 class="w-full text-white bg-transparent border-0 focus:ring-0 focus:outline-none placeholder-gray-500 text-sm"
               />
             </div>
-            <button
-              type="submit"
-              class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-1"
-              title="Add Product"
-            >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              <span class="hidden sm:inline">Add</span>
-            </button>
           </form>
 
           <!-- Order Controls & Status -->

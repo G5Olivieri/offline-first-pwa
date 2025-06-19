@@ -96,12 +96,129 @@ export const useOperatorStore = defineStore("operatorStore", () => {
   const createOperator = async (newOperator: {
     name: string;
   }): Promise<Operator> => {
-    const operatorData: Operator = {
-      _id: crypto.randomUUID(),
-      name: newOperator.name,
-    };
-    await operatorDB.put(operatorData);
-    return operatorData;
+    logger.debug("Creating new operator:", newOperator.name);
+
+    // Track operator creation attempt
+    analytics.trackUserAction({
+      action: 'operator_create_attempt',
+      category: 'authentication',
+      label: newOperator.name,
+      metadata: {
+        operatorName: newOperator.name,
+        source: 'operator_store',
+      },
+    });
+
+    try {
+      const operatorData: Operator = {
+        _id: crypto.randomUUID(),
+        name: newOperator.name,
+      };
+
+      await operatorDB.put(operatorData);
+
+      // Track successful operator creation
+      analytics.trackUserAction({
+        action: 'operator_created',
+        category: 'authentication',
+        label: newOperator.name,
+        metadata: {
+          operatorId: operatorData._id,
+          operatorName: newOperator.name,
+        },
+      });
+
+      logger.info("Operator created successfully", {
+        operatorId: operatorData._id,
+        name: newOperator.name
+      });
+
+      return operatorData;
+    } catch (error) {
+      // Track operator creation error
+      analytics.trackError({
+        errorType: 'operator_creation_error',
+        errorMessage: error instanceof Error ? error.message : String(error),
+        context: {
+          operatorName: newOperator.name,
+          source: 'operator_store',
+        },
+      });
+
+      logger.error("Failed to create operator", error);
+      throw error;
+    }
+  };
+
+  // Business logic method: Create operator and immediately select it
+  const createAndSelectOperator = async (operatorData: { name: string }): Promise<void> => {
+    logger.debug("Creating and selecting operator:", operatorData.name);
+
+    try {
+      const newOperator = await createOperator(operatorData);
+
+      // Track combined action
+      analytics.trackUserAction({
+        action: 'operator_created_and_selected',
+        category: 'authentication',
+        label: operatorData.name,
+        metadata: {
+          operatorId: newOperator._id,
+          operatorName: operatorData.name,
+          source: 'operator_store',
+        },
+      });
+
+      await setOperator(newOperator._id);
+
+      logger.info("Operator created and selected", {
+        operatorId: newOperator._id,
+        name: operatorData.name
+      });
+    } catch (error) {
+      logger.error("Failed to create and select operator", error);
+      throw error;
+    }
+  };
+
+  // Business logic method: Select operator from list (with context)
+  const selectOperatorFromList = async (operatorId: string, operators: Operator[]): Promise<void> => {
+    logger.debug("Selecting operator from list:", operatorId);
+
+    const selectedOperator = operators.find(op => op._id === operatorId);
+
+    // Track operator selection from list
+    analytics.trackUserAction({
+      action: 'operator_selected_from_list',
+      category: 'authentication',
+      label: selectedOperator?.name || 'unknown',
+      metadata: {
+        operatorId,
+        operatorName: selectedOperator?.name || 'unknown',
+        source: 'operator_store',
+      },
+    });
+
+    try {
+      await setOperator(operatorId);
+      logger.info("Operator selected from list", {
+        operatorId,
+        operatorName: selectedOperator?.name
+      });
+    } catch (error) {
+      // Track selection error
+      analytics.trackError({
+        errorType: 'operator_selection_error',
+        errorMessage: error instanceof Error ? error.message : String(error),
+        context: {
+          operatorId,
+          source: 'operator_store',
+        },
+      });
+
+      logger.error("Failed to select operator from list", error);
+      throw error;
+    }
   };
 
   onMounted(() => {
@@ -117,5 +234,7 @@ export const useOperatorStore = defineStore("operatorStore", () => {
     clearOperator,
     listOperators,
     createOperator,
+    createAndSelectOperator,
+    selectOperatorFromList,
   };
 });

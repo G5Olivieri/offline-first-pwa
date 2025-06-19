@@ -194,6 +194,100 @@ export const useCustomerStore = defineStore("customerStore", () => {
       });
   };
 
+  // Business logic method: Create customer and immediately select it
+  const createAndSelectCustomer = async (customerData: { name: string; document: string }): Promise<void> => {
+    logger.debug("Creating and selecting customer:", customerData.name);
+
+    // Track customer creation attempt from form
+    analytics.trackUserAction({
+      action: 'customer_create_attempt',
+      category: 'customer_management',
+      label: customerData.name,
+      metadata: {
+        customerName: customerData.name,
+        hasDocument: !!customerData.document,
+        documentLength: customerData.document.length,
+        source: 'customer_store',
+      },
+    });
+
+    try {
+      const newCustomer = await createCustomer(customerData);
+
+      // Track successful customer creation and immediate selection
+      analytics.trackUserAction({
+        action: 'customer_created_and_selected',
+        category: 'customer_management',
+        label: customerData.name,
+        metadata: {
+          customerId: newCustomer._id,
+          customerName: customerData.name,
+          hasDocument: !!customerData.document,
+          source: 'customer_store',
+        },
+      });
+
+      await setCustomer(newCustomer._id);
+
+      logger.info("Customer created and selected", {
+        customerId: newCustomer._id,
+        name: customerData.name
+      });
+    } catch (error) {
+      // Track customer creation error
+      analytics.trackError({
+        errorType: 'customer_creation_error',
+        errorMessage: error instanceof Error ? error.message : String(error),
+        context: {
+          customerName: customerData.name,
+          source: 'customer_store',
+        },
+      });
+
+      logger.error("Failed to create and select customer", error);
+      throw error;
+    }
+  };
+
+  // Business logic method: Select customer from search results
+  const selectCustomerFromSearch = async (customerId: string, searchDocument: string, foundCustomer?: Customer): Promise<void> => {
+    logger.debug("Selecting customer from search:", customerId);
+
+    // Track customer selection from search results
+    analytics.trackUserAction({
+      action: 'customer_selected_from_search',
+      category: 'customer_management',
+      label: foundCustomer?.name || 'unknown',
+      metadata: {
+        customerId,
+        customerName: foundCustomer?.name || 'unknown',
+        searchDocument,
+        source: 'customer_store',
+      },
+    });
+
+    try {
+      await setCustomer(customerId);
+      logger.info("Customer selected from search", {
+        customerId,
+        customerName: foundCustomer?.name
+      });
+    } catch (error) {
+      // Track selection error
+      analytics.trackError({
+        errorType: 'customer_selection_error',
+        errorMessage: error instanceof Error ? error.message : String(error),
+        context: {
+          customerId,
+          source: 'customer_store',
+        },
+      });
+
+      logger.error("Failed to select customer from search", error);
+      throw error;
+    }
+  };
+
   onMounted(() => {
     if (customerId.value) {
       setCustomer(customerId.value).catch((error) => {
@@ -211,5 +305,7 @@ export const useCustomerStore = defineStore("customerStore", () => {
     createCustomer,
     deleteCustomer,
     fetchAllCustomers,
+    createAndSelectCustomer,
+    selectCustomerFromSearch,
   };
 });

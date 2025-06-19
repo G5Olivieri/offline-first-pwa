@@ -6,12 +6,11 @@ defineOptions({
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import * as z from "zod";
-import { router } from "../../router";
 import { useOperatorStore } from "../../stores/operator-store";
-import { useAnalytics } from "../../composables/use-analytics";
+import { useNavigationActions } from "../../composables/use-navigation-actions";
 
 const operatorStore = useOperatorStore();
-const analytics = useAnalytics();
+const navigation = useNavigationActions();
 
 const validationSchema = toTypedSchema(
   z.object({
@@ -25,53 +24,17 @@ const { handleSubmit, errors } = useForm({
 
 const { value: name } = useField("name");
 
-const onSubmit = handleSubmit((values) => {
+const onSubmit = handleSubmit(async (values) => {
   const { name } = values;
 
-  // Track operator creation attempt
-  analytics.trackAction({
-    action: 'operator_create_attempt',
-    category: 'authentication',
-    label: name,
-    metadata: {
-      operatorName: name,
-      source: 'new_operator_page',
-    },
-  });
-
-  operatorStore
-    .createOperator({ name })
-    .then(({ _id }) => {
-      // Track successful operator creation and immediate selection
-      analytics.trackAction({
-        action: 'operator_created_and_selected',
-        category: 'authentication',
-        label: name,
-        metadata: {
-          operatorId: _id,
-          operatorName: name,
-          source: 'new_operator_page',
-        },
-      });
-
-      operatorStore.setOperator(_id).then(() => {
-        router.push("/");
-      });
-    })
-    .catch((error) => {
-      // Track operator creation error
-      analytics.trackError({
-        errorType: 'operator_creation_error',
-        errorMessage: error instanceof Error ? error.message : String(error),
-        context: {
-          operatorName: name,
-          source: 'new_operator_page',
-        },
-      });
-
-      console.error("Error creating operator:", error);
-      alert("Failed to create operator. Please try again.");
-    });
+  try {
+    await operatorStore.createAndSelectOperator({ name });
+    navigation.goToHomeAfterSuccess('operator', name, 'new_operator_page');
+  } catch (error) {
+    console.error("Error creating operator:", error);
+    alert("Failed to create operator. Please try again.");
+    // Error is already tracked in the store
+  }
 });
 </script>
 <template>

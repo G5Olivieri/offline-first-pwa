@@ -3,40 +3,98 @@ defineOptions({
   name: 'HomePage'
 });
 
-import { onMounted, ref } from "vue";
+import { computed, watch } from "vue";
 import { useOrderStore } from "../../stores/order-store";
-import { useProductStore } from "../../stores/product-store";
+import { useRecommendationStore } from "../../stores/recommendation-store";
 import { useTerminalStore } from "../../stores/terminal-store";
-import { useUpsellCrossSell } from "../../composables/use-upsell-cross-sell";
+import { RecommendationType } from "../../types/recommendation";
 import ProductSuggestions from "../../components/product-suggestions.vue";
-import type { Product } from "../../types/product";
 
 const orderStore = useOrderStore();
-const productStore = useProductStore();
+const recommendationStore = useRecommendationStore();
 const terminalStore = useTerminalStore();
-const allProducts = ref<Product[]>([]);
-const loading = ref(true);
 
-// Load all products for suggestions
-const loadProducts = async () => {
-  try {
-    loading.value = true;
-    const result = await productStore.listProducts({ limit: 200 });
-    allProducts.value = result.products;
-  } catch (error) {
-    console.error("Error loading products:", error);
-  } finally {
-    loading.value = false;
+// Load recommendations when cart changes
+const loadRecommendations = async () => {
+  if (orderStore.values.length > 0) {
+    await recommendationStore.getRecommendationsForCheckout(orderStore.values);
+  } else {
+    await recommendationStore.getRecommendationsForHomepage();
   }
 };
 
-// Get suggestions using the composable
-const { crossSellSuggestions, upsellSuggestions, popularProducts } =
-  useUpsellCrossSell(orderStore.values, allProducts);
+// Watch cart changes and reload recommendations
+watch(
+  () => orderStore.values.length,
+  () => {
+    loadRecommendations();
+  },
+  { immediate: true }
+);
 
-onMounted(() => {
-  loadProducts();
+// Get products already in cart for filtering
+const cartProductIds = computed(() =>
+  orderStore.values.map(item => item.product._id)
+);
+
+// Cross-sell suggestions from recommendation store
+const crossSellSuggestions = computed(() => {
+  const recommendations = recommendationStore.checkoutRecommendations
+    .filter(rec =>
+      rec.type === RecommendationType.CROSS_SELL ||
+      rec.type === RecommendationType.FREQUENTLY_BOUGHT_TOGETHER
+    )
+    .filter(rec => !cartProductIds.value.includes(rec.product._id))
+    .slice(0, 6);
+
+  return recommendations.map(rec => rec.product);
 });
+
+// Upsell suggestions from recommendation store
+const upsellSuggestions = computed(() => {
+  const recommendations = recommendationStore.checkoutRecommendations
+    .filter(rec =>
+      rec.type === RecommendationType.UPSELL ||
+      rec.type === RecommendationType.CATEGORY_BASED
+    )
+    .filter(rec => !cartProductIds.value.includes(rec.product._id))
+    .slice(0, 4);
+
+  return recommendations.map(rec => rec.product);
+});
+
+// Popular products from recommendation store
+const popularProducts = computed(() => {
+  if (orderStore.values.length === 0) {
+    // Use homepage recommendations when cart is empty
+    const trending = recommendationStore.homepageRecommendations
+      .filter(rec => rec.type === RecommendationType.TRENDING)
+      .slice(0, 8);
+
+    const seasonal = recommendationStore.homepageRecommendations
+      .filter(rec => rec.type === RecommendationType.SEASONAL)
+      .slice(0, 4);
+
+    // Combine trending and seasonal recommendations
+    const combined = [...trending, ...seasonal];
+    const uniqueProducts = Array.from(
+      new Map(combined.map(rec => [rec.product._id, rec.product])).values()
+    );
+
+    return uniqueProducts.slice(0, 8);
+  }
+
+  // When cart has items, show inventory-based popular products
+  const inventoryBased = recommendationStore.checkoutRecommendations
+    .filter(rec => rec.type === RecommendationType.INVENTORY_BASED)
+    .filter(rec => !cartProductIds.value.includes(rec.product._id))
+    .slice(0, 4);
+
+  return inventoryBased.map(rec => rec.product);
+});
+
+// Loading state from recommendation store
+const isLoading = computed(() => recommendationStore.isLoading);
 </script>
 
 <template>
@@ -261,7 +319,7 @@ onMounted(() => {
       </div>
 
       <!-- Loading State -->
-      <div v-if="loading" class="text-center py-16">
+      <div v-if="isLoading" class="text-center py-16">
         <div
           class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl mb-4"
         >

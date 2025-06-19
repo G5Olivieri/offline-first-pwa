@@ -12,7 +12,7 @@ export type Product = {
   isProprietary?: boolean;
   manufacturer?: string;
   nonProprietaryName?: string;
-  prescriptionStatus?: 'PrescriptionOnly';
+  prescriptionStatus?: "OTC" | "PrescriptionOnly" | "Controlled";
   contraindication?: string;
   activeIngredient?: string;
   tags?: string[];

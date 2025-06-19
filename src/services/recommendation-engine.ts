@@ -3,11 +3,13 @@ import type { Customer } from '../types/customer';
 import type { Order, Item } from '../types/order';
 import type {
   ProductRecommendation,
-  RecommendationType,
-  RecommendationContext,
   ProductAffinity,
   CustomerProductPreference,
-  RecommendationConfig
+  RecommendationConfig,
+} from '../types/recommendation';
+import {
+  RecommendationType,
+  RecommendationContext,
 } from '../types/recommendation';
 import {
   getProductAffinityDB,

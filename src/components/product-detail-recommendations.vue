@@ -3,7 +3,9 @@
     <!-- Loading State -->
     <div v-if="isLoading" class="flex items-center justify-center py-8">
       <div class="text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+        <div
+          class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"
+        ></div>
         <p class="mt-2 text-sm text-gray-600">Finding related products...</p>
       </div>
     </div>
@@ -11,8 +13,18 @@
     <!-- Error State -->
     <div v-else-if="error" class="text-center py-6">
       <div class="bg-red-50 rounded-lg p-4">
-        <svg class="w-8 h-8 text-red-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        <svg
+          class="w-8 h-8 text-red-600 mx-auto mb-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
         </svg>
         <p class="text-sm text-red-600">{{ error }}</p>
       </div>
@@ -20,8 +32,18 @@
 
     <!-- Empty State -->
     <div v-else-if="recommendations.length === 0" class="text-center py-6">
-      <svg class="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+      <svg
+        class="w-12 h-12 text-gray-300 mx-auto mb-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1"
+          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+        ></path>
       </svg>
       <p class="text-sm text-gray-500">No related products found</p>
     </div>
@@ -36,24 +58,35 @@
       >
         <div class="flex items-start justify-between">
           <div class="flex-1 min-w-0">
-            <h4 class="text-sm font-medium text-gray-900 truncate" :title="product.name">
+            <h4
+              class="text-sm font-medium text-gray-900 truncate"
+              :title="product.name"
+            >
               {{ product.name }}
             </h4>
             <p class="text-xs text-gray-500 mt-1">{{ product.barcode }}</p>
 
             <!-- Category or manufacturer if available -->
             <div class="flex items-center gap-2 mt-2">
-              <span v-if="product.category" class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+              <span
+                v-if="product.category"
+                class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full"
+              >
                 {{ product.category }}
               </span>
-              <span v-if="product.manufacturer" class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+              <span
+                v-if="product.manufacturer"
+                class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded"
+              >
                 {{ product.manufacturer }}
               </span>
             </div>
           </div>
 
           <div class="flex-shrink-0 text-right">
-            <p class="text-sm font-semibold text-green-600">${{ product.price }}</p>
+            <p class="text-sm font-semibold text-green-600">
+              ${{ product.price }}
+            </p>
             <p class="text-xs text-gray-500">{{ product.stock }} in stock</p>
           </div>
         </div>
@@ -65,7 +98,7 @@
             :disabled="product.stock === 0"
             class="flex-1 text-xs bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-3 rounded transition-colors disabled:cursor-not-allowed"
           >
-            {{ product.stock === 0 ? 'Out of Stock' : 'Add to Order' }}
+            {{ product.stock === 0 ? "Out of Stock" : "Add to Order" }}
           </button>
           <button
             @click.stop="navigateToProduct(product._id)"
@@ -83,7 +116,7 @@
           :disabled="isLoadingMore"
           class="text-sm text-purple-600 hover:text-purple-700 font-medium disabled:opacity-50"
         >
-          {{ isLoadingMore ? 'Loading...' : 'Show More' }}
+          {{ isLoadingMore ? "Loading..." : "Show More" }}
         </button>
       </div>
     </div>
@@ -95,14 +128,17 @@ defineOptions({
   name: "ProductDetailRecommendations",
 });
 
-import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import type { Product } from '../types/product';
-import { RecommendationContext, RecommendationType } from '../types/recommendation';
-import { useRecommendationStore } from '../stores/recommendation-store';
-import { useOrderStore } from '../stores/order-store';
-import { useNotificationStore } from '../stores/notification-store';
-import { createLogger } from '../services/logger-service';
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { createLogger } from "../services/logger-service";
+import { useNotificationStore } from "../stores/notification-store";
+import { useOrderStore } from "../stores/order-store";
+import { useRecommendationStore } from "../stores/recommendation-store";
+import type { Product } from "../types/product";
+import {
+  RecommendationContext,
+  RecommendationType,
+} from "../types/recommendation";
 
 interface Props {
   currentProduct: Product;
@@ -117,7 +153,7 @@ const router = useRouter();
 const recommendationStore = useRecommendationStore();
 const orderStore = useOrderStore();
 const notificationStore = useNotificationStore();
-const logger = createLogger('ProductDetailRecommendations');
+const logger = createLogger("ProductDetailRecommendations");
 
 // State
 const recommendations = ref<Product[]>([]);
@@ -138,27 +174,34 @@ async function loadRecommendations(): Promise<void> {
 
   try {
     // Get product recommendations based on the current product
-    const productRecommendations = await recommendationStore.getRecommendationsForProduct(props.currentProduct);
+    const productRecommendations =
+      await recommendationStore.getRecommendationsForProduct(
+        props.currentProduct
+      );
 
     // Extract the actual products from the recommendations
-    recommendations.value = productRecommendations.map(rec => rec.product);
+    recommendations.value = productRecommendations.map((rec) => rec.product);
   } catch (err) {
-    logger.error('Error loading recommendations:', err);
-    error.value = err instanceof Error ? err.message : 'Failed to load recommendations';
+    logger.error("Error loading recommendations:", err);
+    error.value =
+      err instanceof Error ? err.message : "Failed to load recommendations";
   } finally {
     isLoading.value = false;
   }
 }
 
 function loadMore(): void {
-  displayLimit.value = Math.min(displayLimit.value + props.maxRecommendations, recommendations.value.length);
+  displayLimit.value = Math.min(
+    displayLimit.value + props.maxRecommendations,
+    recommendations.value.length
+  );
 }
 
 async function addToOrder(product: Product): Promise<void> {
   try {
     await orderStore.addProduct(product);
     notificationStore.showSuccess(
-      'Product Added',
+      "Product Added",
       `${product.name} has been added to the order.`
     );
 
@@ -170,23 +213,26 @@ async function addToOrder(product: Product): Promise<void> {
       context: RecommendationContext.PRODUCT_DETAIL,
       score: 1.0,
       confidence: 0.8,
-      reason: 'Product detail page recommendation',
-      created_at: new Date().toISOString()
+      reason: "Product detail page recommendation",
+      created_at: new Date().toISOString(),
     };
 
-    await recommendationStore.trackRecommendationAddedToCart(recommendation, RecommendationContext.PRODUCT_DETAIL);
+    await recommendationStore.trackRecommendationAddedToCart(
+      recommendation,
+      RecommendationContext.PRODUCT_DETAIL
+    );
   } catch (err) {
-    logger.error('Error adding product to order:', err);
+    logger.error("Error adding product to order:", err);
     notificationStore.showError(
-      'Add to Order Error',
-      'Failed to add product to order. Please try again.'
+      "Add to Order Error",
+      "Failed to add product to order. Please try again."
     );
   }
 }
 
 function navigateToProduct(productId: string): void {
   // Track the recommendation click
-  const clickedProduct = recommendations.value.find(p => p._id === productId);
+  const clickedProduct = recommendations.value.find((p) => p._id === productId);
   if (clickedProduct) {
     const recommendation = {
       id: `${props.currentProduct._id}-${productId}`,
@@ -195,13 +241,18 @@ function navigateToProduct(productId: string): void {
       context: RecommendationContext.PRODUCT_DETAIL,
       score: 1.0,
       confidence: 0.8,
-      reason: 'Product detail page recommendation',
-      created_at: new Date().toISOString()
+      reason: "Product detail page recommendation",
+      created_at: new Date().toISOString(),
     };
 
-    recommendationStore.trackRecommendationClicked(recommendation, RecommendationContext.PRODUCT_DETAIL).catch((err: unknown) => {
-      logger.warn('Failed to track recommendation click:', err);
-    });
+    recommendationStore
+      .trackRecommendationClicked(
+        recommendation,
+        RecommendationContext.PRODUCT_DETAIL
+      )
+      .catch((err: unknown) => {
+        logger.warn("Failed to track recommendation click:", err);
+      });
   }
 
   router.push(`/products/${productId}`);

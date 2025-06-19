@@ -9,8 +9,10 @@ import { ref } from "vue";
 import * as z from "zod";
 import { router } from "../../router";
 import { useCustomerStore } from "../../stores/customer-store";
+import { useAnalytics } from "../../composables/use-analytics";
 
 const customerStore = useCustomerStore();
+const analytics = useAnalytics();
 const isSubmitting = ref(false);
 const submitError = ref<string>("");
 
@@ -36,10 +38,48 @@ const onSubmit = handleSubmit(async (values) => {
 
   try {
     const { name, document } = values;
+
+    // Track customer creation attempt from form
+    analytics.trackAction({
+      action: 'customer_create_attempt',
+      category: 'customer_management',
+      label: name,
+      metadata: {
+        customerName: name,
+        hasDocument: !!document,
+        documentLength: document.length,
+        source: 'new_customer_page',
+      },
+    });
+
     const newCustomer = await customerStore.createCustomer({ name, document });
+
+    // Track successful customer creation and immediate selection
+    analytics.trackAction({
+      action: 'customer_created_and_selected',
+      category: 'customer_management',
+      label: name,
+      metadata: {
+        customerId: newCustomer._id,
+        customerName: name,
+        hasDocument: !!document,
+        source: 'new_customer_page',
+      },
+    });
+
     await customerStore.setCustomer(newCustomer._id);
     router.push("/");
   } catch (error) {
+    // Track customer creation error
+    analytics.trackError({
+      errorType: 'customer_creation_error',
+      errorMessage: error instanceof Error ? error.message : String(error),
+      context: {
+        customerName: values.name,
+        source: 'new_customer_page',
+      },
+    });
+
     console.error("Error creating customer:", error);
     submitError.value = "Failed to create customer. Please try again.";
   } finally {

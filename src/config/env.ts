@@ -10,7 +10,7 @@ interface SearchConfig {
 }
 
 interface AnalyticsConfig {
-  provider: string;
+  providers: string[];
   enabled: boolean;
   debug: boolean;
   batchSize: number;
@@ -102,6 +102,13 @@ function toBool(value: string): boolean {
   return value.toLowerCase() === "true" || value === "1";
 }
 
+function toStringArray(value: string): string[] {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 /**
  * Convert string to number
  */
@@ -184,7 +191,7 @@ export const config: AppConfig = {
   },
 
   analytics: {
-    provider: getEnvVar("VITE_ANALYTICS_PROVIDER", "console"),
+    providers: getEnvVar("VITE_ANALYTICS_PROVIDERS", [], toStringArray),
     enabled: getEnvVar("VITE_ENABLE_ANALYTICS", false, toBool),
     debug: getEnvVar("VITE_ANALYTICS_DEBUG", false, toBool),
     batchSize: getEnvVar("VITE_ANALYTICS_BATCH_SIZE", 20, toNumber),

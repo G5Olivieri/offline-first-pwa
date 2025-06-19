@@ -6,6 +6,7 @@ defineOptions({
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useCustomerStore, type Customer } from "../../stores/customer-store";
+import { useAnalytics } from "../../composables/use-analytics";
 
 const searchDocument = ref("");
 const customerStore = useCustomerStore();
@@ -13,6 +14,7 @@ const customerFound = ref<Customer | null>(null);
 const error = ref<string>("");
 const router = useRouter();
 const isLoading = ref(false);
+const analytics = useAnalytics();
 
 const onSubmit = async () => {
   if (searchDocument.value.trim() === "") {
@@ -43,9 +45,31 @@ const onSubmit = async () => {
 const selectCustomer = async (customerId: string) => {
   isLoading.value = true;
   try {
+    // Track customer selection from search results
+    analytics.trackAction({
+      action: 'customer_selected_from_search',
+      category: 'customer_management',
+      label: customerFound.value?.name || 'unknown',
+      metadata: {
+        customerId,
+        customerName: customerFound.value?.name || 'unknown',
+        searchDocument: searchDocument.value,
+        source: 'customer_search_page',
+      },
+    });
+
     await customerStore.setCustomer(customerId);
     router.push("/");
   } catch (err) {
+    analytics.trackError({
+      errorType: 'customer_selection_error',
+      errorMessage: err instanceof Error ? err.message : String(err),
+      context: {
+        customerId,
+        source: 'customer_search_page',
+      },
+    });
+
     console.error("Error selecting customer:", err);
     error.value = "Failed to select customer. Please try again.";
   } finally {

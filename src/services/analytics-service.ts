@@ -12,6 +12,7 @@ import type {
   UserAction,
 } from "../types/analytics";
 import { AnalyticsCategory } from "../types/analytics";
+import { ConsoleAnalyticsProvider } from "./console-analytics-provider";
 import { createLogger } from "./logger-service";
 
 const logger = createLogger("AnalyticsService");
@@ -365,12 +366,39 @@ class AnalyticsService {
   }
 }
 
+function getProvider(providerName: string): AnalyticsProvider {
+  switch (providerName) {
+    case "console":
+      return new ConsoleAnalyticsProvider();
+    // Add other providers here as needed
+    default:
+      throw new Error(`Unknown analytics provider: ${providerName}`);
+  }
+}
+
+function getProviders(providers: string[]): AnalyticsProvider[] {
+  return providers
+    .map((providerName) => {
+      try {
+        return getProvider(providerName);
+      } catch (error) {
+        logger.error("Failed to initialize analytics provider", {
+          providerName,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return null; // Skip this provider if it fails
+      }
+    })
+    .filter((provider): provider is AnalyticsProvider => provider !== null);
+}
+
 // Create singleton instance
 export const analytics = new AnalyticsService({
   enabled: config.analytics.enabled,
   debug: config.analytics.debug,
   batchSize: config.analytics.batchSize,
   flushInterval: config.analytics.flushInterval,
+  providers: getProviders(config.analytics.providers),
 });
 
 // Export the class for custom instances

@@ -1,3 +1,4 @@
+import { useLocalStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { getOrderDB } from "../db";
@@ -13,10 +14,8 @@ import { useTerminalStore } from "./terminal-store";
 export const useOrderStore = defineStore("orderStore", () => {
   const orderDB = getOrderDB();
   const productStore = useProductStore();
-  const currentOrderId = ref(localStorage.getItem("currentOrderId") || "");
-  const currentOrderRev = ref<string | undefined>(
-    localStorage.getItem("currentOrderRev") || undefined
-  );
+  const currentOrderId = useLocalStorage("currentOrderId", "");
+  const currentOrderRev = useLocalStorage("currentOrderRev", "");
   const order = reactive<Map<string, Item>>(new Map());
   const operatorStore = useOperatorStore();
   const customerStore = useCustomerStore();
@@ -33,7 +32,7 @@ export const useOrderStore = defineStore("orderStore", () => {
   ): Order => {
     return {
       _id: currentOrderId.value,
-      _rev: currentOrderRev.value,
+      _rev: currentOrderRev.value || undefined,
       items: Array.from(order.values()),
       total: total.value,
       status,
@@ -107,13 +106,11 @@ export const useOrderStore = defineStore("orderStore", () => {
 
     if (currentOrderId.value === "") {
       currentOrderId.value = crypto.randomUUID();
-      localStorage.setItem("currentOrderId", currentOrderId.value);
     }
 
     try {
       const result = await orderDB.put(mapOrderToDocument(OrderStatus.PENDING));
       currentOrderRev.value = result.rev;
-      localStorage.setItem("currentOrderRev", result.rev);
     } finally {
       syncing.value = false;
     }
@@ -159,9 +156,7 @@ export const useOrderStore = defineStore("orderStore", () => {
 
     order.clear();
     currentOrderId.value = "";
-    currentOrderRev.value = undefined;
-    localStorage.removeItem("currentOrderId");
-    localStorage.removeItem("currentOrderRev");
+    currentOrderRev.value = "";
     await productStore.changeStock(new Map(productsToUpdate));
     await customerStore.clearCustomer();
   };
@@ -186,14 +181,11 @@ export const useOrderStore = defineStore("orderStore", () => {
       doc.status === OrderStatus.CANCELLED
     ) {
       currentOrderId.value = "";
-      currentOrderRev.value = undefined;
-      localStorage.removeItem("currentOrderId");
-      localStorage.removeItem("currentOrderRev");
+      currentOrderRev.value = "";
       customerStore.clearCustomer();
       return;
     }
     currentOrderRev.value = doc._rev;
-    localStorage.setItem("currentOrderRev", doc._rev || "");
     order.clear();
     doc.items.forEach((item: Item) => {
       order.set(item.product._id, item);

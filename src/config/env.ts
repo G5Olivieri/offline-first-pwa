@@ -9,6 +9,15 @@ interface SearchConfig {
   indexKey: string;
 }
 
+interface AnalyticsConfig {
+  provider: string;
+  enabled: boolean;
+  debug: boolean;
+  batchSize: number;
+  flushInterval: number;
+  sessionTimeout: number;
+}
+
 interface AppConfig {
   // Application Settings
   appTitle: string;
@@ -57,6 +66,7 @@ interface AppConfig {
   logLevel: string;
 
   search: SearchConfig;
+  analytics: AnalyticsConfig;
 }
 
 /**
@@ -171,6 +181,19 @@ export const config: AppConfig = {
     dbVersion: getEnvVar("VITE_SEARCH_DB_VERSION", 1, toNumber),
     storeName: getEnvVar("VITE_SEARCH_STORE_NAME", "products"),
     indexKey: getEnvVar("VITE_SEARCH_INDEX_KEY", "id"),
+  },
+
+  analytics: {
+    provider: getEnvVar("VITE_ANALYTICS_PROVIDER", "console"),
+    enabled: getEnvVar("VITE_ENABLE_ANALYTICS", false, toBool),
+    debug: getEnvVar("VITE_ANALYTICS_DEBUG", false, toBool),
+    batchSize: getEnvVar("VITE_ANALYTICS_BATCH_SIZE", 20, toNumber),
+    flushInterval: getEnvVar("VITE_ANALYTICS_FLUSH_INTERVAL", 5000, toNumber), // 5 seconds
+    sessionTimeout: getEnvVar(
+      "VITE_ANALYTICS_SESSION_TIMEOUT",
+      3600000,
+      toNumber
+    ), // 1 hour
   },
 };
 

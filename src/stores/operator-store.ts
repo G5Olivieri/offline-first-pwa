@@ -2,8 +2,10 @@ import { defineStore } from "pinia";
 import { onMounted, ref } from "vue";
 import { getOperatorDB } from "../db";
 import type { Operator } from "../types/operator";
+import { createLogger } from "../services/logger-service";
 
 export const useOperatorStore = defineStore("operatorStore", () => {
+  const logger = createLogger("OperatorStore");
   const operatorId = ref<string | null>(
     localStorage.getItem("operator") || null
   );
@@ -11,7 +13,7 @@ export const useOperatorStore = defineStore("operatorStore", () => {
   const operatorDB = getOperatorDB();
 
   const setOperator = (newOperator: string): Promise<void> => {
-    console.log("Setting operator:", newOperator);
+    logger.debug("Setting operator:", newOperator);
     operatorId.value = newOperator;
     return fetchOperator(newOperator).then(() => {
       localStorage.setItem("operator", newOperator);
@@ -19,14 +21,14 @@ export const useOperatorStore = defineStore("operatorStore", () => {
   };
 
   const clearOperator = () => {
-    console.log("Clearing operator");
+    logger.debug("Clearing operator");
     operatorId.value = null;
     operator.value = null;
     localStorage.removeItem("operator");
   };
 
   const listOperators = async (): Promise<Operator[]> => {
-    console.log("Listing all operators");
+    logger.debug("Listing all operators");
     return operatorDB
       .allDocs({ include_docs: true })
       .then((result) => {
@@ -39,7 +41,7 @@ export const useOperatorStore = defineStore("operatorStore", () => {
   };
 
   const fetchOperator = async (id: string) => {
-    console.log("Fetching operator:", id);
+    logger.debug("Fetching operator:", id);
     return operatorDB
       .get(id)
       .then((doc) => {

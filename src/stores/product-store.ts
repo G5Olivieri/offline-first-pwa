@@ -1,9 +1,11 @@
 import { defineStore } from "pinia";
 import { getProductDB } from "../db";
+import { createLogger } from "../services/logger-service";
 import { searchService } from "../services/search-service";
 import type { Product } from "../types/product";
 
 export const useProductStore = defineStore("productStore", () => {
+  const logger = createLogger("ProductStore");
   const productDB = getProductDB();
 
   // Main search method - uses search service if available, fallback to database
@@ -11,7 +13,7 @@ export const useProductStore = defineStore("productStore", () => {
     query: string,
     { limit = 100, skip = 0 } = {}
   ) => {
-    console.log("Searching products with query:", query);
+    logger.debug("Searching products with query:", query);
 
     const searchResult = searchService.search(query, { limit, skip });
 
@@ -22,12 +24,12 @@ export const useProductStore = defineStore("productStore", () => {
       .then((result) => {
         return result.results.map(
           (r) =>
-            ((r.docs && r.docs[0] && 'ok' in r.docs[0] && r.docs[0].ok) ||
+            ((r.docs && r.docs[0] && "ok" in r.docs[0] && r.docs[0].ok) ||
               null) as Product | null
         );
       })
       .catch((error) => {
-        console.error("Error fetching products:", error);
+        logger.error("Error fetching products:", error);
         return [];
       });
 
@@ -53,7 +55,7 @@ export const useProductStore = defineStore("productStore", () => {
     const products = await productDB.bulkGet({
       docs: Array.from(input.keys()).map((id) => ({ id })),
     });
-    console.log("Bulk get products response:", products);
+    logger.debug("Bulk get products response:", products);
     if (products.results.length === 0) {
       throw new Error("No products found");
     }
@@ -69,7 +71,10 @@ export const useProductStore = defineStore("productStore", () => {
         if (Object.getOwnPropertyDescriptor(result.docs[0], "error")) {
           return [
             success,
-            [...errors, new Error(String((result.docs[0] as { error: unknown }).error))],
+            [
+              ...errors,
+              new Error(String((result.docs[0] as { error: unknown }).error)),
+            ],
           ];
         }
         success.push((result.docs[0] as { ok: Product }).ok);
@@ -77,8 +82,8 @@ export const useProductStore = defineStore("productStore", () => {
       },
       [[], []] as [Product[], Error[]]
     );
-    console.log("Bulk get products success:", success);
-    console.log("Bulk get products errors:", errors);
+    logger.debug("Bulk get products success:", success);
+    logger.debug("Bulk get products errors:", errors);
     if (errors.length > 0) {
       throw new Error(`Errors occurred while fetching products: ${errors}`);
     }
@@ -86,22 +91,22 @@ export const useProductStore = defineStore("productStore", () => {
       ...result,
       stock: input.get(result._id) ?? result.stock, // Update stock if input has a value for this product
     }));
-    console.log("Products to update:", productsToUpdate);
+    logger.debug("Products to update:", productsToUpdate);
     productDB
       .bulkDocs(productsToUpdate)
       .then((response) => {
-        console.log("Bulk update response:", response);
+        logger.debug("Bulk update response:", response);
         return response;
       })
       .catch((error) => {
-        console.error("Error updating products:", error);
+        logger.error("Error updating products:", error);
       });
   };
 
   const listProducts = async ({ limit = 100, skip = 0 } = {}) => {
-    console.log("Listing all products");
+    logger.debug("Listing all products");
     const count = await productDB.info().then((info) => info.doc_count);
-    console.log(`Total products count: ${count}`);
+    logger.debug(`Total products count: ${count}`);
 
     const result = {
       count,
@@ -111,7 +116,7 @@ export const useProductStore = defineStore("productStore", () => {
           return result.rows.map((row) => row.doc as Product);
         })
         .catch((error) => {
-          console.error("Error fetching products:", error);
+          logger.error("Error fetching products:", error);
           return [];
         }),
     };
@@ -120,7 +125,7 @@ export const useProductStore = defineStore("productStore", () => {
   };
 
   const createProduct = async (product: Omit<Product, "_id" | "rev">) => {
-    console.log("Creating product:", product);
+    logger.debug("Creating product:", product);
     const newProduct = {
       _id: crypto.randomUUID(),
       ...product,
@@ -133,13 +138,13 @@ export const useProductStore = defineStore("productStore", () => {
       barcode: newProduct.barcode,
     });
 
-    console.log("Product created:", newProduct);
+    logger.debug("Product created:", newProduct);
 
     return newProduct;
   };
 
   const updateProduct = async (product: Product) => {
-    console.log("Updating product:", product);
+    logger.debug("Updating product:", product);
     await productDB.put(product);
     await searchService.add({
       id: product._id,
@@ -147,23 +152,23 @@ export const useProductStore = defineStore("productStore", () => {
       barcode: product.barcode,
     });
 
-    console.log("Product updated:", product);
+    logger.debug("Product updated:", product);
     return product;
   };
 
   const deleteProduct = async (id: string) => {
-    console.log("Deleting product with ID:", id);
+    logger.debug("Deleting product with ID:", id);
     const productToDelete = await productDB.get(id);
 
     await productDB.remove(productToDelete);
     await searchService.remove(id);
 
-    console.log("Product deleted:", id);
+    logger.debug("Product deleted:", id);
     return id;
   };
 
   const bulkInsertProducts = async (products: Product[]) => {
-    console.log("Bulk inserting products:", products.length);
+    logger.debug("Bulk inserting products:", products.length);
     const docs = products.map((product) => ({
       ...product,
       _id: product._id || crypto.randomUUID(),
@@ -181,7 +186,7 @@ export const useProductStore = defineStore("productStore", () => {
 
       return response;
     } catch (error) {
-      console.error("Error during bulk insert:", error);
+      logger.error("Error during bulk insert:", error);
       throw error;
     }
   };

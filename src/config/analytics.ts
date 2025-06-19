@@ -1,19 +1,30 @@
-import { analytics } from '../services/analytics-service';
-import { ConsoleAnalyticsProvider } from '../services/console-analytics-provider';
-import { AnalyticsCategory } from '../types/analytics';
-import { config, isDevelopment } from './env';
+import { analytics } from "../services/analytics-service";
+import { ConsoleAnalyticsProvider } from "../services/console-analytics-provider";
+import { AnalyticsCategory } from "../types/analytics";
+import { config } from "./env";
 
+const getProvider = () => {
+  switch (config.analytics.provider) {
+    case "console":
+      return new ConsoleAnalyticsProvider(config.analytics.debug);
+    default:
+      throw new Error(
+        `Unsupported analytics provider: ${config.analytics.provider}`
+      );
+  }
+};
 export function initializeAnalytics() {
   // Add console provider for development/debugging
-  const consoleProvider = new ConsoleAnalyticsProvider(isDevelopment);
-  analytics.addProvider(consoleProvider);
+  const provider = getProvider();
+  analytics.addProvider(provider);
 
   // Configure analytics service
   analytics.configure({
-    enabled: true,
-    debug: isDevelopment,
-    batchSize: 20,
-    flushInterval: 5000, // 5 seconds in development for faster feedback
+    enabled: config.analytics.enabled,
+    debug: config.analytics.debug,
+    batchSize: config.analytics.batchSize,
+    flushInterval: config.analytics.flushInterval,
+    sessionTimeout: config.analytics.sessionTimeout,
   });
 
   // Start initial session
@@ -21,10 +32,10 @@ export function initializeAnalytics() {
 
   // Track app initialization
   analytics.track({
-    name: 'app_initialized',
+    name: "app_initialized",
     category: AnalyticsCategory.SYSTEM,
     properties: {
-      version: config.appVersion || 'unknown',
+      version: config.appVersion || "unknown",
       environment: config.environment,
       timestamp: Date.now(),
     },

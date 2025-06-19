@@ -566,7 +566,7 @@ onUnmounted(() => {
       <!-- Products Grid -->
       <div
         v-else
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8"
       >
         <div
           v-for="product in products.products"
@@ -583,6 +583,17 @@ onUnmounted(() => {
                 >
                   {{ product.name }}
                 </h3>
+                <!-- Non-proprietary name if available -->
+                <p
+                  v-if="
+                    product.nonProprietaryName &&
+                    product.nonProprietaryName !== product.name
+                  "
+                  class="text-sm text-gray-600 italic mb-2"
+                  :title="product.nonProprietaryName"
+                >
+                  {{ product.nonProprietaryName }}
+                </p>
                 <div class="flex items-center gap-2 text-sm text-gray-500">
                   <svg
                     class="w-4 h-4"
@@ -620,19 +631,134 @@ onUnmounted(() => {
 
             <!-- Product Details -->
             <div class="space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Price:</span>
+              <!-- Price -->
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-sm text-gray-600">Price</span>
                 <span class="text-xl font-bold text-green-600">
                   ${{ product.price }}
                 </span>
               </div>
 
+              <!-- Manufacturer -->
+              <div
+                v-if="product.manufacturer"
+                class="flex items-center justify-between text-sm"
+              >
+                <span class="text-gray-600">Manufacturer:</span>
+                <span
+                  class="text-gray-800 font-medium text-xs bg-gray-100 px-2 py-1 rounded"
+                >
+                  {{ product.manufacturer }}
+                </span>
+              </div>
+
+              <!-- Prescription Status -->
+              <div
+                v-if="product.prescriptionStatus"
+                class="flex items-center justify-between text-sm"
+              >
+                <span class="text-gray-600">Type:</span>
+                <span
+                  class="px-2 py-1 rounded-full text-xs font-medium"
+                  :class="{
+                    'bg-yellow-100 text-yellow-700':
+                      product.prescriptionStatus === 'PrescriptionOnly',
+                  }"
+                >
+                  {{ product.prescriptionStatus }}
+                </span>
+              </div>
+
+              <!-- Dosage Form -->
+              <div
+                v-if="product.dosageForm"
+                class="flex items-center justify-between text-sm"
+              >
+                <span class="text-gray-600">Form:</span>
+                <span
+                  class="text-gray-800 text-xs bg-gray-100 px-2 py-1 rounded"
+                >
+                  {{ product.dosageForm }}
+                </span>
+              </div>
+
+              <!-- Drug Class -->
+              <div
+                v-if="product.drugClass"
+                class="flex items-center justify-between text-sm"
+              >
+                <span class="text-gray-600">Drug Class:</span>
+                <span
+                  class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded"
+                >
+                  {{ product.drugClass }}
+                </span>
+              </div>
+
+              <!-- Active Ingredient -->
+              <div
+                v-if="product.activeIngredient"
+                class="text-sm flex justify-between"
+              >
+                <span class="text-gray-600 block mb-1">Active Ingredient:</span>
+                <span
+                  class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded inline-block"
+                >
+                  {{ product.activeIngredient }}
+                </span>
+              </div>
+
+              <!-- Tags -->
+              <div
+                v-if="product.tags && product.tags.length > 0"
+                class="text-sm"
+              >
+                <span class="text-gray-600 block mb-2">Tags:</span>
+                <div class="flex flex-wrap gap-1">
+                  <span
+                    v-for="tag in product.tags"
+                    :key="tag"
+                    class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs font-medium"
+                  >
+                    {{ tag }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Proprietary Status -->
+              <div
+                v-if="product.isProprietary !== undefined"
+                class="flex items-center justify-between text-sm"
+              >
+                <span class="text-gray-600">Status:</span>
+                <span
+                  class="px-2 py-1 rounded-full text-xs font-medium"
+                  :class="{
+                    'bg-blue-100 text-blue-700': product.isProprietary,
+                    'bg-gray-100 text-gray-700': !product.isProprietary,
+                  }"
+                >
+                  {{ product.isProprietary ? "Brand Name" : "Generic" }}
+                </span>
+              </div>
+
+              <!-- Product ID -->
               <div class="flex items-center justify-between text-sm">
                 <span class="text-gray-600">Product ID:</span>
                 <span
                   class="font-mono text-gray-800 text-xs bg-gray-100 px-2 py-1 rounded"
                 >
-                  {{ product._id.slice(-8) }}
+                  {{ product._id }}
+                </span>
+              </div>
+
+              <!-- Category -->
+              <div v-if="product.category" class="flex flex-col text-sm gap-2">
+                <span class="text-gray-600">Category</span>
+                <span
+                  class="flex items-center justify-center bg-blue-100 text-blue-800 px-2 py-1 rounded-xl text-xs font-medium text-center"
+                >
+                  {{ product.category }}
                 </span>
               </div>
             </div>
@@ -641,6 +767,32 @@ onUnmounted(() => {
           <!-- Product Actions -->
           <div class="px-6 pb-6">
             <div class="flex flex-col gap-2">
+              <RouterLink
+                :to="`/products/${product._id}`"
+                class="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                :title="`View details for ${product.name}`"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
+                </svg>
+                View Details
+              </RouterLink>
               <button
                 @click="copyEAN(product.barcode)"
                 class="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5"

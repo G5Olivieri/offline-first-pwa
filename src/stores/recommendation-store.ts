@@ -3,7 +3,6 @@ import { ref, computed, readonly } from 'vue';
 import type {
   ProductRecommendation,
   RecommendationSet,
-  RecommendationAnalytics,
   RecommendationMetrics
 } from '../types/recommendation';
 import { RecommendationContext } from '../types/recommendation';
@@ -11,15 +10,15 @@ import type { Product } from '../types/product';
 import type { Customer } from '../types/customer';
 import type { Item } from '../types/order';
 import { recommendationEngine } from '../services/recommendation-engine';
-import { getRecommendationAnalyticsDB } from '../db';
+import { useAnalyticsStore } from './analytics-store';
 import { createLogger } from '../services/logger-service';
 import { useProductStore } from './product-store';
 
 const logger = createLogger('RecommendationStore');
 
 export const useRecommendationStore = defineStore('recommendationStore', () => {
-  const analyticsDB = getRecommendationAnalyticsDB();
   const productStore = useProductStore();
+  const analyticsStore = useAnalyticsStore();
 
   // State
   const currentRecommendations = ref<Record<RecommendationContext, ProductRecommendation[]>>({
@@ -178,42 +177,103 @@ export const useRecommendationStore = defineStore('recommendationStore', () => {
     metadata: Record<string, string | number | boolean> = {}
   ): Promise<void> {
     try {
-      const analyticsEvent: RecommendationAnalytics = {
-        _id: `analytics-${recommendation.id}-${action}-${Date.now()}`,
-        recommendation_id: recommendation.id,
-        product_id: recommendation.product._id,
-        customer_id: recommendation.source_customer?._id,
-        context,
-        type: recommendation.type,
-        action,
-        timestamp: new Date().toISOString(),
+      const baseMetadata: Record<string, string | number | boolean> = {
         session_id: sessionId.value,
-        order_id: metadata.order_id as string,
-        metadata
+        ...metadata
       };
 
-      await analyticsDB.put(analyticsEvent);
-      logger.debug(`Tracked recommendation ${action}:`, analyticsEvent);
+      if (recommendation.source_customer?._id) {
+        baseMetadata.customer_id = recommendation.source_customer._id;
+      }
+
+      switch (action) {
+        case 'viewed':
+          analyticsStore.trackRecommendationViewed(
+            recommendation.id,
+            recommendation.product._id,
+            context,
+            recommendation.type,
+            baseMetadata
+          );
+          break;
+        case 'clicked':
+          analyticsStore.trackRecommendationClicked(
+            recommendation.id,
+            recommendation.product._id,
+            context,
+            recommendation.type,
+            baseMetadata
+          );
+          break;
+        case 'added_to_cart':
+          analyticsStore.trackRecommendationAddedToCart(
+            recommendation.id,
+            recommendation.product._id,
+            context,
+            recommendation.type,
+            baseMetadata
+          );
+          break;
+        case 'purchased':
+          analyticsStore.trackRecommendationPurchased(
+            recommendation.id,
+            recommendation.product._id,
+            context,
+            recommendation.type,
+            metadata.order_id as string || 'unknown',
+            baseMetadata
+          );
+          break;
+        case 'dismissed':
+          analyticsStore.trackRecommendationDismissed(
+            recommendation.id,
+            recommendation.product._id,
+            context,
+            recommendation.type,
+            baseMetadata
+          );
+          break;
+      }
+
+      logger.debug(`Tracked recommendation ${action}:`, {
+        recommendation_id: recommendation.id,
+        product_id: recommendation.product._id,
+        context,
+        action
+      });
     } catch (err) {
       logger.error('Error tracking recommendation event:', err);
     }
   }
 
   async function trackRecommendationsGenerated(recommendations: ProductRecommendation[], context: RecommendationContext): Promise<void> {
-    for (const recommendation of recommendations) {
-      await trackRecommendationViewed(recommendation, context);
-    }
+    // Track the batch generation event
+    analyticsStore.trackRecommendationsGenerated(
+      recommendations.map(rec => ({
+        id: rec.id,
+        productId: rec.product._id,
+        type: rec.type
+      })),
+      context,
+      {
+        session_id: sessionId.value
+      }
+    );
   }
 
   async function getRecommendationAnalytics(): Promise<RecommendationMetrics | null> {
     try {
-      const analyticsResult = await analyticsDB.allDocs({ include_docs: true });
-      const events = analyticsResult.rows.map(row => row.doc!);
+      // Note: With the analytics service abstraction, we don't have direct access to stored events
+      // This would need to be implemented by querying the analytics providers or maintaining
+      // a separate metrics aggregation system
 
+      logger.warn('getRecommendationAnalytics: Analytics data not available with current abstraction');
+
+      // Return basic metrics structure with zeros for now
       const metrics: RecommendationMetrics = {
-        total_recommendations_generated: events.filter(e => e.action === 'viewed').length,
-        total_recommendations_clicked: events.filter(e => e.action === 'clicked').length,
-        total_recommendations_purchased: events.filter(e => e.action === 'purchased').length,
+        total_recommendations_generated: 0,
+        total_recommendations_clicked: 0,
+        total_recommendations_purchased: 0,
         click_through_rate: 0,
         conversion_rate: 0,
         revenue_attributed: 0,
@@ -227,20 +287,13 @@ export const useRecommendationStore = defineStore('recommendationStore', () => {
         last_updated: new Date().toISOString()
       };
 
-      // Calculate rates
-      if (metrics.total_recommendations_generated > 0) {
-        metrics.click_through_rate = metrics.total_recommendations_clicked / metrics.total_recommendations_generated;
-        metrics.conversion_rate = metrics.total_recommendations_purchased / metrics.total_recommendations_generated;
-      }
-
-      // Calculate performance by context
+      // Initialize context performance with zeros
       for (const context of Object.values(RecommendationContext)) {
-        const contextEvents = events.filter(e => e.context === context);
         metrics.context_performance[context] = {
-          impressions: contextEvents.filter(e => e.action === 'viewed').length,
-          clicks: contextEvents.filter(e => e.action === 'clicked').length,
-          conversions: contextEvents.filter(e => e.action === 'purchased').length,
-          revenue: 0 // Would need order data to calculate actual revenue
+          impressions: 0,
+          clicks: 0,
+          conversions: 0,
+          revenue: 0
         };
       }
 

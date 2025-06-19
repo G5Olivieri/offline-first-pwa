@@ -10,6 +10,7 @@ import { useCustomerStore } from "./customer-store";
 import { useOperatorStore } from "./operator-store";
 import { useProductStore } from "./product-store";
 import { useTerminalStore } from "./terminal-store";
+import { useAnalytics } from "../composables/use-analytics";
 
 const logger = createLogger("OrderStore");
 
@@ -30,6 +31,7 @@ export const useOrderStore = defineStore("orderStore", () => {
   const paymentMethod = ref<PaymentMethod>("card");
   const change = ref<number | null>(null);
   const createdAt = ref<string>(new Date().toISOString());
+  const analytics = useAnalytics();
 
   const mapOrderToDocument = (
     status: OrderStatus = OrderStatus.PENDING
@@ -183,6 +185,8 @@ export const useOrderStore = defineStore("orderStore", () => {
     localStorage.removeItem("currentOrderRev");
     await productStore.changeStock(new Map(productsToUpdate));
     await customerStore.clearCustomer();
+
+    analyticsStore.trackOrderComplete(orderData);
   };
 
   const values = computed(() => Array.from(order.values()));

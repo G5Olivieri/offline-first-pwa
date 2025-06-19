@@ -42,7 +42,9 @@ const customerStore = useCustomerStore();
 const notificationStore = useNotificationStore();
 const setupStore = useSetupStore();
 const isHome = computed(() => router.currentRoute.value.path === "/");
-const isCheckout = computed(() => router.currentRoute.value.path === "/checkout");
+const isCheckout = computed(
+  () => router.currentRoute.value.path === "/checkout"
+);
 
 // Database status helper
 const getSyncStatus = (dbName: string) => {
@@ -185,12 +187,15 @@ const selectCustomer = () => {
 
 const showOrderInfo = () => {
   analytics.trackAction({
-    action: 'show_order_dialog',
-    category: 'order_management',
-    label: 'user_initiated',
+    action: "show_order_dialog",
+    category: "order_management",
+    label: "user_initiated",
     metadata: {
-      orderId: orderStore.id || 'none',
-      itemCount: orderStore.values.reduce((sum, item) => sum + item.quantity, 0),
+      orderId: orderStore.id || "none",
+      itemCount: orderStore.values.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+      ),
       total: orderStore.total,
     },
   });
@@ -202,13 +207,26 @@ const closeOrderDialog = () => {
   showOrderDialog.value = false;
 };
 
+const gotoCheckout = () => {
+  analytics.trackAction({
+    action: "navigate_to_checkout",
+    category: "order_management",
+    label: "complete_order_redirect",
+  });
+  notificationStore.showInfo(
+    "Proceeding to Checkout",
+    "Taking you to checkout to complete your order"
+  );
+  router.push("/checkout");
+};
+
 const completeOrder = async () => {
   // If no active order, show warning regardless of current page
   if (!orderStore.id) {
     analytics.trackAction({
-      action: 'complete_order_failed',
-      category: 'order_management',
-      label: 'no_active_order',
+      action: "complete_order_failed",
+      category: "order_management",
+      label: "no_active_order",
     });
 
     notificationStore.showWarning("No Order", "No active order to complete");
@@ -217,18 +235,7 @@ const completeOrder = async () => {
 
   // If not on checkout page, navigate to checkout first
   if (!isCheckout.value) {
-    analytics.trackAction({
-      action: 'navigate_to_checkout',
-      category: 'order_management',
-      label: 'complete_order_redirect',
-    });
-
-    notificationStore.showInfo(
-      "Proceeding to Checkout",
-      "Taking you to checkout to complete your order"
-    );
-
-    router.push("/checkout");
+    gotoCheckout();
     return;
   }
 
@@ -245,7 +252,6 @@ const completeOrder = async () => {
 
     await orderStore.complete();
 
-    analytics.trackOrderComplete(orderData);
 
     notificationStore.showSuccess(
       "Order Completed",
@@ -253,7 +259,7 @@ const completeOrder = async () => {
     );
   } catch (error) {
     analytics.trackError({
-      errorType: 'order_completion_error',
+      errorType: "order_completion_error",
       errorMessage: error instanceof Error ? error.message : String(error),
       context: {
         orderId: orderStore.id,
@@ -267,7 +273,7 @@ const completeOrder = async () => {
 
 const abandonOrder = async () => {
   if (orderStore.id) {
-    analytics.trackDialogOpen('abandon_order_confirm');
+    analytics.trackDialogOpen("abandon_order_confirm");
 
     const result = await notificationStore.showConfirm(
       "Abandon Order",
@@ -288,7 +294,7 @@ const abandonOrder = async () => {
         await orderStore.abandon();
 
         analytics.trackOrderAbandon(orderData);
-        analytics.trackDialogClose('abandon_order_confirm', 'confirmed');
+        analytics.trackDialogClose("abandon_order_confirm", "confirmed");
 
         notificationStore.showInfo(
           "Order Abandoned",
@@ -296,7 +302,7 @@ const abandonOrder = async () => {
         );
       } catch (error) {
         analytics.trackError({
-          errorType: 'order_abandon_error',
+          errorType: "order_abandon_error",
           errorMessage: error instanceof Error ? error.message : String(error),
           context: {
             orderId: orderStore.id,
@@ -307,13 +313,13 @@ const abandonOrder = async () => {
         notificationStore.showError("Error", "Failed to abandon order");
       }
     } else {
-      analytics.trackDialogClose('abandon_order_confirm', 'cancelled');
+      analytics.trackDialogClose("abandon_order_confirm", "cancelled");
     }
   } else {
     analytics.trackAction({
-      action: 'abandon_order_failed',
-      category: 'order_management',
-      label: 'no_active_order',
+      action: "abandon_order_failed",
+      category: "order_management",
+      label: "no_active_order",
     });
 
     notificationStore.showWarning("No Order", "No active order to abandon");
@@ -321,17 +327,17 @@ const abandonOrder = async () => {
 };
 
 const openProducts = () => {
-  analytics.trackButtonClick('open_products', { section: 'navigation' });
+  analytics.trackButtonClick("open_products", { section: "navigation" });
   router.push("/products");
 };
 
 const openCustomers = () => {
-  analytics.trackButtonClick('open_customers', { section: 'navigation' });
+  analytics.trackButtonClick("open_customers", { section: "navigation" });
   router.push("/customers");
 };
 
 const showHelp = () => {
-  analytics.trackDialogOpen('help_dialog');
+  analytics.trackDialogOpen("help_dialog");
   showHelpDialog.value = true;
 };
 
@@ -355,9 +361,9 @@ useKeyboardShortcuts(posShortcuts);
 const addProduct = async () => {
   if (barcode.value.trim() === "") {
     analytics.trackAction({
-      action: 'barcode_scan_failed',
-      category: 'input_validation',
-      label: 'empty_barcode',
+      action: "barcode_scan_failed",
+      category: "input_validation",
+      label: "empty_barcode",
     });
     notificationStore.showWarning("Invalid Input", "Please enter a barcode.");
     return;
@@ -390,8 +396,8 @@ const addProduct = async () => {
       }
     } else {
       analytics.trackAction({
-        action: 'product_not_found',
-        category: 'barcode_scan',
+        action: "product_not_found",
+        category: "barcode_scan",
         label: barcode.value,
       });
 
@@ -402,7 +408,7 @@ const addProduct = async () => {
     }
   } catch (error) {
     analytics.trackError({
-      errorType: 'product_fetch_error',
+      errorType: "product_fetch_error",
       errorMessage: error instanceof Error ? error.message : String(error),
       context: {
         barcode: barcode.value,

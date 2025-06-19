@@ -107,6 +107,7 @@ export const createPOSShortcuts = (callbacks: {
   openOrders?: () => void
   openCustomers?: () => void
   showHelp?: () => void
+  showOrderInfo?: () => void
 }) => {
   const shortcuts: KeyboardShortcut[] = []
 
@@ -193,6 +194,14 @@ export const createPOSShortcuts = (callbacks: {
       shift: true,
       description: 'Open customers',
       action: callbacks.openCustomers
+    })
+  }
+
+  if (callbacks.showOrderInfo) {
+    shortcuts.push({
+      key: 'F8',
+      description: 'Show order details',
+      action: callbacks.showOrderInfo
     })
   }
 

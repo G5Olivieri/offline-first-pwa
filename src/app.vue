@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import AppModal from "./components/app-modal.vue";
 import HelpDialog from "./components/help-dialog.vue";
+import OrderDialog from "./components/order-dialog.vue";
 import SetupLoading from "./components/setup-loading.vue";
 import ToastContainer from "./components/toast-container.vue";
 import {
@@ -32,6 +33,7 @@ const clock = ref(
 );
 const barcodeInput = ref<HTMLInputElement | null>(null);
 const showHelpDialog = ref(false);
+const showOrderDialog = ref(false);
 const productStore = useProductStore();
 const orderStore = useOrderStore();
 const onlineStatusStore = useOnlineStatusStore();
@@ -179,6 +181,25 @@ const clearCustomer = () => {
 
 const selectCustomer = () => {
   router.push("/customers");
+};
+
+const showOrderInfo = () => {
+  analytics.trackAction({
+    action: 'show_order_dialog',
+    category: 'order_management',
+    label: 'user_initiated',
+    metadata: {
+      orderId: orderStore.id || 'none',
+      itemCount: orderStore.values.reduce((sum, item) => sum + item.quantity, 0),
+      total: orderStore.total,
+    },
+  });
+
+  showOrderDialog.value = true;
+};
+
+const closeOrderDialog = () => {
+  showOrderDialog.value = false;
 };
 
 const completeOrder = async () => {
@@ -332,6 +353,7 @@ const posShortcuts = createPOSShortcuts({
   openOrders,
   openCustomers,
   showHelp,
+  showOrderInfo,
 });
 
 useKeyboardShortcuts(posShortcuts);
@@ -507,23 +529,14 @@ onUnmounted(() => {
             </div>
           </form>
 
-          <!-- Order Controls & Status -->
+          <!-- Order Info Button -->
           <div class="flex flex-col items-center gap-2 flex-shrink-0">
-            <!-- Order Status -->
-            <div
-              v-if="orderStore.id"
-              class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-lg font-mono"
+            <button
+              @click="showOrderInfo"
+              class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors font-medium"
+              title="Show Order Details (F8)"
             >
-              #{{ orderStore.id.slice(-9) }}
-            </div>
-
-            <!-- Order Actions -->
-            <div class="flex gap-1">
-              <button
-                @click="completeOrder"
-                class="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded transition-colors"
-                :title="isCheckout ? 'Complete Order (F6)' : 'Go to Checkout (F6)'"
-              >
+              <div class="flex items-center gap-1">
                 <svg
                   class="w-3 h-3"
                   fill="none"
@@ -534,30 +547,12 @@ onUnmounted(() => {
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M5 13l4 4L19 7"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-              </button>
-              <button
-                @click="abandonOrder"
-                class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded transition-colors"
-                title="Abandon Order (F7)"
-              >
-                <svg
-                  class="w-3 h-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1-1H6a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
-            </div>
+                <span>Order</span>
+              </div>
+            </button>
           </div>
 
           <!-- Customer -->
@@ -782,6 +777,14 @@ onUnmounted(() => {
       @confirm="notificationStore.confirmModal"
       @cancel="notificationStore.cancelModal"
       @close="notificationStore.closeModal"
+    />
+
+    <!-- Order Dialog -->
+    <OrderDialog
+      :is-open="showOrderDialog"
+      @close="closeOrderDialog"
+      @complete="completeOrder"
+      @abandon="abandonOrder"
     />
 
     <!-- Help Dialog -->

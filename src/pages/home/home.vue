@@ -16,8 +16,8 @@ const terminalStore = useTerminalStore();
 
 // Load recommendations when cart changes
 const loadRecommendations = async () => {
-  if (orderStore.values.length > 0) {
-    await recommendationStore.getRecommendationsForCheckout(orderStore.values);
+  if (orderStore.items.length > 0) {
+    await recommendationStore.getRecommendationsForCheckout(orderStore.items);
   } else {
     await recommendationStore.getRecommendationsForHomepage();
   }
@@ -25,7 +25,7 @@ const loadRecommendations = async () => {
 
 // Watch cart changes and reload recommendations
 watch(
-  () => orderStore.values.length,
+  () => orderStore.items.length,
   () => {
     loadRecommendations();
   },
@@ -34,7 +34,7 @@ watch(
 
 // Get products already in cart for filtering
 const cartProductIds = computed(() =>
-  orderStore.values.map(item => item.product._id)
+  orderStore.items.map(item => item.product._id)
 );
 
 // Cross-sell suggestions from recommendation store
@@ -65,7 +65,7 @@ const upsellSuggestions = computed(() => {
 
 // Popular products from recommendation store
 const popularProducts = computed(() => {
-  if (orderStore.values.length === 0) {
+  if (orderStore.items.length === 0) {
     // Use homepage recommendations when cart is empty
     const trending = recommendationStore.homepageRecommendations
       .filter(rec => rec.type === RecommendationType.TRENDING)
@@ -148,7 +148,7 @@ const isLoading = computed(() => recommendationStore.isLoading);
               class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center"
             >
               <span class="text-white font-bold text-lg">{{
-                orderStore.values.length
+                orderStore.items.length
               }}</span>
             </div>
           </div>
@@ -182,13 +182,13 @@ const isLoading = computed(() => recommendationStore.isLoading);
             <span
               class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
             >
-              {{ orderStore.values.length }}
-              {{ orderStore.values.length === 1 ? "item" : "items" }}
+              {{ orderStore.items.length }}
+              {{ orderStore.items.length === 1 ? "item" : "items" }}
             </span>
           </div>
         </div>
 
-        <div v-if="orderStore.values.length === 0" class="text-center py-16">
+        <div v-if="orderStore.items.length === 0" class="text-center py-16">
           <div
             class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"
           >
@@ -217,7 +217,7 @@ const isLoading = computed(() => recommendationStore.isLoading);
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
           <div
-            v-for="item in orderStore.values"
+            v-for="item in orderStore.items"
             :key="item.product._id"
             class="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group"
           >
@@ -352,7 +352,7 @@ const isLoading = computed(() => recommendationStore.isLoading);
       <!-- Suggestions Section -->
       <div v-else class="space-y-12">
         <!-- Upsell Suggestions -->
-        <div v-if="orderStore.values.length > 0" class="relative">
+        <div v-if="orderStore.items.length > 0" class="relative">
           <div
             class="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-3xl"
           ></div>
@@ -369,7 +369,7 @@ const isLoading = computed(() => recommendationStore.isLoading);
         </div>
 
         <!-- Cross-sell Suggestions -->
-        <div v-if="orderStore.values.length > 0" class="relative">
+        <div v-if="orderStore.items.length > 0" class="relative">
           <div
             class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-3xl"
           ></div>
@@ -386,7 +386,7 @@ const isLoading = computed(() => recommendationStore.isLoading);
         </div>
 
         <!-- Popular Products (shown when cart is empty) -->
-        <div v-if="orderStore.values.length === 0" class="relative">
+        <div v-if="orderStore.items.length === 0" class="relative">
           <div
             class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-3xl"
           ></div>

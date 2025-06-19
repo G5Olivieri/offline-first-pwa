@@ -166,9 +166,9 @@ export const useOrderStore = defineStore("orderStore", () => {
     await customerStore.clearCustomer();
   };
 
-  const values = computed(() => Array.from(order.values()));
+  const items = computed(() => Array.from(order.values()));
   const total = computed(() =>
-    values.value.reduce(
+    items.value.reduce(
       (sum, item) => sum + item.product.price * item.quantity,
       0
     )
@@ -302,7 +302,7 @@ export const useOrderStore = defineStore("orderStore", () => {
     decrease,
     abandon,
     addProduct,
-    values,
+    items,
     total,
     calculateTotal,
     complete,

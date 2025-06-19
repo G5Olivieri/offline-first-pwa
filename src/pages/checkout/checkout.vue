@@ -19,7 +19,7 @@ const formatPrice = (price: number) => {
 };
 
 const hasItems = computed(
-  () => orderStore.values && orderStore.values.length > 0
+  () => orderStore.items && orderStore.items.length > 0
 );
 const canProceed = computed(() => {
   if (!hasItems.value) return false;
@@ -280,14 +280,14 @@ const goBack = () => {
               <span
                 class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
               >
-                {{ orderStore.values.length }}
-                {{ orderStore.values.length === 1 ? "item" : "items" }}
+                {{ orderStore.items.length }}
+                {{ orderStore.items.length === 1 ? "item" : "items" }}
               </span>
             </div>
 
             <div class="space-y-4">
               <div
-                v-for="item in orderStore.values"
+                v-for="item in orderStore.items"
                 :key="item.product._id"
                 class="flex items-center justify-between p-4 bg-zinc-50 rounded-2xl hover:bg-zinc-100 transition-colors"
               >

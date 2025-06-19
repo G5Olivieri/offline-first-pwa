@@ -218,7 +218,7 @@ const isCheckout = computed(
 );
 
 const orderItems = computed(() => {
-  return orderStore.values;
+  return orderStore.items;
 });
 
 const itemCount = computed(() => {

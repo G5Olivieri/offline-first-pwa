@@ -7,6 +7,12 @@ import type { Operator } from "./types/operator";
 import type { Order } from "./types/order";
 import { OrderStatus } from "./types/order";
 import type { Product } from "./types/product";
+import type {
+  RecommendationAnalytics,
+  ProductAffinity,
+  CustomerProductPreference,
+  RecommendationConfig,
+} from "./types/recommendation";
 
 // Initialize PouchDB with plugins
 PouchDB.plugin(PouchDBFind);
@@ -203,4 +209,182 @@ export const getCustomerDB = (): PouchDB.Database<Customer> => {
       });
   }
   return _customerDB;
+};
+
+// Recommendation Analytics Database
+let _recommendationAnalyticsDB: PouchDB.Database<RecommendationAnalytics> | null = null;
+export const getRecommendationAnalyticsDB = (): PouchDB.Database<RecommendationAnalytics> => {
+  if (_recommendationAnalyticsDB) {
+    return _recommendationAnalyticsDB;
+  }
+
+  _recommendationAnalyticsDB = new PouchDB("recommendation-analytics");
+  _recommendationAnalyticsDB.createIndex({
+    index: { fields: ["recommendation_id"] },
+  });
+  _recommendationAnalyticsDB.createIndex({
+    index: { fields: ["product_id"] },
+  });
+  _recommendationAnalyticsDB.createIndex({
+    index: { fields: ["customer_id"] },
+  });
+  _recommendationAnalyticsDB.createIndex({
+    index: { fields: ["timestamp"] },
+  });
+
+  if (SYNCING) {
+    try {
+      const remoteAnalyticsDB = new PouchDB<RecommendationAnalytics>(`${COUCHDB_URL}/recommendation-analytics`, {
+        auth: {
+          username: config.couchdbUsername,
+          password: config.couchdbPassword,
+        },
+      });
+
+      remoteAnalyticsDB
+        .sync(_recommendationAnalyticsDB, {
+          live: true,
+          retry: true,
+        })
+        .on("change", (info) => {
+          logger.debug("[recommendation-analytics] Sync change:", info);
+        })
+        .on("error", (err) => {
+          logger.error("[recommendation-analytics] Sync error:", err);
+        });
+    } catch (error) {
+      logger.error("[recommendation-analytics] Sync setup error:", error);
+    }
+  }
+
+  return _recommendationAnalyticsDB;
+};
+
+// Product Affinity Database
+let _productAffinityDB: PouchDB.Database<ProductAffinity> | null = null;
+export const getProductAffinityDB = (): PouchDB.Database<ProductAffinity> => {
+  if (_productAffinityDB) {
+    return _productAffinityDB;
+  }
+
+  _productAffinityDB = new PouchDB("product-affinity");
+  _productAffinityDB.createIndex({
+    index: { fields: ["product_a_id"] },
+  });
+  _productAffinityDB.createIndex({
+    index: { fields: ["product_b_id"] },
+  });
+  _productAffinityDB.createIndex({
+    index: { fields: ["affinity_score"] },
+  });
+
+  if (SYNCING) {
+    try {
+      const remoteAffinityDB = new PouchDB<ProductAffinity>(`${COUCHDB_URL}/product-affinity`, {
+        auth: {
+          username: config.couchdbUsername,
+          password: config.couchdbPassword,
+        },
+      });
+
+      remoteAffinityDB
+        .sync(_productAffinityDB, {
+          live: true,
+          retry: true,
+        })
+        .on("change", (info) => {
+          logger.debug("[product-affinity] Sync change:", info);
+        })
+        .on("error", (err) => {
+          logger.error("[product-affinity] Sync error:", err);
+        });
+    } catch (error) {
+      logger.error("[product-affinity] Sync setup error:", error);
+    }
+  }
+
+  return _productAffinityDB;
+};
+
+// Customer Product Preferences Database
+let _customerPreferencesDB: PouchDB.Database<CustomerProductPreference> | null = null;
+export const getCustomerPreferencesDB = (): PouchDB.Database<CustomerProductPreference> => {
+  if (_customerPreferencesDB) {
+    return _customerPreferencesDB;
+  }
+
+  _customerPreferencesDB = new PouchDB("customer-preferences");
+  _customerPreferencesDB.createIndex({
+    index: { fields: ["customer_id"] },
+  });
+  _customerPreferencesDB.createIndex({
+    index: { fields: ["product_id"] },
+  });
+  _customerPreferencesDB.createIndex({
+    index: { fields: ["preference_score"] },
+  });
+
+  if (SYNCING) {
+    try {
+      const remotePreferencesDB = new PouchDB<CustomerProductPreference>(`${COUCHDB_URL}/customer-preferences`, {
+        auth: {
+          username: config.couchdbUsername,
+          password: config.couchdbPassword,
+        },
+      });
+
+      remotePreferencesDB
+        .sync(_customerPreferencesDB, {
+          live: true,
+          retry: true,
+        })
+        .on("change", (info) => {
+          logger.debug("[customer-preferences] Sync change:", info);
+        })
+        .on("error", (err) => {
+          logger.error("[customer-preferences] Sync error:", err);
+        });
+    } catch (error) {
+      logger.error("[customer-preferences] Sync setup error:", error);
+    }
+  }
+
+  return _customerPreferencesDB;
+};
+
+// Recommendation Configuration Database
+let _recommendationConfigDB: PouchDB.Database<RecommendationConfig> | null = null;
+export const getRecommendationConfigDB = (): PouchDB.Database<RecommendationConfig> => {
+  if (_recommendationConfigDB) {
+    return _recommendationConfigDB;
+  }
+
+  _recommendationConfigDB = new PouchDB("recommendation-config");
+
+  if (SYNCING) {
+    try {
+      const remoteConfigDB = new PouchDB<RecommendationConfig>(`${COUCHDB_URL}/recommendation-config`, {
+        auth: {
+          username: config.couchdbUsername,
+          password: config.couchdbPassword,
+        },
+      });
+
+      remoteConfigDB
+        .sync(_recommendationConfigDB, {
+          live: true,
+          retry: true,
+        })
+        .on("change", (info) => {
+          logger.debug("[recommendation-config] Sync change:", info);
+        })
+        .on("error", (err) => {
+          logger.error("[recommendation-config] Sync error:", err);
+        });
+    } catch (error) {
+      logger.error("[recommendation-config] Sync setup error:", error);
+    }
+  }
+
+  return _recommendationConfigDB;
 };

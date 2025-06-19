@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { getOrderDB } from "../db";
 import { createLogger } from "../services/logger-service";
+import { recommendationEngine } from "../services/recommendation-engine";
 import type { Item, Order, PaymentMethod } from "../types/order";
 import { OrderStatus } from "../types/order";
 import type { Product } from "../types/product";
@@ -157,7 +158,19 @@ export const useOrderStore = defineStore("orderStore", () => {
     amountError.value = null;
     amount.value = "";
     paymentMethod.value = "card";
+
+    // Complete the order
     await orderDB.put(mapOrderToDocument(OrderStatus.COMPLETED));
+
+    // Update recommendation system with completed order data
+    try {
+      const orderDocument = mapOrderToDocument(OrderStatus.COMPLETED);
+      await recommendationEngine.updateProductAffinities(orderDocument);
+      await recommendationEngine.updateCustomerPreferences(orderDocument);
+      logger.debug("Updated recommendation system with completed order");
+    } catch (error) {
+      logger.error("Error updating recommendation system:", error);
+    }
 
     const productsToUpdate: [string, number][] = Array.from(order.values()).map(
       (item) => [item.product._id, item.product.stock - item.quantity]

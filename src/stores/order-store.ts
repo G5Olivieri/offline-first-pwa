@@ -1,8 +1,7 @@
 import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, watch } from "vue";
-import { useRouter } from "vue-router";
-import { createLogger } from "../services/logger-service";
 import { getOrderDB } from "../db";
+import { createLogger } from "../services/logger-service";
 import type { Item, Order, PaymentMethod } from "../types/order";
 import { OrderStatus } from "../types/order";
 import type { Product } from "../types/product";
@@ -14,7 +13,6 @@ import { useTerminalStore } from "./terminal-store";
 const logger = createLogger("OrderStore");
 
 export const useOrderStore = defineStore("orderStore", () => {
-  const router = useRouter();
   const orderDB = getOrderDB();
   const productStore = useProductStore();
   const currentOrderId = ref(localStorage.getItem("currentOrderId") || "");
@@ -145,10 +143,6 @@ export const useOrderStore = defineStore("orderStore", () => {
       logger.warn("Cannot complete an empty order.");
       return;
     }
-    if (router.currentRoute.value.path !== "/checkout") {
-      router.push("/checkout");
-      return;
-    }
     if (paymentMethod.value === "cash" && !amount.value) {
       amountError.value = "Please enter the amount paid.";
       return;
@@ -176,7 +170,6 @@ export const useOrderStore = defineStore("orderStore", () => {
     localStorage.removeItem("currentOrderRev");
     await productStore.changeStock(new Map(productsToUpdate));
     await customerStore.clearCustomer();
-    router.push("/");
   };
 
   const values = computed(() => Array.from(order.values()));

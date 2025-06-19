@@ -153,7 +153,7 @@ export const createPOSShortcuts = (callbacks: {
   if (callbacks.completeOrder) {
     shortcuts.push({
       key: 'F6',
-      description: 'Complete order',
+      description: 'Complete order / Go to checkout',
       action: callbacks.completeOrder
     })
   }

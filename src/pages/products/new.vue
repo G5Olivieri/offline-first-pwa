@@ -8,11 +8,9 @@ import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
 import * as z from "zod";
 import { useProductStore } from "../../stores/product-store";
-import { useAnalytics } from "../../composables/use-analytics";
 
 const productStore = useProductStore();
 const router = useRouter();
-const analytics = useAnalytics();
 
 const validationSchema = toTypedSchema(
   z.object({
@@ -87,29 +85,9 @@ const onSubmit = handleSubmit((values) => {
   productStore
     .createProduct(productData)
     .then(() => {
-      analytics.trackProduct("product_created", {
-        productName: productData.name,
-        category: productData.category,
-        price: productData.price,
-        barcode: productData.barcode,
-      });
-
-      analytics.trackFormSubmit("new_product_form", true);
       router.push("/products");
     })
     .catch((error) => {
-      analytics.trackFormSubmit("new_product_form", false, [
-        error instanceof Error ? error.message : String(error)
-      ]);
-
-      analytics.trackError({
-        errorType: 'product_creation_error',
-        errorMessage: error instanceof Error ? error.message : String(error),
-        context: {
-          formData: JSON.stringify(productData),
-        },
-      });
-
       console.error("Error creating product:", error);
       alert("Failed to create product. Please try again.");
     });

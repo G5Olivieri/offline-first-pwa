@@ -186,7 +186,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { analytics } from "../services/analytics-service";
 import { useCustomerStore } from "../stores/customer-store";
 import { useNotificationStore } from "../stores/notification-store";
 import { useOperatorStore } from "../stores/operator-store";
@@ -250,19 +249,6 @@ const handleCompleteOrder = async () => {
   isProcessing.value = true;
 
   try {
-    // Track dialog completion attempt
-    analytics.trackUserAction({
-      action: "complete_order_from_dialog",
-      category: "order_management",
-      label: isCheckout.value ? "complete" : "go_to_checkout",
-      metadata: {
-        orderId: orderStore.id || "none",
-        itemCount: itemCount.value,
-        total: orderTotal.value,
-        isCheckout: isCheckout.value,
-      },
-    });
-
     emit("complete");
     close();
   } catch (error) {
@@ -282,18 +268,6 @@ const handleAbandonOrder = async () => {
   isProcessing.value = true;
 
   try {
-    // Track dialog abandon attempt
-    analytics.trackUserAction({
-      action: "abandon_order_from_dialog",
-      category: "order_management",
-      label: "user_initiated",
-      metadata: {
-        orderId: orderStore.id || "none",
-        itemCount: itemCount.value,
-        total: orderTotal.value,
-      },
-    });
-
     emit("abandon");
     close();
   } catch (error) {

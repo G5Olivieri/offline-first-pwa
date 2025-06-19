@@ -34,7 +34,6 @@ interface SystemInfo {
   timezone: string;
   features: {
     offlineMode: boolean;
-    analytics: boolean;
     notifications: boolean;
     debugMode: boolean;
   };
@@ -86,7 +85,6 @@ export const useSystemInfoStore = defineStore('systemInfo', () => {
     timezone: config.defaultTimezone,
     features: {
       offlineMode: config.enableOfflineMode,
-      analytics: config.enableAnalytics,
       notifications: config.enableNotifications,
       debugMode: config.enableDebugMode
     },

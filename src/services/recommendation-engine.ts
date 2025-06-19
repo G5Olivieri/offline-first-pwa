@@ -54,7 +54,6 @@ export class RecommendationEngine {
       max_recommendations_per_context: 6,
       min_confidence_threshold: 0.3,
       cache_duration_minutes: 60,
-      analytics_enabled: true,
       rules: [],
       feature_flags: {
         collaborative_filtering: true,

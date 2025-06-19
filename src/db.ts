@@ -8,7 +8,6 @@ import type { Order } from "./types/order";
 import { OrderStatus } from "./types/order";
 import type { Product } from "./types/product";
 import type {
-  RecommendationAnalytics,
   ProductAffinity,
   CustomerProductPreference,
   RecommendationConfig,
@@ -209,55 +208,6 @@ export const getCustomerDB = (): PouchDB.Database<Customer> => {
       });
   }
   return _customerDB;
-};
-
-// Recommendation Analytics Database
-let _recommendationAnalyticsDB: PouchDB.Database<RecommendationAnalytics> | null = null;
-export const getRecommendationAnalyticsDB = (): PouchDB.Database<RecommendationAnalytics> => {
-  if (_recommendationAnalyticsDB) {
-    return _recommendationAnalyticsDB;
-  }
-
-  _recommendationAnalyticsDB = new PouchDB("recommendation-analytics");
-  _recommendationAnalyticsDB.createIndex({
-    index: { fields: ["recommendation_id"] },
-  });
-  _recommendationAnalyticsDB.createIndex({
-    index: { fields: ["product_id"] },
-  });
-  _recommendationAnalyticsDB.createIndex({
-    index: { fields: ["customer_id"] },
-  });
-  _recommendationAnalyticsDB.createIndex({
-    index: { fields: ["timestamp"] },
-  });
-
-  if (SYNCING) {
-    try {
-      const remoteAnalyticsDB = new PouchDB<RecommendationAnalytics>(`${COUCHDB_URL}/recommendation-analytics`, {
-        auth: {
-          username: config.couchdbUsername,
-          password: config.couchdbPassword,
-        },
-      });
-
-      remoteAnalyticsDB
-        .sync(_recommendationAnalyticsDB, {
-          live: true,
-          retry: true,
-        })
-        .on("change", (info) => {
-          logger.debug("[recommendation-analytics] Sync change:", info);
-        })
-        .on("error", (err) => {
-          logger.error("[recommendation-analytics] Sync error:", err);
-        });
-    } catch (error) {
-      logger.error("[recommendation-analytics] Sync setup error:", error);
-    }
-  }
-
-  return _recommendationAnalyticsDB;
 };
 
 // Product Affinity Database

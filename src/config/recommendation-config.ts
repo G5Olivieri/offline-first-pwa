@@ -13,7 +13,6 @@ export const DEFAULT_RECOMMENDATION_CONFIG: RecommendationConfig = {
   max_recommendations_per_context: 8,
   min_confidence_threshold: 0.3,
   cache_duration_minutes: 60,
-  analytics_enabled: true,
   rules: [
     // Checkout Context Rules
     {
@@ -153,20 +152,17 @@ export const DEFAULT_RECOMMENDATION_CONFIG: RecommendationConfig = {
 export const RECOMMENDATION_CONFIGS = {
   development: {
     ...DEFAULT_RECOMMENDATION_CONFIG,
-    analytics_enabled: true,
     cache_duration_minutes: 5, // Shorter cache for development
     min_confidence_threshold: 0.1 // Lower threshold for testing
   },
 
   staging: {
     ...DEFAULT_RECOMMENDATION_CONFIG,
-    analytics_enabled: true,
     max_recommendations_per_context: 6
   },
 
   production: {
     ...DEFAULT_RECOMMENDATION_CONFIG,
-    analytics_enabled: true,
     min_confidence_threshold: 0.4, // Higher threshold for production
     cache_duration_minutes: 120 // Longer cache for production
   }

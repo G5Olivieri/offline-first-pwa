@@ -10,7 +10,7 @@ The POS Recommendation System is a comprehensive, offline-first solution that pr
 
 1. **Types & Interfaces** (`src/types/recommendation.ts`)
    - Comprehensive TypeScript definitions for all recommendation entities
-   - Includes recommendation types, contexts, analytics, and configuration
+   - Includes recommendation types, contexts, and configuration
 
 2. **Recommendation Engine** (`src/services/recommendation-engine.ts`)
    - Core logic for generating recommendations
@@ -20,16 +20,15 @@ The POS Recommendation System is a comprehensive, offline-first solution that pr
 3. **Recommendation Store** (`src/stores/recommendation-store.ts`)
    - Pinia store for managing recommendation state
    - Provides reactive recommendation lists for different contexts
-   - Handles caching and analytics tracking
+   - Handles caching
 
 4. **Database Integration** (`src/db.ts`)
    - PouchDB databases for offline-first storage
    - Sync capability with remote CouchDB
-   - Separate databases for analytics, affinities, and preferences
+   - Separate databases for affinities, and preferences
 
 5. **Components** (`src/components/`)
    - Reusable Vue components for displaying recommendations
-   - Analytics dashboard for monitoring performance
    - Context-specific recommendation widgets
 
 6. **Composables** (`src/composables/`)
@@ -156,21 +155,6 @@ type CustomerProductPreference = {
 }
 ```
 
-### Recommendation Analytics
-Tracks user interactions with recommendations:
-
-```typescript
-type RecommendationAnalytics = {
-  recommendation_id: string;
-  product_id: string;
-  customer_id?: string;
-  context: RecommendationContext;
-  type: RecommendationType;
-  action: 'viewed' | 'clicked' | 'added_to_cart' | 'purchased' | 'dismissed';
-  timestamp: string;
-}
-```
-
 ## Algorithm Details
 
 ### Market Basket Analysis
@@ -207,7 +191,6 @@ type RecommendationAnalytics = {
   max_recommendations_per_context: 8,
   min_confidence_threshold: 0.1, // Lower for testing
   cache_duration_minutes: 5,
-  analytics_enabled: true
 }
 
 // Production
@@ -216,7 +199,6 @@ type RecommendationAnalytics = {
   max_recommendations_per_context: 6,
   min_confidence_threshold: 0.4, // Higher for quality
   cache_duration_minutes: 120,
-  analytics_enabled: true
 }
 ```
 
@@ -296,29 +278,6 @@ export function useProductDetailPage(product: Product) {
 }
 ```
 
-## Analytics and Monitoring
-
-### Key Metrics
-- **Click-Through Rate (CTR)**: Percentage of viewed recommendations that are clicked
-- **Conversion Rate**: Percentage of clicked recommendations that result in purchases
-- **Revenue Attribution**: Total revenue generated from recommendation clicks
-- **Context Performance**: Performance metrics broken down by recommendation context
-
-### Analytics Dashboard
-The `RecommendationAnalytics` component provides:
-- Real-time performance metrics
-- Context-specific performance breakdown
-- Top-performing recommendation types
-- Export functionality for detailed analysis
-
-### Event Tracking
-All user interactions are tracked:
-- Recommendation views (automatic)
-- Recommendation clicks
-- Add to cart from recommendations
-- Purchases from recommendations
-- Recommendation dismissals
-
 ## Performance Optimization
 
 ### Caching Strategy
@@ -329,7 +288,6 @@ All user interactions are tracked:
 ### Database Optimization
 - Indexed queries on frequently accessed fields
 - Batch operations for updating affinities and preferences
-- Periodic cleanup of old analytics data
 
 ### Real-time Updates
 - Immediate updates to customer preferences on purchase
@@ -392,11 +350,6 @@ Configuration allows enabling/disabling specific features:
 - Multi-armed bandit for A/B testing recommendations
 - Graph-based recommendation algorithms
 
-### Enhanced Analytics
-- Advanced segmentation and cohort analysis
-- Predictive analytics for inventory management
-- Real-time dashboard with live metrics
-
 ### External Integrations
 - Third-party recommendation engines
 - External data sources for enhanced recommendations
@@ -410,7 +363,6 @@ Configuration allows enabling/disabling specific features:
 - Configurable data retention policies
 
 ### Access Control
-- Role-based access to analytics and configuration
 - API authentication for external access
 - Audit logging for sensitive operations
 

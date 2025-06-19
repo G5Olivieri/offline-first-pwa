@@ -10,7 +10,6 @@ import { useCustomerStore } from "./customer-store";
 import { useOperatorStore } from "./operator-store";
 import { useProductStore } from "./product-store";
 import { useTerminalStore } from "./terminal-store";
-import { useAnalytics } from "../composables/use-analytics";
 
 const logger = createLogger("OrderStore");
 
@@ -31,7 +30,6 @@ export const useOrderStore = defineStore("orderStore", () => {
   const paymentMethod = ref<PaymentMethod>("card");
   const change = ref<number | null>(null);
   const createdAt = ref<string>(new Date().toISOString());
-  const analytics = useAnalytics();
 
   const mapOrderToDocument = (
     status: OrderStatus = OrderStatus.PENDING
@@ -97,7 +95,9 @@ export const useOrderStore = defineStore("orderStore", () => {
     }
 
     try {
-      await orderDB.put(mapOrderToDocument(OrderStatus.CANCELLED));
+      const orderDocument = mapOrderToDocument(OrderStatus.CANCELLED);
+      await orderDB.put(orderDocument);
+
       order.clear();
       currentOrderId.value = "";
       currentOrderRev.value = undefined;
@@ -162,11 +162,11 @@ export const useOrderStore = defineStore("orderStore", () => {
     paymentMethod.value = "card";
 
     // Complete the order
-    await orderDB.put(mapOrderToDocument(OrderStatus.COMPLETED));
+    const orderDocument = mapOrderToDocument(OrderStatus.COMPLETED);
+    await orderDB.put(orderDocument);
 
     // Update recommendation system with completed order data
     try {
-      const orderDocument = mapOrderToDocument(OrderStatus.COMPLETED);
       await recommendationEngine.updateProductAffinities(orderDocument);
       await recommendationEngine.updateCustomerPreferences(orderDocument);
       logger.debug("Updated recommendation system with completed order");
@@ -185,8 +185,6 @@ export const useOrderStore = defineStore("orderStore", () => {
     localStorage.removeItem("currentOrderRev");
     await productStore.changeStock(new Map(productsToUpdate));
     await customerStore.clearCustomer();
-
-    analyticsStore.trackOrderComplete(orderData);
   };
 
   const values = computed(() => Array.from(order.values()));

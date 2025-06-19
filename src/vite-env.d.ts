@@ -20,7 +20,6 @@ interface ImportMetaEnv {
 
   // Feature Flags
   readonly VITE_ENABLE_OFFLINE_MODE: string;
-  readonly VITE_ENABLE_ANALYTICS: string;
   readonly VITE_ENABLE_NOTIFICATIONS: string;
   readonly VITE_ENABLE_DEBUG_MODE: string;
 

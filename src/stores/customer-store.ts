@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { onMounted, ref } from "vue";
 import { getCustomerDB } from "../db";
-import { analytics } from "../services/analytics-service";
 import { createLogger } from "../services/logger-service";
 import type { Customer } from "../types/customer";
 
@@ -24,17 +23,6 @@ export const useCustomerStore = defineStore("customerStore", () => {
     const newCustomer = { _id: crypto.randomUUID(), name, document };
     await customerDB.put(newCustomer);
 
-    // Track customer creation
-    analytics.trackUserAction({
-      action: "customer_created",
-      category: "customer_management",
-      label: name,
-      metadata: {
-        customerId: newCustomer._id,
-        hasDocument: !!document,
-      },
-    });
-
     logger.debug("Customer created", {
       customerId: newCustomer._id,
       name,
@@ -52,19 +40,6 @@ export const useCustomerStore = defineStore("customerStore", () => {
       customerId.value = doc._id;
       localStorage.setItem("customerId", doc._id);
       customer.value = doc;
-
-      // Track customer change
-      analytics.trackUserAction({
-        action: "customer_changed",
-        category: "customer_management",
-        label: doc.name,
-        metadata: {
-          customerId: doc._id,
-          customerName: doc.name,
-          previousCustomer: previousCustomer || "none",
-          hasDocument: !!doc.document,
-        },
-      });
 
       logger.debug("Customer changed", {
         from: previousCustomer,
@@ -84,17 +59,6 @@ export const useCustomerStore = defineStore("customerStore", () => {
     customer.value = null;
     localStorage.removeItem("customerId");
 
-    // Track customer clear
-    analytics.trackUserAction({
-      action: "customer_cleared",
-      category: "customer_management",
-      label: previousCustomerName || "unknown",
-      metadata: {
-        previousCustomer: previousCustomer || "none",
-        customerName: previousCustomerName || "unknown",
-      },
-    });
-
     logger.debug("Customer cleared", {
       previousCustomer,
       customerName: previousCustomerName,
@@ -104,17 +68,6 @@ export const useCustomerStore = defineStore("customerStore", () => {
   const findByDocument = async (document: string): Promise<Customer | null> => {
     logger.debug("Finding customer by document:", document);
 
-    // Track customer search attempt
-    analytics.trackUserAction({
-      action: "customer_search",
-      category: "customer_management",
-      label: "search_by_document",
-      metadata: {
-        hasDocument: !!document,
-        documentLength: document.length,
-      },
-    });
-
     const result = await customerDB.find({
       selector: { document },
       limit: 1,
@@ -122,39 +75,9 @@ export const useCustomerStore = defineStore("customerStore", () => {
 
     if (result.docs.length > 0) {
       const foundCustomer = result.docs[0] as Customer;
-
-      // Track successful customer search
-      analytics.trackUserAction({
-        action: "customer_search_success",
-        category: "customer_management",
-        label: foundCustomer.name,
-        metadata: {
-          customerId: foundCustomer._id,
-          customerName: foundCustomer.name,
-          searchDocument: document,
-        },
-      });
-
-      logger.debug("Customer found by document", {
-        customerId: foundCustomer._id,
-        customerName: foundCustomer.name,
-        document,
-      });
-
       return foundCustomer;
     } else {
-      // Track failed customer search
-      analytics.trackUserAction({
-        action: "customer_search_not_found",
-        category: "customer_management",
-        label: "not_found",
-        metadata: {
-          searchDocument: document,
-        },
-      });
-
       logger.debug("Customer not found by document", { document });
-
       return null;
     }
   };
@@ -195,35 +118,8 @@ export const useCustomerStore = defineStore("customerStore", () => {
   }): Promise<void> => {
     logger.debug("Creating and selecting customer:", customerData.name);
 
-    // Track customer creation attempt from form
-    analytics.trackUserAction({
-      action: "customer_create_attempt",
-      category: "customer_management",
-      label: customerData.name,
-      metadata: {
-        customerName: customerData.name,
-        hasDocument: !!customerData.document,
-        documentLength: customerData.document.length,
-        source: "customer_store",
-      },
-    });
-
     try {
       const newCustomer = await createCustomer(customerData);
-
-      // Track successful customer creation and immediate selection
-      analytics.trackUserAction({
-        action: "customer_created_and_selected",
-        category: "customer_management",
-        label: customerData.name,
-        metadata: {
-          customerId: newCustomer._id,
-          customerName: customerData.name,
-          hasDocument: !!customerData.document,
-          source: "customer_store",
-        },
-      });
-
       await setCustomer(newCustomer._id);
 
       logger.debug("Customer created and selected", {
@@ -231,60 +127,7 @@ export const useCustomerStore = defineStore("customerStore", () => {
         name: customerData.name,
       });
     } catch (error) {
-      // Track customer creation error
-      analytics.trackError({
-        errorType: "customer_creation_error",
-        errorMessage: error instanceof Error ? error.message : String(error),
-        context: {
-          customerName: customerData.name,
-          source: "customer_store",
-        },
-      });
-
       logger.error("Failed to create and select customer", error);
-      throw error;
-    }
-  };
-
-  // Business logic method: Select customer from search results
-  const selectCustomerFromSearch = async (
-    customerId: string,
-    searchDocument: string,
-    foundCustomer?: Customer
-  ): Promise<void> => {
-    logger.debug("Selecting customer from search:", customerId);
-
-    // Track customer selection from search results
-    analytics.trackUserAction({
-      action: "customer_selected_from_search",
-      category: "customer_management",
-      label: foundCustomer?.name || "unknown",
-      metadata: {
-        customerId,
-        customerName: foundCustomer?.name || "unknown",
-        searchDocument,
-        source: "customer_store",
-      },
-    });
-
-    try {
-      await setCustomer(customerId);
-      logger.debug("Customer selected from search", {
-        customerId,
-        customerName: foundCustomer?.name,
-      });
-    } catch (error) {
-      // Track selection error
-      analytics.trackError({
-        errorType: "customer_selection_error",
-        errorMessage: error instanceof Error ? error.message : String(error),
-        context: {
-          customerId,
-          source: "customer_store",
-        },
-      });
-
-      logger.error("Failed to select customer from search", error);
       throw error;
     }
   };
@@ -292,7 +135,7 @@ export const useCustomerStore = defineStore("customerStore", () => {
   onMounted(() => {
     if (customerId.value) {
       setCustomer(customerId.value).catch((error) => {
-        console.error("Error setting customer on mount:", error);
+        logger.error("Error setting customer on mount:", error);
       });
     }
   });
@@ -307,6 +150,5 @@ export const useCustomerStore = defineStore("customerStore", () => {
     deleteCustomer,
     fetchAllCustomers,
     createAndSelectCustomer,
-    selectCustomerFromSearch,
   };
 });

@@ -1,15 +1,17 @@
 import vue from "@vitejs/plugin-vue";
 import { defineConfig, loadEnv } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+import vueDevTools from "vite-plugin-vue-devtools";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  const env = loadEnv(mode, process.cwd(), '');
+  const env = loadEnv(mode, process.cwd(), "");
 
   return {
     plugins: [
       vue(),
+      vueDevTools(),
       VitePWA({
         registerType: "autoUpdate",
         injectRegister: "auto",
@@ -33,9 +35,9 @@ export default defineConfig(({ mode }) => {
             {
               src: "/favicon.svg",
               sizes: "any",
-              type: "image/svg+xml"
-            }
-          ]
+              type: "image/svg+xml",
+            },
+          ],
         },
 
         workbox: {
@@ -47,20 +49,20 @@ export default defineConfig(({ mode }) => {
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-              handler: 'CacheFirst',
+              handler: "CacheFirst",
               options: {
-                cacheName: 'google-fonts-cache',
+                cacheName: "google-fonts-cache",
                 expiration: {
                   maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
-                }
-              }
-            }
-          ]
+                  maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+                },
+              },
+            },
+          ],
         },
 
         devOptions: {
-          enabled: env.VITE_ENABLE_PWA_DEV === 'true',
+          enabled: env.VITE_ENABLE_PWA_DEV === "true",
           navigateFallback: "index.html",
           suppressWarnings: true,
           type: "module",
@@ -70,77 +72,87 @@ export default defineConfig(({ mode }) => {
 
     // Define global variables
     define: {
-      __APP_VERSION__: JSON.stringify(env.VITE_APP_VERSION || '1.0.0'),
+      __APP_VERSION__: JSON.stringify(env.VITE_APP_VERSION || "1.0.0"),
       __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
-      global: 'globalThis',
+      global: "globalThis",
     },
 
     // Resolve configuration
     resolve: {
       alias: {
         // Provide browser-compatible alternatives
-        'crypto': 'crypto-browserify',
-        'stream': 'stream-browserify',
-        'assert': 'assert',
-        'http': 'stream-http',
-        'https': 'https-browserify',
-        'os': 'os-browserify/browser',
-        'url': 'url',
-        'zlib': 'browserify-zlib',
-        'util': 'util',
-        'buffer': 'buffer',
-        'process': 'process/browser',
-        'path': 'path-browserify',
-        'events': 'events',
-        'constants': 'constants-browserify',
-      }
+        crypto: "crypto-browserify",
+        stream: "stream-browserify",
+        assert: "assert",
+        http: "stream-http",
+        https: "https-browserify",
+        os: "os-browserify/browser",
+        url: "url",
+        zlib: "browserify-zlib",
+        util: "util",
+        buffer: "buffer",
+        process: "process/browser",
+        path: "path-browserify",
+        events: "events",
+        constants: "constants-browserify",
+      },
     },
 
     // Optimize dependencies
     optimizeDeps: {
       include: [
-        'buffer',
-        'process',
-        'util',
-        'events',
-        'crypto-browserify',
-        'stream-browserify',
-        'assert',
-        'url',
-        'pouchdb-browser',
-        'pouchdb-find'
+        "buffer",
+        "process",
+        "util",
+        "events",
+        "crypto-browserify",
+        "stream-browserify",
+        "assert",
+        "url",
+        "pouchdb-browser",
+        "pouchdb-find",
       ],
-      exclude: ['@vite-pwa/assets-generator']
+      exclude: ["@vite-pwa/assets-generator"],
     },
 
     // Development server configuration
     server: {
-      port: parseInt(env.VITE_DEV_PORT || '5173'),
-      host: env.VITE_DEV_HOST || 'localhost',
-      open: env.VITE_DEV_OPEN === 'true',
+      port: parseInt(env.VITE_DEV_PORT || "5173"),
+      host: env.VITE_DEV_HOST || "localhost",
+      open: env.VITE_DEV_OPEN === "true",
     },
 
     // Build configuration
     build: {
-      sourcemap: env.VITE_BUILD_SOURCEMAP === 'true',
-      minify: env.VITE_BUILD_MINIFY !== 'false',
-      target: 'es2015',
+      sourcemap: env.VITE_BUILD_SOURCEMAP === "true",
+      minify: env.VITE_BUILD_MINIFY !== "false",
+      target: "es2015",
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ['vue', 'vue-router', 'pinia'],
-            pouchdb: ['pouchdb-browser']
-          }
+            vendor: ["vue", "vue-router", "pinia"],
+            pouchdb: ["pouchdb-browser"],
+          },
         },
         // Suppress external module warnings by explicitly externalizing problematic Node modules
         external: (id) => {
-          if (id.includes('node:') ||
-              ['fs', 'child_process', 'module', 'v8', 'tty', 'perf_hooks', 'vm'].includes(id)) {
+          if (
+            id.includes("node:") ||
+            [
+              "fs",
+              "child_process",
+              "module",
+              "v8",
+              "tty",
+              "perf_hooks",
+              "vm",
+            ].includes(id)
+          ) {
             return true;
           }
           return false;
-        }
-      }
-    }
+        },
+      },
+    },
   };
 });

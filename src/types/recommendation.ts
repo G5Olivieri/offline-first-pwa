@@ -69,21 +69,6 @@ export type RecommendationSet = {
   cart_items?: string[]; // Product IDs
 };
 
-export type RecommendationAnalytics = {
-  _id: string;
-  _rev?: string;
-  recommendation_id: string;
-  product_id: string;
-  customer_id?: string;
-  context: RecommendationContext;
-  type: RecommendationType;
-  action: 'viewed' | 'clicked' | 'added_to_cart' | 'purchased' | 'dismissed';
-  timestamp: string;
-  session_id?: string;
-  order_id?: string;
-  metadata?: Record<string, string | number | boolean>;
-};
-
 export type ProductAffinity = {
   _id: string;
   _rev?: string;
@@ -119,7 +104,6 @@ export type RecommendationConfig = {
   max_recommendations_per_context: number;
   min_confidence_threshold: number;
   cache_duration_minutes: number;
-  analytics_enabled: boolean;
   rules: RecommendationRule[];
   feature_flags: {
     collaborative_filtering: boolean;
@@ -129,25 +113,4 @@ export type RecommendationConfig = {
     inventory_based_recommendations: boolean;
     real_time_updates: boolean;
   };
-};
-
-export type RecommendationMetrics = {
-  total_recommendations_generated: number;
-  total_recommendations_clicked: number;
-  total_recommendations_purchased: number;
-  click_through_rate: number;
-  conversion_rate: number;
-  revenue_attributed: number;
-  top_performing_types: Array<{
-    type: RecommendationType;
-    performance_score: number;
-    conversion_rate: number;
-  }>;
-  context_performance: Record<RecommendationContext, {
-    impressions: number;
-    clicks: number;
-    conversions: number;
-    revenue: number;
-  }>;
-  last_updated: string;
 };

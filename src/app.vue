@@ -10,7 +10,6 @@ import {
   createPOSShortcuts,
   useKeyboardShortcuts,
 } from "./composables/use-keyboard-shortcuts";
-import { useAnalytics } from "./composables/use-analytics";
 import { createLogger } from "./services/logger-service";
 import { useCustomerStore } from "./stores/customer-store";
 import { useNotificationStore } from "./stores/notification-store";
@@ -21,7 +20,6 @@ import { useProductStore } from "./stores/product-store";
 import { useSetupStore } from "./stores/setup-store";
 
 const logger = createLogger("App");
-const analytics = useAnalytics();
 const barcode = ref("");
 const router = useRouter();
 const clock = ref(
@@ -186,20 +184,6 @@ const selectCustomer = () => {
 };
 
 const showOrderInfo = () => {
-  analytics.trackAction({
-    action: "show_order_dialog",
-    category: "order_management",
-    label: "user_initiated",
-    metadata: {
-      orderId: orderStore.id || "none",
-      itemCount: orderStore.values.reduce(
-        (sum, item) => sum + item.quantity,
-        0
-      ),
-      total: orderStore.total,
-    },
-  });
-
   showOrderDialog.value = true;
 };
 
@@ -208,27 +192,11 @@ const closeOrderDialog = () => {
 };
 
 const gotoCheckout = () => {
-  analytics.trackAction({
-    action: "navigate_to_checkout",
-    category: "order_management",
-    label: "complete_order_redirect",
-  });
-  notificationStore.showInfo(
-    "Proceeding to Checkout",
-    "Taking you to checkout to complete your order"
-  );
   router.push("/checkout");
 };
 
 const completeOrder = async () => {
-  // If no active order, show warning regardless of current page
   if (!orderStore.id) {
-    analytics.trackAction({
-      action: "complete_order_failed",
-      category: "order_management",
-      label: "no_active_order",
-    });
-
     notificationStore.showWarning("No Order", "No active order to complete");
     return;
   }
@@ -241,31 +209,13 @@ const completeOrder = async () => {
 
   // If on checkout page, complete the order
   try {
-    const orderData = {
-      orderId: orderStore.id,
-      customerId: customerStore.customerId || undefined,
-      operatorId: operatorStore.operatorId || undefined,
-      total: orderStore.total,
-      itemCount: orderStore.values.length,
-      paymentMethod: orderStore.paymentMethod,
-    };
-
     await orderStore.complete();
-
 
     notificationStore.showSuccess(
       "Order Completed",
       "Thank you for your order!"
     );
   } catch (error) {
-    analytics.trackError({
-      errorType: "order_completion_error",
-      errorMessage: error instanceof Error ? error.message : String(error),
-      context: {
-        orderId: orderStore.id,
-      },
-    });
-
     logger.error("Error completing order:", error);
     notificationStore.showError("Error", "Failed to complete order");
   }
@@ -273,8 +223,6 @@ const completeOrder = async () => {
 
 const abandonOrder = async () => {
   if (orderStore.id) {
-    analytics.trackDialogOpen("abandon_order_confirm");
-
     const result = await notificationStore.showConfirm(
       "Abandon Order",
       "Are you sure you want to abandon this order? All items will be lost.",
@@ -283,61 +231,31 @@ const abandonOrder = async () => {
 
     if (result.confirmed) {
       try {
-        const orderData = {
-          orderId: orderStore.id,
-          customerId: customerStore.customerId || undefined,
-          operatorId: operatorStore.operatorId || undefined,
-          total: orderStore.total,
-          itemCount: orderStore.values.length,
-        };
-
         await orderStore.abandon();
-
-        analytics.trackOrderAbandon(orderData);
-        analytics.trackDialogClose("abandon_order_confirm", "confirmed");
 
         notificationStore.showInfo(
           "Order Abandoned",
           "Order has been cancelled"
         );
       } catch (error) {
-        analytics.trackError({
-          errorType: "order_abandon_error",
-          errorMessage: error instanceof Error ? error.message : String(error),
-          context: {
-            orderId: orderStore.id,
-          },
-        });
-
         logger.error("Error abandoning order:", error);
         notificationStore.showError("Error", "Failed to abandon order");
       }
-    } else {
-      analytics.trackDialogClose("abandon_order_confirm", "cancelled");
     }
   } else {
-    analytics.trackAction({
-      action: "abandon_order_failed",
-      category: "order_management",
-      label: "no_active_order",
-    });
-
     notificationStore.showWarning("No Order", "No active order to abandon");
   }
 };
 
 const openProducts = () => {
-  analytics.trackButtonClick("open_products", { section: "navigation" });
   router.push("/products");
 };
 
 const openCustomers = () => {
-  analytics.trackButtonClick("open_customers", { section: "navigation" });
   router.push("/customers");
 };
 
 const showHelp = () => {
-  analytics.trackDialogOpen("help_dialog");
   showHelpDialog.value = true;
 };
 
@@ -360,32 +278,17 @@ useKeyboardShortcuts(posShortcuts);
 
 const addProduct = async () => {
   if (barcode.value.trim() === "") {
-    analytics.trackAction({
-      action: "barcode_scan_failed",
-      category: "input_validation",
-      label: "empty_barcode",
-    });
     notificationStore.showWarning("Invalid Input", "Please enter a barcode.");
     return;
   }
 
   try {
-    analytics.trackProductScan(barcode.value);
-
     const fetchedProduct = await productStore.findProductByBarcode(
       barcode.value
     );
 
     if (fetchedProduct) {
       await orderStore.addProduct(fetchedProduct);
-
-      analytics.trackProductAdd({
-        productId: fetchedProduct._id,
-        productName: fetchedProduct.name,
-        barcode: fetchedProduct.barcode,
-        price: fetchedProduct.price,
-        category: fetchedProduct.category,
-      });
 
       notificationStore.showSuccess(
         "Product Added",
@@ -395,26 +298,12 @@ const addProduct = async () => {
         router.push("/");
       }
     } else {
-      analytics.trackAction({
-        action: "product_not_found",
-        category: "barcode_scan",
-        label: barcode.value,
-      });
-
       notificationStore.showWarning(
         "Product Not Found",
         "No product found with this barcode"
       );
     }
   } catch (error) {
-    analytics.trackError({
-      errorType: "product_fetch_error",
-      errorMessage: error instanceof Error ? error.message : String(error),
-      context: {
-        barcode: barcode.value,
-      },
-    });
-
     logger.error("Error fetching product:", error);
     notificationStore.showError(
       "Error",

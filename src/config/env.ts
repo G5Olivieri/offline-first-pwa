@@ -1,7 +1,3 @@
-/**
- * Environment configuration utility
- * Provides type-safe access to environment variables with defaults
- */
 interface SearchConfig {
   dbName: string;
   dbVersion: number;
@@ -9,64 +5,44 @@ interface SearchConfig {
   indexKey: string;
 }
 
-interface AnalyticsConfig {
-  providers: string[];
-  enabled: boolean;
-  debug: boolean;
-  batchSize: number;
-  flushInterval: number;
-  sessionTimeout: number;
-}
-
 interface AppConfig {
-  // Application Settings
   appTitle: string;
   appVersion: string;
   environment: string;
 
-  // Terminal Configuration
   terminalId: string;
   terminalName: string;
 
-  // Database Configuration
   couchdbUrl: string;
   couchdbUsername?: string;
   couchdbPassword?: string;
   enableSync: boolean;
 
-  // Localization Settings
   defaultLocale: string;
   defaultCurrency: string;
   defaultTimezone: string;
 
-  // Feature Flags
   enableOfflineMode: boolean;
-  enableAnalytics: boolean;
   enableNotifications: boolean;
   enableDebugMode: boolean;
 
-  // UI Configuration
   themePrimaryColor: string;
   themeSecondaryColor: string;
   productsPerPage: number;
   maxSuggestions: number;
 
-  // Security Settings
   sessionTimeout: number;
   maxLoginAttempts: number;
   enableCsrfProtection: boolean;
 
-  // API Configuration
   apiTimeout: number;
   apiRetryAttempts: number;
   apiBaseUrl?: string;
 
-  // Development Settings
   mockData: boolean;
   logLevel: string;
 
   search: SearchConfig;
-  analytics: AnalyticsConfig;
 }
 
 /**
@@ -159,7 +135,6 @@ export const config: AppConfig = {
 
   // Feature Flags
   enableOfflineMode: getEnvVar("VITE_ENABLE_OFFLINE_MODE", true, toBool),
-  enableAnalytics: getEnvVar("VITE_ENABLE_ANALYTICS", false, toBool),
   enableNotifications: getEnvVar("VITE_ENABLE_NOTIFICATIONS", true, toBool),
   enableDebugMode: getEnvVar("VITE_ENABLE_DEBUG_MODE", false, toBool),
 
@@ -188,19 +163,6 @@ export const config: AppConfig = {
     dbVersion: getEnvVar("VITE_SEARCH_DB_VERSION", 1, toNumber),
     storeName: getEnvVar("VITE_SEARCH_STORE_NAME", "products"),
     indexKey: getEnvVar("VITE_SEARCH_INDEX_KEY", "id"),
-  },
-
-  analytics: {
-    providers: getEnvVar("VITE_ANALYTICS_PROVIDERS", [], toStringArray),
-    enabled: getEnvVar("VITE_ENABLE_ANALYTICS", false, toBool),
-    debug: getEnvVar("VITE_ANALYTICS_DEBUG", false, toBool),
-    batchSize: getEnvVar("VITE_ANALYTICS_BATCH_SIZE", 20, toNumber),
-    flushInterval: getEnvVar("VITE_ANALYTICS_FLUSH_INTERVAL", 5000, toNumber), // 5 seconds
-    sessionTimeout: getEnvVar(
-      "VITE_ANALYTICS_SESSION_TIMEOUT",
-      3600000,
-      toNumber
-    ), // 1 hour
   },
 };
 

@@ -104,7 +104,6 @@ export const createPOSShortcuts = (callbacks: {
   completeOrder?: () => void
   abandonOrder?: () => void
   openProducts?: () => void
-  openOrders?: () => void
   openCustomers?: () => void
   showHelp?: () => void
   showOrderInfo?: () => void
@@ -177,16 +176,6 @@ export const createPOSShortcuts = (callbacks: {
     })
   }
 
-  if (callbacks.openOrders) {
-    shortcuts.push({
-      key: 'o',
-      alt: true,
-      shift: true,
-      description: 'Open orders',
-      action: callbacks.openOrders
-    })
-  }
-
   if (callbacks.openCustomers) {
     shortcuts.push({
       key: 'u',
@@ -199,7 +188,9 @@ export const createPOSShortcuts = (callbacks: {
 
   if (callbacks.showOrderInfo) {
     shortcuts.push({
-      key: 'F8',
+      key: 'o',
+      alt: true,
+      shift: true,
       description: 'Show order details',
       action: callbacks.showOrderInfo
     })

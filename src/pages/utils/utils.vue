@@ -67,13 +67,6 @@ const cleanDbs = async () => {
           >View all customers</RouterLink
         >
       </li>
-      <li>
-        <RouterLink
-          to="/orders"
-          class="inline-block bg-black text-white py-2 px-3 rounded mb-4"
-          >View orders</RouterLink
-        >
-      </li>
     </ul>
   </nav>
 </template>

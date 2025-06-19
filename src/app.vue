@@ -325,11 +325,6 @@ const openProducts = () => {
   router.push("/products");
 };
 
-const openOrders = () => {
-  analytics.trackButtonClick('open_orders', { section: 'navigation' });
-  router.push("/orders");
-};
-
 const openCustomers = () => {
   analytics.trackButtonClick('open_customers', { section: 'navigation' });
   router.push("/customers");
@@ -350,7 +345,6 @@ const posShortcuts = createPOSShortcuts({
   completeOrder,
   abandonOrder,
   openProducts,
-  openOrders,
   openCustomers,
   showHelp,
   showOrderInfo,
@@ -534,7 +528,7 @@ onUnmounted(() => {
             <button
               @click="showOrderInfo"
               class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors font-medium"
-              title="Show Order Details (F8)"
+              title="Show Order Details (Alt+Shift+O)"
             >
               <div class="flex items-center gap-1">
                 <svg

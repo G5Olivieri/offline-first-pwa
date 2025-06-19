@@ -9,7 +9,6 @@ import NewCustomer from "./pages/customers/new.vue";
 import Home from "./pages/home/home.vue";
 import NewOperator from "./pages/operators/new.vue";
 import Operators from "./pages/operators/operators.vue";
-import Orders from "./pages/orders/orders.vue";
 import ImportProducts from "./pages/products/import.vue";
 import NewProduct from "./pages/products/new.vue";
 import Products from "./pages/products/products.vue";
@@ -23,7 +22,6 @@ const routes: RouteRecordRaw[] = [
   { path: "/customers/new", name: "new-customer", component: NewCustomer },
   { path: "/products", name: "products", component: Products },
   { path: "/checkout", name: "checkout", component: Checkout },
-  { path: "/orders", name: "orders", component: Orders },
   { path: "/customers/all", name: "all-customers", component: ListAllCustomers },
   { path: "/operators/new", name: "new-operator", component: NewOperator },
   { path: "/products/import", name: "import-products", component: ImportProducts },

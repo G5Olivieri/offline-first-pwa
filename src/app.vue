@@ -9,6 +9,7 @@ import {
   createPOSShortcuts,
   useKeyboardShortcuts,
 } from "./composables/use-keyboard-shortcuts";
+import { createLogger } from "./services/logger-service";
 import { useCustomerStore } from "./stores/customer-store";
 import { useNotificationStore } from "./stores/notification-store";
 import { useOnlineStatusStore } from "./stores/online-status-store";
@@ -16,9 +17,8 @@ import { useOperatorStore } from "./stores/operator-store";
 import { useOrderStore } from "./stores/order-store";
 import { useProductStore } from "./stores/product-store";
 import { useSetupStore } from "./stores/setup-store";
-import { createLogger } from "./services/logger-service";
 
-const logger = createLogger('App');
+const logger = createLogger("App");
 const barcode = ref("");
 const router = useRouter();
 const clock = ref(
@@ -151,85 +151,103 @@ const dbStatusSummary = computed(() => {
 
 // Notification system - removed unused modal variable
 
+const focusBarcode = () => {
+  if (barcodeInput.value) {
+    barcodeInput.value.focus();
+  }
+};
+
+const clearOperator = () => {
+  operatorStore.clearOperator();
+  notificationStore.showInfo(
+    "Operator cleared",
+    "Please select a new operator"
+  );
+};
+
+const selectOperator = () => {
+  router.push("/operators");
+};
+
+const clearCustomer = () => {
+  customerStore.clearCustomer();
+  notificationStore.showInfo("Customer cleared");
+};
+
+const selectCustomer = () => {
+  router.push("/customers");
+};
+
+const completeOrder = async () => {
+  if (orderStore.id) {
+    try {
+      await orderStore.complete();
+      notificationStore.showSuccess(
+        "Order Completed",
+        "Thank you for your order!"
+      );
+    } catch (error) {
+      logger.error("Error completing order:", error);
+      notificationStore.showError("Error", "Failed to complete order");
+    }
+  } else {
+    notificationStore.showWarning("No Order", "No active order to complete");
+  }
+};
+
+const abandonOrder = async () => {
+  if (orderStore.id) {
+    const result = await notificationStore.showConfirm(
+      "Abandon Order",
+      "Are you sure you want to abandon this order? All items will be lost.",
+      { type: "warning" }
+    );
+    if (result.confirmed) {
+      try {
+        await orderStore.abandon();
+        notificationStore.showInfo(
+          "Order Abandoned",
+          "Order has been cancelled"
+        );
+      } catch (error) {
+        logger.error("Error abandoning order:", error);
+        notificationStore.showError("Error", "Failed to abandon order");
+      }
+    }
+  } else {
+    notificationStore.showWarning("No Order", "No active order to abandon");
+  }
+};
+
+const openProducts = () => {
+  router.push("/products");
+};
+
+const openOrders = () => {
+  router.push("/orders");
+};
+
+const openCustomers = () => {
+  router.push("/customers");
+};
+
+const showHelp = () => {
+  showHelpDialog.value = true;
+};
+
 // Keyboard shortcuts
 const posShortcuts = createPOSShortcuts({
-  focusBarcode: () => {
-    if (barcodeInput.value) {
-      barcodeInput.value.focus();
-    }
-  },
-  clearOperator: () => {
-    operatorStore.clearOperator();
-    notificationStore.showInfo(
-      "Operator cleared",
-      "Please select a new operator"
-    );
-  },
-  selectOperator: () => {
-    router.push("/operators");
-  },
-  clearCustomer: () => {
-    customerStore.clearCustomer();
-    notificationStore.showInfo("Customer cleared");
-  },
-  selectCustomer: () => {
-    router.push("/customers");
-  },
-  completeOrder: async () => {
-    if (orderStore.id) {
-      const result = await notificationStore.showConfirm(
-        "Complete Order",
-        "Are you sure you want to complete this order?"
-      );
-      if (result.confirmed) {
-        try {
-          await orderStore.complete();
-          notificationStore.showSuccess(
-            "Order completed",
-            "Order has been processed successfully"
-          );
-        } catch {
-          notificationStore.showError("Error", "Failed to complete order");
-        }
-      }
-    } else {
-      notificationStore.showWarning("No Order", "No active order to complete");
-    }
-  },
-  abandonOrder: async () => {
-    if (orderStore.id) {
-      const result = await notificationStore.showConfirm(
-        "Abandon Order",
-        "Are you sure you want to abandon this order? All items will be lost.",
-        { type: "warning" }
-      );
-      if (result.confirmed) {
-        try {
-          await orderStore.abandon();
-          notificationStore.showInfo(
-            "Order abandoned",
-            "Order has been cancelled"
-          );
-        } catch {
-          notificationStore.showError("Error", "Failed to abandon order");
-        }
-      }
-    } else {
-      notificationStore.showWarning("No Order", "No active order to abandon");
-    }
-  },
-  openProducts: () => {
-    router.push("/products");
-  },
-  openOrders: () => {
-    router.push("/orders");
-  },
-  openCustomers: () => {
-    router.push("/customers");
-  },
-  showHelp: () => {
-    showHelpDialog.value = true;
-  },
+  focusBarcode,
+  clearOperator,
+  selectOperator,
+  clearCustomer,
+  selectCustomer,
+  completeOrder,
+  abandonOrder,
+  openProducts,
+  openOrders,
+  openCustomers,
+  showHelp,
 });
 
 useKeyboardShortcuts(posShortcuts);
@@ -360,6 +378,12 @@ onUnmounted(() => {
               </svg>
               <input
                 ref="barcodeInput"
+                @keydown.escape="
+                  (event) => {
+                    (event.target as HTMLElement | null)?.blur();
+                    barcode = '';
+                  }
+                "
                 v-model="barcode"
                 type="text"
                 placeholder="Barcode (F1)"
@@ -401,7 +425,7 @@ onUnmounted(() => {
             <!-- Order Actions -->
             <div class="flex gap-1">
               <button
-                @click="orderStore.complete"
+                @click="completeOrder"
                 class="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded transition-colors"
                 title="Complete Order (F6)"
               >
@@ -420,7 +444,7 @@ onUnmounted(() => {
                 </svg>
               </button>
               <button
-                @click="orderStore.abandon"
+                @click="abandonOrder"
                 class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded transition-colors"
                 title="Abandon Order (F7)"
               >

@@ -22,16 +22,12 @@ const routes: RouteRecordRaw[] = [
   { path: "/products", component: Products },
   { path: "/checkout", component: Checkout },
   { path: "/orders", component: Orders },
-  ...(import.meta.env.DEV
-    ? [
-        { path: "/customers/all", component: ListAllCustomers },
-        { path: "/operators/new", component: NewOperator },
-        { path: "/products/import", component: ImportProducts },
-        { path: "/products/new", component: NewProduct },
-        { path: "/_utils", component: Utils },
-        { path: "/_utils/monitoring", component: Monitoring },
-      ]
-    : []),
+  { path: "/customers/all", component: ListAllCustomers },
+  { path: "/operators/new", component: NewOperator },
+  { path: "/products/import", component: ImportProducts },
+  { path: "/products/new", component: NewProduct },
+  { path: "/_utils", component: Utils },
+  { path: "/_utils/monitoring", component: Monitoring },
 ];
 
 export const router = createRouter({

@@ -11,7 +11,7 @@ import { useOperatorStore } from "./operator-store";
 import { useProductStore } from "./product-store";
 import { useTerminalStore } from "./terminal-store";
 
-const logger = createLogger('OrderStore');
+const logger = createLogger("OrderStore");
 
 export const useOrderStore = defineStore("orderStore", () => {
   const router = useRouter();
@@ -95,17 +95,15 @@ export const useOrderStore = defineStore("orderStore", () => {
       return;
     }
 
-    if (confirm("Are you sure you want to abandon the order?")) {
-      try {
-        await orderDB.put(mapOrderToDocument(OrderStatus.CANCELLED));
-        order.clear();
-        currentOrderId.value = "";
-        currentOrderRev.value = undefined;
-        await customerStore.clearCustomer();
-        syncOrder();
-      } catch (error) {
-        logger.error("Error abandoning order:", error);
-      }
+    try {
+      await orderDB.put(mapOrderToDocument(OrderStatus.CANCELLED));
+      order.clear();
+      currentOrderId.value = "";
+      currentOrderRev.value = undefined;
+      await customerStore.clearCustomer();
+      syncOrder();
+    } catch (error) {
+      logger.error("Error abandoning order:", error);
     }
   };
 
@@ -229,7 +227,9 @@ export const useOrderStore = defineStore("orderStore", () => {
       doc.customer_id !== customerStore.customerId ||
       operatorStore.operatorId !== doc.operator_id
     ) {
-      logger.warn("The current order does not match the current customer or operator, resync.");
+      logger.warn(
+        "The current order does not match the current customer or operator, resync."
+      );
       syncOrder();
       return;
     }
@@ -289,7 +289,9 @@ export const useOrderStore = defineStore("orderStore", () => {
           if (order._rev) {
             await orderDB.remove(order._id, order._rev);
             purgedCount++;
-            logger.info(`Purged ${order.status} order ${order._id} from local storage`);
+            logger.info(
+              `Purged ${order.status} order ${order._id} from local storage`
+            );
           }
         } catch (error) {
           logger.error(`Failed to purge order ${order._id}:`, error);

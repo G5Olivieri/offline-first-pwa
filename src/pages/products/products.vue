@@ -1,17 +1,17 @@
 <script setup lang="ts">
 defineOptions({
-  name: 'ProductsPage'
+  name: "ProductsPage",
 });
 
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { createLogger } from "../../services/logger-service";
-import { useNotificationStore } from "../../stores/notification-store";
-import { useProductStore } from "../../stores/product-store";
-import { useOrderStore } from "../../stores/order-store";
 import { searchService } from "../../services/search-service";
+import { useNotificationStore } from "../../stores/notification-store";
+import { useOrderStore } from "../../stores/order-store";
+import { useProductStore } from "../../stores/product-store";
 import type { Product } from "../../types/product";
 
-const logger = createLogger('ProductsPage');
+const logger = createLogger("ProductsPage");
 const productStore = useProductStore();
 const notificationStore = useNotificationStore();
 const orderStore = useOrderStore();
@@ -225,7 +225,11 @@ watch(searchQuery, () => {
 // Keyboard shortcut handler
 const handleKeydown = (event: KeyboardEvent) => {
   // Alt + Shift + F to focus search
-  if (event.altKey && event.shiftKey && (event.key === 'F' || event.key === 'f')) {
+  if (
+    event.altKey &&
+    event.shiftKey &&
+    (event.key === "F" || event.key === "f")
+  ) {
     event.preventDefault();
     searchInputRef.value?.focus();
     notificationStore.showInfo(
@@ -235,15 +239,23 @@ const handleKeydown = (event: KeyboardEvent) => {
   }
 };
 
+const escapeSearch = (event: KeyboardEvent) => {
+  (event.target as HTMLElement | null)?.blur();
+  searchQuery.value = "";
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value);
+  }
+};
+
 onMounted(() => {
   loadProducts();
-  window.addEventListener('keydown', handleKeydown);
+  window.addEventListener("keydown", handleKeydown);
 });
 onUnmounted(() => {
   if (searchTimeout.value) {
     clearTimeout(searchTimeout.value);
   }
-  window.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener("keydown", handleKeydown);
 });
 </script>
 <template>
@@ -339,6 +351,7 @@ onUnmounted(() => {
               </div>
               <input
                 ref="searchInputRef"
+                @keydown.escape="escapeSearch"
                 v-model="searchQuery"
                 type="text"
                 :placeholder="
@@ -393,11 +406,20 @@ onUnmounted(() => {
           <!-- Keyboard Shortcut Hint -->
           <div class="mt-3 text-center">
             <p class="text-xs text-gray-500">
-              <kbd class="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">Alt</kbd>
+              <kbd
+                class="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded"
+                >Alt</kbd
+              >
               +
-              <kbd class="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">Shift</kbd>
+              <kbd
+                class="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded"
+                >Shift</kbd
+              >
               +
-              <kbd class="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">F</kbd>
+              <kbd
+                class="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded"
+                >F</kbd
+              >
               to focus search
             </p>
           </div>

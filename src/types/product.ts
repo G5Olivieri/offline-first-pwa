@@ -6,6 +6,14 @@ export type Product = {
   price: number;
   stock: number;
   category?: string;
-  tags?: string[];
   description?: string;
+  dosageForm?: string;
+  drugClass?: string;
+  isProprietary?: boolean;
+  manufacturer?: string;
+  nonProprietaryName?: string;
+  prescriptionStatus?: 'OTC' | 'Prescription' | 'Controlled';
+  contraindication?: string;
+  activeIngredient?: string;
+  tags?: string[];
 };

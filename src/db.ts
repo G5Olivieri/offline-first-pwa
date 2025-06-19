@@ -11,7 +11,7 @@ import type { Product } from "./types/product";
 // Initialize PouchDB with plugins
 PouchDB.plugin(PouchDBFind);
 
-const logger = createLogger('DB');
+const logger = createLogger("DB");
 
 export const SYNCING = config.enableSync;
 const COUCHDB_URL = config.couchdbUrl;
@@ -104,10 +104,15 @@ export const getOrderDB = (): PouchDB.Database<Order> => {
                 try {
                   if (doc._rev) {
                     await _orderDB!.remove(doc._id, doc._rev);
-                    logger.debug(`[orders] Purged ${order.status} order ${doc._id} from local storage`);
+                    logger.debug(
+                      `[orders] Purged ${order.status} order ${doc._id} from local storage`
+                    );
                   }
                 } catch (error) {
-                  logger.error(`[orders] Failed to purge order ${doc._id}:`, error);
+                  logger.error(
+                    `[orders] Failed to purge order ${doc._id}:`,
+                    error
+                  );
                 }
               }
             }
@@ -123,7 +128,9 @@ export const getOrderDB = (): PouchDB.Database<Order> => {
           logger.debug("[orders] Sync paused");
         });
 
-      logger.info(`[orders] One-way sync enabled with ${COUCHDB_URL}/orders (push all orders, never pull)`);
+      logger.info(
+        `[orders] One-way sync enabled with ${COUCHDB_URL}/orders (push all orders, never pull)`
+      );
     } catch (error) {
       logger.error("[orders] Failed to setup sync:", error);
     }

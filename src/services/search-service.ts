@@ -1,5 +1,6 @@
 import Fuse, { type FuseResult, type IFuseOptions } from "fuse.js";
 import { config } from "../config/env";
+import { createLogger } from "./logger-service";
 
 const DB_NAME = config.search.dbName;
 const DB_VERSION = config.search.dbVersion;
@@ -21,6 +22,7 @@ export interface IndexableProduct {
 }
 
 export class SearchService {
+  private logger = createLogger("SearchService");
   private fuse: Fuse<IndexableProduct> | null = null;
   private db: IDBDatabase | null = null;
   private docs = new Map<string, IndexableProduct>();
@@ -58,7 +60,7 @@ export class SearchService {
           const cachedIndex = await this.loadIndexFromCache();
 
           if (cachedIndex) {
-            console.log("Loading existing search index from IndexedDB");
+            this.logger.debug("Loading existing search index from IndexedDB");
 
             this.docs = new Map(
               cachedIndex.dataset.map((item) => [item.id, item])
@@ -74,16 +76,16 @@ export class SearchService {
               fuseIndex
             );
 
-            console.log(
+            this.logger.debug(
               `Search index loaded with ${cachedIndex.dataset.length} products`
             );
           } else {
-            console.log("No existing search index found");
+            this.logger.debug("No existing search index found");
             this.fuse = new Fuse([], this.fuseOptions);
             this.docs = new Map<string, IndexableProduct>();
           }
         } catch (error) {
-          console.warn("Failed to load existing search index:", error);
+          this.logger.warn("Failed to load existing search index:", error);
         }
 
         resolve();
@@ -100,7 +102,7 @@ export class SearchService {
 
   private async saveIndexToCache(): Promise<void> {
     if (!this.fuse) {
-      console.warn("Search service not initialized");
+      this.logger.warn("Search service not initialized");
       return;
     }
     if (!this.db) return;
@@ -146,7 +148,7 @@ export class SearchService {
     matches?: FuseResult<IndexableProduct>[];
   } {
     if (!this.fuse) {
-      console.warn("Search service not initialized");
+      this.logger.warn("Search service not initialized");
       return { count: 0, productIds: [] };
     }
 
@@ -181,7 +183,7 @@ export class SearchService {
 
   public async add(product: IndexableProduct): Promise<void> {
     if (!this.fuse) {
-      console.warn("Search service not initialized");
+      this.logger.warn("Search service not initialized");
       return;
     }
 
@@ -193,7 +195,7 @@ export class SearchService {
 
   public async bulkAdd(products: IndexableProduct[]): Promise<void> {
     if (!this.fuse) {
-      console.warn("Search service not initialized");
+      this.logger.warn("Search service not initialized");
       return;
     }
     products.forEach((product) => {
@@ -205,7 +207,7 @@ export class SearchService {
 
   public async remove(productId: string): Promise<void> {
     if (!this.fuse) {
-      console.warn("Search service not initialized");
+      this.logger.warn("Search service not initialized");
       return;
     }
 
@@ -217,7 +219,7 @@ export class SearchService {
 
   public async bulkRemove(productIds: string[]): Promise<void> {
     if (!this.fuse) {
-      console.warn("Search service not initialized");
+      this.logger.warn("Search service not initialized");
       return;
     }
 

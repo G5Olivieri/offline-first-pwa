@@ -1,19 +1,20 @@
+import { config } from "../config/env";
 import type {
-  AnalyticsEvent,
-  AnalyticsProvider,
   AnalyticsConfig,
   AnalyticsContext,
-  UserAction,
-  ProductEvent,
-  OrderEvent,
-  NavigationEvent,
+  AnalyticsEvent,
+  AnalyticsProvider,
   ErrorEvent,
-  PerformanceEvent
-} from '../types/analytics';
-import { AnalyticsCategory } from '../types/analytics';
-import { createLogger } from './logger-service';
+  NavigationEvent,
+  OrderEvent,
+  PerformanceEvent,
+  ProductEvent,
+  UserAction,
+} from "../types/analytics";
+import { AnalyticsCategory } from "../types/analytics";
+import { createLogger } from "./logger-service";
 
-const logger = createLogger('AnalyticsService');
+const logger = createLogger("AnalyticsService");
 
 class AnalyticsService {
   private config: AnalyticsConfig;
@@ -38,9 +39,9 @@ class AnalyticsService {
 
     if (this.config.enabled) {
       this.setupAutoFlush();
-      logger.info('Analytics Service initialized', {
+      logger.debug("Analytics Service initialized", {
         sessionId: this.sessionId,
-        providersCount: this.config.providers.length
+        providersCount: this.config.providers.length,
       });
     }
   }
@@ -48,16 +49,18 @@ class AnalyticsService {
   // Public API methods
   addProvider(provider: AnalyticsProvider): void {
     this.config.providers.push(provider);
-    logger.info('Analytics provider added', { providerName: provider.name });
+    logger.debug("Analytics provider added", { providerName: provider.name });
   }
 
   removeProvider(providerName: string): void {
-    this.config.providers = this.config.providers.filter(p => p.name !== providerName);
-    logger.info('Analytics provider removed', { providerName });
+    this.config.providers = this.config.providers.filter(
+      (p) => p.name !== providerName
+    );
+    logger.debug("Analytics provider removed", { providerName });
   }
 
   // Generic event tracking
-  track(event: Omit<AnalyticsEvent, 'timestamp' | 'sessionId'>): void {
+  track(event: Omit<AnalyticsEvent, "timestamp" | "sessionId">): void {
     if (!this.config.enabled) return;
 
     const enrichedEvent: AnalyticsEvent = {
@@ -71,7 +74,7 @@ class AnalyticsService {
     this.eventQueue.push(enrichedEvent);
 
     if (this.config.debug) {
-      logger.debug('Event tracked', enrichedEvent);
+      logger.debug("Event tracked", enrichedEvent);
     }
 
     // Immediate flush for high-priority events
@@ -89,7 +92,7 @@ class AnalyticsService {
       category: AnalyticsCategory.USER_ACTION,
       properties: {
         category: action.category,
-        label: action.label || '',
+        label: action.label || "",
         value: action.value || 0,
         ...action.metadata,
       },
@@ -101,12 +104,12 @@ class AnalyticsService {
       name: eventName,
       category: AnalyticsCategory.BUSINESS,
       properties: {
-        productId: product.productId || '',
-        productName: product.productName || '',
-        category: product.category || '',
+        productId: product.productId || "",
+        productName: product.productName || "",
+        category: product.category || "",
         price: product.price || 0,
         quantity: product.quantity || 0,
-        barcode: product.barcode || '',
+        barcode: product.barcode || "",
       },
     });
   }
@@ -116,22 +119,22 @@ class AnalyticsService {
       name: eventName,
       category: AnalyticsCategory.BUSINESS,
       properties: {
-        orderId: order.orderId || '',
-        customerId: order.customerId || '',
-        operatorId: order.operatorId || '',
+        orderId: order.orderId || "",
+        customerId: order.customerId || "",
+        operatorId: order.operatorId || "",
         total: order.total || 0,
         itemCount: order.itemCount || 0,
-        paymentMethod: order.paymentMethod || '',
+        paymentMethod: order.paymentMethod || "",
       },
     });
   }
 
   trackNavigation(navigation: NavigationEvent): void {
     this.track({
-      name: 'navigation',
+      name: "navigation",
       category: AnalyticsCategory.NAVIGATION,
       properties: {
-        from: navigation.from || '',
+        from: navigation.from || "",
         to: navigation.to,
         duration: navigation.duration || 0,
       },
@@ -140,12 +143,12 @@ class AnalyticsService {
 
   trackError(error: ErrorEvent): void {
     this.track({
-      name: 'error_occurred',
+      name: "error_occurred",
       category: AnalyticsCategory.ERROR,
       properties: {
         errorType: error.errorType,
-        errorMessage: error.errorMessage || '',
-        stackTrace: error.stackTrace || '',
+        errorMessage: error.errorMessage || "",
+        stackTrace: error.stackTrace || "",
         ...error.context,
       },
     });
@@ -164,46 +167,52 @@ class AnalyticsService {
   }
 
   // User identification
-  identify(userId: string, properties?: Record<string, string | number | boolean>): void {
+  identify(
+    userId: string,
+    properties?: Record<string, string | number | boolean>
+  ): void {
     if (!this.config.enabled) return;
 
     this.config.userId = userId;
 
-    this.config.providers.forEach(provider => {
+    this.config.providers.forEach((provider) => {
       try {
         provider.identify(userId, properties);
       } catch (error) {
-        logger.error('Provider identify failed', {
+        logger.error("Provider identify failed", {
           providerName: provider.name,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     });
 
     this.track({
-      name: 'user_identified',
+      name: "user_identified",
       category: AnalyticsCategory.SYSTEM,
       properties: properties || {},
     });
   }
 
   // Page tracking
-  page(name: string, properties?: Record<string, string | number | boolean>): void {
+  page(
+    name: string,
+    properties?: Record<string, string | number | boolean>
+  ): void {
     if (!this.config.enabled) return;
 
-    this.config.providers.forEach(provider => {
+    this.config.providers.forEach((provider) => {
       try {
         provider.page(name, properties);
       } catch (error) {
-        logger.error('Provider page tracking failed', {
+        logger.error("Provider page tracking failed", {
           providerName: provider.name,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     });
 
     this.track({
-      name: 'page_view',
+      name: "page_view",
       category: AnalyticsCategory.NAVIGATION,
       properties: {
         page: name,
@@ -228,16 +237,16 @@ class AnalyticsService {
           await provider.flush();
         }
       } catch (error) {
-        logger.error('Provider flush failed', {
+        logger.error("Provider flush failed", {
           providerName: provider.name,
           eventsCount: events.length,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }
 
     if (this.config.debug) {
-      logger.debug('Events flushed', { eventsCount: events.length });
+      logger.debug("Events flushed", { eventsCount: events.length });
     }
   }
 
@@ -245,9 +254,11 @@ class AnalyticsService {
   configure(newConfig: Partial<AnalyticsConfig>): void {
     this.config = { ...this.config, ...newConfig };
 
-    this.config.providers.forEach(provider => {
+    this.config.providers.forEach((provider) => {
       if (provider.configure) {
-        provider.configure(newConfig as Record<string, string | number | boolean>);
+        provider.configure(
+          newConfig as Record<string, string | number | boolean>
+        );
       }
     });
 
@@ -255,7 +266,7 @@ class AnalyticsService {
       this.setupAutoFlush();
     }
 
-    logger.info('Analytics Service reconfigured', newConfig);
+    logger.info("Analytics Service reconfigured", newConfig);
   }
 
   // Session management
@@ -264,12 +275,12 @@ class AnalyticsService {
     this.context = this.collectContext();
 
     this.track({
-      name: 'session_started',
+      name: "session_started",
       category: AnalyticsCategory.SYSTEM,
       properties: { previousSession: this.sessionId },
     });
 
-    logger.info('New analytics session started', { sessionId: this.sessionId });
+    logger.info("New analytics session started", { sessionId: this.sessionId });
   }
 
   // Cleanup
@@ -279,7 +290,7 @@ class AnalyticsService {
     }
 
     this.flush().finally(() => {
-      logger.info('Analytics Service destroyed');
+      logger.info("Analytics Service destroyed");
     });
   }
 
@@ -290,30 +301,38 @@ class AnalyticsService {
 
   private collectContext(): AnalyticsContext {
     const context: AnalyticsContext = {
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-      viewport: typeof window !== 'undefined' ? {
-        width: window.innerWidth,
-        height: window.innerHeight,
-      } : undefined,
+      userAgent:
+        typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
+      viewport:
+        typeof window !== "undefined"
+          ? {
+              width: window.innerWidth,
+              height: window.innerHeight,
+            }
+          : undefined,
     };
 
     // Detect device type
-    if (typeof window !== 'undefined' && window.innerWidth) {
+    if (typeof window !== "undefined" && window.innerWidth) {
       if (window.innerWidth <= 768) {
-        context.device = { type: 'mobile' };
+        context.device = { type: "mobile" };
       } else if (window.innerWidth <= 1024) {
-        context.device = { type: 'tablet' };
+        context.device = { type: "tablet" };
       } else {
-        context.device = { type: 'desktop' };
+        context.device = { type: "desktop" };
       }
     }
 
     // Add connection info if available
-    if ('connection' in navigator) {
-      const connection = (navigator as Navigator & { connection: { effectiveType: string; downlink?: number } }).connection;
+    if ("connection" in navigator) {
+      const connection = (
+        navigator as Navigator & {
+          connection: { effectiveType: string; downlink?: number };
+        }
+      ).connection;
       context.connection = {
         type: connection.effectiveType,
-        speed: connection.downlink ? `${connection.downlink}Mbps` : 'unknown',
+        speed: connection.downlink ? `${connection.downlink}Mbps` : "unknown",
       };
     }
 
@@ -347,8 +366,14 @@ class AnalyticsService {
 }
 
 // Create singleton instance
-export const analytics = new AnalyticsService();
+export const analytics = new AnalyticsService({
+  enabled: config.analytics.enabled,
+  debug: config.analytics.debug,
+  batchSize: config.analytics.batchSize,
+  flushInterval: config.analytics.flushInterval,
+});
 
 // Export the class for custom instances
 export { AnalyticsService };
-export type { AnalyticsEvent, AnalyticsProvider, AnalyticsConfig };
+export type { AnalyticsConfig, AnalyticsEvent, AnalyticsProvider };
+

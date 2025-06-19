@@ -1,8 +1,8 @@
 import { defineStore } from "pinia";
 import { onMounted, ref } from "vue";
 import { getCustomerDB } from "../db";
-import { createLogger } from "../services/logger-service";
 import { analytics } from "../services/analytics-service";
+import { createLogger } from "../services/logger-service";
 
 export type Customer = {
   _id: string;
@@ -32,8 +32,8 @@ export const useCustomerStore = defineStore("customerStore", () => {
 
     // Track customer creation
     analytics.trackUserAction({
-      action: 'customer_created',
-      category: 'customer_management',
+      action: "customer_created",
+      category: "customer_management",
       label: name,
       metadata: {
         customerId: newCustomer._id,
@@ -41,9 +41,9 @@ export const useCustomerStore = defineStore("customerStore", () => {
       },
     });
 
-    logger.info("Customer created", {
+    logger.debug("Customer created", {
       customerId: newCustomer._id,
-      name
+      name,
     });
 
     return newCustomer;
@@ -61,21 +61,21 @@ export const useCustomerStore = defineStore("customerStore", () => {
 
       // Track customer change
       analytics.trackUserAction({
-        action: 'customer_changed',
-        category: 'customer_management',
+        action: "customer_changed",
+        category: "customer_management",
         label: doc.name,
         metadata: {
           customerId: doc._id,
           customerName: doc.name,
-          previousCustomer: previousCustomer || 'none',
+          previousCustomer: previousCustomer || "none",
           hasDocument: !!doc.document,
         },
       });
 
-      logger.info("Customer changed", {
+      logger.debug("Customer changed", {
         from: previousCustomer,
         to: doc._id,
-        customerName: doc.name
+        customerName: doc.name,
       });
     });
   };
@@ -92,18 +92,18 @@ export const useCustomerStore = defineStore("customerStore", () => {
 
     // Track customer clear
     analytics.trackUserAction({
-      action: 'customer_cleared',
-      category: 'customer_management',
-      label: previousCustomerName || 'unknown',
+      action: "customer_cleared",
+      category: "customer_management",
+      label: previousCustomerName || "unknown",
       metadata: {
-        previousCustomer: previousCustomer || 'none',
-        customerName: previousCustomerName || 'unknown',
+        previousCustomer: previousCustomer || "none",
+        customerName: previousCustomerName || "unknown",
       },
     });
 
-    logger.info("Customer cleared", {
+    logger.debug("Customer cleared", {
       previousCustomer,
-      customerName: previousCustomerName
+      customerName: previousCustomerName,
     });
   };
 
@@ -112,9 +112,9 @@ export const useCustomerStore = defineStore("customerStore", () => {
 
     // Track customer search attempt
     analytics.trackUserAction({
-      action: 'customer_search',
-      category: 'customer_management',
-      label: 'search_by_document',
+      action: "customer_search",
+      category: "customer_management",
+      label: "search_by_document",
       metadata: {
         hasDocument: !!document,
         documentLength: document.length,
@@ -131,8 +131,8 @@ export const useCustomerStore = defineStore("customerStore", () => {
 
       // Track successful customer search
       analytics.trackUserAction({
-        action: 'customer_search_success',
-        category: 'customer_management',
+        action: "customer_search_success",
+        category: "customer_management",
         label: foundCustomer.name,
         metadata: {
           customerId: foundCustomer._id,
@@ -141,25 +141,25 @@ export const useCustomerStore = defineStore("customerStore", () => {
         },
       });
 
-      logger.info("Customer found by document", {
+      logger.debug("Customer found by document", {
         customerId: foundCustomer._id,
         customerName: foundCustomer.name,
-        document
+        document,
       });
 
       return foundCustomer;
     } else {
       // Track failed customer search
       analytics.trackUserAction({
-        action: 'customer_search_not_found',
-        category: 'customer_management',
-        label: 'not_found',
+        action: "customer_search_not_found",
+        category: "customer_management",
+        label: "not_found",
         metadata: {
           searchDocument: document,
         },
       });
 
-      logger.info("Customer not found by document", { document });
+      logger.debug("Customer not found by document", { document });
 
       return null;
     }
@@ -195,19 +195,22 @@ export const useCustomerStore = defineStore("customerStore", () => {
   };
 
   // Business logic method: Create customer and immediately select it
-  const createAndSelectCustomer = async (customerData: { name: string; document: string }): Promise<void> => {
+  const createAndSelectCustomer = async (customerData: {
+    name: string;
+    document: string;
+  }): Promise<void> => {
     logger.debug("Creating and selecting customer:", customerData.name);
 
     // Track customer creation attempt from form
     analytics.trackUserAction({
-      action: 'customer_create_attempt',
-      category: 'customer_management',
+      action: "customer_create_attempt",
+      category: "customer_management",
       label: customerData.name,
       metadata: {
         customerName: customerData.name,
         hasDocument: !!customerData.document,
         documentLength: customerData.document.length,
-        source: 'customer_store',
+        source: "customer_store",
       },
     });
 
@@ -216,31 +219,31 @@ export const useCustomerStore = defineStore("customerStore", () => {
 
       // Track successful customer creation and immediate selection
       analytics.trackUserAction({
-        action: 'customer_created_and_selected',
-        category: 'customer_management',
+        action: "customer_created_and_selected",
+        category: "customer_management",
         label: customerData.name,
         metadata: {
           customerId: newCustomer._id,
           customerName: customerData.name,
           hasDocument: !!customerData.document,
-          source: 'customer_store',
+          source: "customer_store",
         },
       });
 
       await setCustomer(newCustomer._id);
 
-      logger.info("Customer created and selected", {
+      logger.debug("Customer created and selected", {
         customerId: newCustomer._id,
-        name: customerData.name
+        name: customerData.name,
       });
     } catch (error) {
       // Track customer creation error
       analytics.trackError({
-        errorType: 'customer_creation_error',
+        errorType: "customer_creation_error",
         errorMessage: error instanceof Error ? error.message : String(error),
         context: {
           customerName: customerData.name,
-          source: 'customer_store',
+          source: "customer_store",
         },
       });
 
@@ -250,36 +253,40 @@ export const useCustomerStore = defineStore("customerStore", () => {
   };
 
   // Business logic method: Select customer from search results
-  const selectCustomerFromSearch = async (customerId: string, searchDocument: string, foundCustomer?: Customer): Promise<void> => {
+  const selectCustomerFromSearch = async (
+    customerId: string,
+    searchDocument: string,
+    foundCustomer?: Customer
+  ): Promise<void> => {
     logger.debug("Selecting customer from search:", customerId);
 
     // Track customer selection from search results
     analytics.trackUserAction({
-      action: 'customer_selected_from_search',
-      category: 'customer_management',
-      label: foundCustomer?.name || 'unknown',
+      action: "customer_selected_from_search",
+      category: "customer_management",
+      label: foundCustomer?.name || "unknown",
       metadata: {
         customerId,
-        customerName: foundCustomer?.name || 'unknown',
+        customerName: foundCustomer?.name || "unknown",
         searchDocument,
-        source: 'customer_store',
+        source: "customer_store",
       },
     });
 
     try {
       await setCustomer(customerId);
-      logger.info("Customer selected from search", {
+      logger.debug("Customer selected from search", {
         customerId,
-        customerName: foundCustomer?.name
+        customerName: foundCustomer?.name,
       });
     } catch (error) {
       // Track selection error
       analytics.trackError({
-        errorType: 'customer_selection_error',
+        errorType: "customer_selection_error",
         errorMessage: error instanceof Error ? error.message : String(error),
         context: {
           customerId,
-          source: 'customer_store',
+          source: "customer_store",
         },
       });
 

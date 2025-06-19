@@ -7,10 +7,10 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import * as z from "zod";
 import { useOperatorStore } from "../../stores/operator-store";
-import { useNavigationActions } from "../../composables/use-navigation-actions";
+import { useRouter } from "vue-router";
 
 const operatorStore = useOperatorStore();
-const navigation = useNavigationActions();
+const router = useRouter();
 
 const validationSchema = toTypedSchema(
   z.object({
@@ -29,11 +29,10 @@ const onSubmit = handleSubmit(async (values) => {
 
   try {
     await operatorStore.createAndSelectOperator({ name });
-    navigation.goToHomeAfterSuccess('operator', name, 'new_operator_page');
+    router.push({ name: "home" });
   } catch (error) {
     console.error("Error creating operator:", error);
     alert("Failed to create operator. Please try again.");
-    // Error is already tracked in the store
   }
 });
 </script>

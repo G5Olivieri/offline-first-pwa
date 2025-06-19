@@ -143,7 +143,6 @@
 import { computed, ref } from 'vue';
 import type { ProductRecommendation } from '../types/recommendation';
 import { RecommendationContext } from '../types/recommendation';
-import { useRecommendationStore } from '../stores/recommendation-store';
 
 interface Props {
   recommendations: ProductRecommendation[];
@@ -171,7 +170,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>();
 
-const recommendationStore = useRecommendationStore();
 const showAll = ref(false);
 
 // Computed
@@ -194,17 +192,14 @@ function getConfidenceBadgeClass(confidence: number): string {
 }
 
 async function handleRecommendationClick(recommendation: ProductRecommendation): Promise<void> {
-  await recommendationStore.trackRecommendationClicked(recommendation, props.context);
   emit('click-recommendation', recommendation);
 }
 
 async function handleAddToCart(recommendation: ProductRecommendation): Promise<void> {
-  await recommendationStore.trackRecommendationAddedToCart(recommendation, props.context);
   emit('add-to-cart', recommendation);
 }
 
 async function handleDismiss(recommendation: ProductRecommendation): Promise<void> {
-  await recommendationStore.trackRecommendationDismissed(recommendation, props.context);
   emit('dismiss-recommendation', recommendation);
 }
 

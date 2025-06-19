@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { getProductDB } from "../db";
-import { createLogger } from "../services/logger-service";
 import { searchService } from "../services/search-service";
 import type { Product } from "../types/product";
 
@@ -32,7 +31,6 @@ export interface SetupState {
 }
 
 export const useSetupStore = defineStore("setupStore", () => {
-  const logger = createLogger("SetupStore");
   const productDB = getProductDB();
 
   // Reactive state
@@ -48,7 +46,6 @@ export const useSetupStore = defineStore("setupStore", () => {
 
   const initializeSystem = async (): Promise<void> => {
     if (setupState.value.isInitialized) {
-      logger.debug("System already initialized");
       return;
     }
 
@@ -63,7 +60,6 @@ export const useSetupStore = defineStore("setupStore", () => {
         "Waiting for search service to be ready...";
       setupState.value.progress = 10;
 
-      logger.debug("Waiting for search service to be ready...");
       // The search service initializes automatically in its constructor
       // We just need to wait a bit for IndexedDB to be ready
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -75,7 +71,6 @@ export const useSetupStore = defineStore("setupStore", () => {
         SETUP_STEP_DESCRIPTIONS[SetupStep.LOADING_PRODUCTS];
       setupState.value.progress = 40;
 
-      logger.debug("Loading products from CouchDB...");
       const allProducts = await productDB.allDocs({
         include_docs: true,
         limit: 10000, // Get all products
@@ -85,15 +80,12 @@ export const useSetupStore = defineStore("setupStore", () => {
       setupState.value.totalProducts = products.length;
       setupState.value.progress = 60;
 
-      logger.debug(`Loaded ${products.length} products from CouchDB`);
-
       // Step 3: Add products to search index (if we have products)
       if (products.length > 0) {
         setupState.value.currentStep = SetupStep.BUILDING_SEARCH_INDEX;
         setupState.value.currentStepDescription = `Building search index for ${products.length} products...`;
         setupState.value.progress = 70;
 
-        logger.debug("Adding products to search index...");
         // Convert products to IndexableProduct format
         const indexableProducts = products.map((product) => ({
           id: product._id,
@@ -103,12 +95,7 @@ export const useSetupStore = defineStore("setupStore", () => {
 
         await searchService.bulkAdd(indexableProducts);
         setupState.value.progress = 90;
-
-        logger.debug("Search index built successfully");
       } else {
-        logger.debug(
-          "No products found, search index ready for future products"
-        );
         setupState.value.progress = 90;
       }
 
@@ -118,8 +105,6 @@ export const useSetupStore = defineStore("setupStore", () => {
         SETUP_STEP_DESCRIPTIONS[SetupStep.COMPLETED];
       setupState.value.progress = 100;
       setupState.value.isInitialized = true;
-
-      logger.debug("System initialization completed");
     } catch (error) {
       console.error("System initialization failed:", error);
       setupState.value.currentStep = SetupStep.ERROR;
@@ -134,7 +119,6 @@ export const useSetupStore = defineStore("setupStore", () => {
   };
 
   const resetSetup = async (): Promise<void> => {
-    logger.debug("Resetting system setup...");
     setupState.value.isInitialized = false;
     setupState.value.isLoading = false;
     setupState.value.currentStep = SetupStep.IDLE;
@@ -147,14 +131,12 @@ export const useSetupStore = defineStore("setupStore", () => {
     // Clear search cache
     try {
       await searchService.clearCache();
-      logger.debug("Search cache cleared");
     } catch (error) {
       console.error("Failed to clear search cache:", error);
     }
   };
 
   const retrySetup = async (): Promise<void> => {
-    logger.debug("Retrying system setup...");
     await resetSetup();
     await initializeSystem();
   };

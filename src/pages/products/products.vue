@@ -4,14 +4,12 @@ defineOptions({
 });
 
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { createLogger } from "../../services/logger-service";
 import { searchService } from "../../services/search-service";
 import { useNotificationStore } from "../../stores/notification-store";
 import { useOrderStore } from "../../stores/order-store";
 import { useProductStore } from "../../stores/product-store";
 import type { Product } from "../../types/product";
 
-const logger = createLogger("ProductsPage");
 const productStore = useProductStore();
 const notificationStore = useNotificationStore();
 const orderStore = useOrderStore();
@@ -112,10 +110,9 @@ const loadProducts = async () => {
     // Check if search service is ready
     isSearchIndexReady.value = searchService.isReady();
   } catch (error) {
-    logger.error("Error loading products:", error);
     notificationStore.showError(
       "Loading Error",
-      "Failed to load products. Please try again."
+      `Failed to load products. Please try again. ${error}`
     );
   } finally {
     isLoading.value = false;
@@ -138,10 +135,9 @@ const deleteProduct = async (product: Product) => {
       );
       await loadProducts();
     } catch (error) {
-      logger.error("Error deleting product:", error);
       notificationStore.showError(
         "Delete Error",
-        "Failed to delete product. Please try again."
+        `Failed to delete product. Please try again. ${error}`
       );
     }
   }
@@ -155,10 +151,9 @@ const addToOrder = async (product: Product) => {
       `${product.name} has been added to the order.`
     );
   } catch (error) {
-    logger.error("Error adding product to order:", error);
     notificationStore.showError(
       "Add to Order Error",
-      "Failed to add product to order. Please try again."
+      `Failed to add product to order. Please try again. ${error}`
     );
   }
 };
@@ -661,9 +656,12 @@ onUnmounted(() => {
                 <span
                   class="px-2 py-1 rounded-full text-xs font-medium"
                   :class="{
-                    'bg-green-100 text-green-700': product.prescriptionStatus === 'OTC',
-                    'bg-yellow-100 text-yellow-700': product.prescriptionStatus === 'Prescription',
-                    'bg-red-100 text-red-700': product.prescriptionStatus === 'Controlled',
+                    'bg-green-100 text-green-700':
+                      product.prescriptionStatus === 'OTC',
+                    'bg-yellow-100 text-yellow-700':
+                      product.prescriptionStatus === 'PrescriptionOnly',
+                    'bg-red-100 text-red-700':
+                      product.prescriptionStatus === 'Controlled',
                   }"
                 >
                   {{ product.prescriptionStatus }}

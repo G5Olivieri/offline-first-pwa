@@ -8,10 +8,10 @@ import { useField, useForm } from "vee-validate";
 import { ref } from "vue";
 import * as z from "zod";
 import { useCustomerStore } from "../../stores/customer-store";
-import { useNavigationActions } from "../../composables/use-navigation-actions";
+import { useRouter } from "vue-router";
 
 const customerStore = useCustomerStore();
-const navigation = useNavigationActions();
+const router = useRouter();
 const isSubmitting = ref(false);
 const submitError = ref<string>("");
 
@@ -38,7 +38,7 @@ const onSubmit = handleSubmit(async (values) => {
   try {
     const { name, document } = values;
     await customerStore.createAndSelectCustomer({ name, document });
-    navigation.goToHomeAfterSuccess('customer', name, 'new_customer_page');
+    router.push({ name: "home" });
   } catch (error) {
     console.error("Error creating customer:", error);
     submitError.value = "Failed to create customer. Please try again.";
@@ -54,7 +54,7 @@ const clearForm = () => {
 };
 
 const goBack = () => {
-  navigation.navigateTo("/customers", 'new_customer_page');
+  router.push("/customers");
 };
 </script>
 <template>

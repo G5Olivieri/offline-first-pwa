@@ -130,15 +130,10 @@ defineOptions({
 
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { createLogger } from "../services/logger-service";
 import { useNotificationStore } from "../stores/notification-store";
 import { useOrderStore } from "../stores/order-store";
 import { useRecommendationStore } from "../stores/recommendation-store";
 import type { Product } from "../types/product";
-import {
-  RecommendationContext,
-  RecommendationType,
-} from "../types/recommendation";
 
 interface Props {
   currentProduct: Product;
@@ -153,7 +148,6 @@ const router = useRouter();
 const recommendationStore = useRecommendationStore();
 const orderStore = useOrderStore();
 const notificationStore = useNotificationStore();
-const logger = createLogger("ProductDetailRecommendations");
 
 // State
 const recommendations = ref<Product[]>([]);
@@ -182,7 +176,6 @@ async function loadRecommendations(): Promise<void> {
     // Extract the actual products from the recommendations
     recommendations.value = productRecommendations.map((rec) => rec.product);
   } catch (err) {
-    logger.error("Error loading recommendations:", err);
     error.value =
       err instanceof Error ? err.message : "Failed to load recommendations";
   } finally {
@@ -204,57 +197,15 @@ async function addToOrder(product: Product): Promise<void> {
       "Product Added",
       `${product.name} has been added to the order.`
     );
-
-    // Track the cross-sell/upsell action - create a recommendation object to track
-    const recommendation = {
-      id: `${props.currentProduct._id}-${product._id}`,
-      product,
-      type: RecommendationType.CROSS_SELL,
-      context: RecommendationContext.PRODUCT_DETAIL,
-      score: 1.0,
-      confidence: 0.8,
-      reason: "Product detail page recommendation",
-      created_at: new Date().toISOString(),
-    };
-
-    await recommendationStore.trackRecommendationAddedToCart(
-      recommendation,
-      RecommendationContext.PRODUCT_DETAIL
-    );
   } catch (err) {
-    logger.error("Error adding product to order:", err);
     notificationStore.showError(
       "Add to Order Error",
-      "Failed to add product to order. Please try again."
+      `Failed to add product to order. Please try again.: ${err}`
     );
   }
 }
 
 function navigateToProduct(productId: string): void {
-  // Track the recommendation click
-  const clickedProduct = recommendations.value.find((p) => p._id === productId);
-  if (clickedProduct) {
-    const recommendation = {
-      id: `${props.currentProduct._id}-${productId}`,
-      product: clickedProduct,
-      type: RecommendationType.CROSS_SELL,
-      context: RecommendationContext.PRODUCT_DETAIL,
-      score: 1.0,
-      confidence: 0.8,
-      reason: "Product detail page recommendation",
-      created_at: new Date().toISOString(),
-    };
-
-    recommendationStore
-      .trackRecommendationClicked(
-        recommendation,
-        RecommendationContext.PRODUCT_DETAIL
-      )
-      .catch((err: unknown) => {
-        logger.warn("Failed to track recommendation click:", err);
-      });
-  }
-
   router.push(`/products/${productId}`);
 }
 

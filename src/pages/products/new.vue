@@ -26,7 +26,7 @@ const validationSchema = toTypedSchema(
     manufacturer: z.string().optional(),
     nonProprietaryName: z.string().optional(),
     prescriptionStatus: z
-      .enum(["OTC", "Prescription", "Controlled"])
+      .enum(["OTC", "PrescriptionOnly", "Controlled"])
       .optional(),
     contraindication: z.string().optional(),
     activeIngredient: z.string().optional(),
@@ -320,7 +320,7 @@ const onSubmit = handleSubmit((values) => {
                 >
                   <option value="">Select status</option>
                   <option value="OTC">Over-the-Counter (OTC)</option>
-                  <option value="Prescription">Prescription Required</option>
+                  <option value="PrescriptionOnly">Prescription Required</option>
                   <option value="Controlled">Controlled Substance</option>
                 </select>
               </div>

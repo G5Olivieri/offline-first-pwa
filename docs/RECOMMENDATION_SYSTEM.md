@@ -257,7 +257,6 @@ export function useProductDetailPage(product: Product) {
   const {
     recommendations,
     isLoading,
-    trackRecommendationClicked,
     loadRecommendations
   } = useRecommendations({
     context: RecommendationContext.PRODUCT_DETAIL,
@@ -273,7 +272,6 @@ export function useProductDetailPage(product: Product) {
     recommendations,
     isLoading,
     loadProductRecommendations,
-    trackRecommendationClicked
   };
 }
 ```

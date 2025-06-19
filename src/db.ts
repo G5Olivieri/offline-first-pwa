@@ -1,22 +1,19 @@
 import PouchDB from "pouchdb-browser";
 import PouchDBFind from "pouchdb-find";
 import { config } from "./config/env";
-import { createLogger } from "./services/logger-service";
 import type { Customer } from "./types/customer";
 import type { Operator } from "./types/operator";
 import type { Order } from "./types/order";
 import { OrderStatus } from "./types/order";
 import type { Product } from "./types/product";
 import type {
-  ProductAffinity,
   CustomerProductPreference,
+  ProductAffinity,
   RecommendationConfig,
 } from "./types/recommendation";
 
 // Initialize PouchDB with plugins
 PouchDB.plugin(PouchDBFind);
-
-const logger = createLogger("DB");
 
 export const SYNCING = config.enableSync;
 const COUCHDB_URL = config.couchdbUrl;
@@ -33,38 +30,17 @@ export const getProductDB = (): PouchDB.Database<Product> => {
   });
 
   if (SYNCING) {
-    try {
-      const remoteProductDB = new PouchDB<Product>(`${COUCHDB_URL}/products`, {
-        auth: {
-          username: config.couchdbUsername,
-          password: config.couchdbPassword,
-        },
-      });
+    const remoteProductDB = new PouchDB<Product>(`${COUCHDB_URL}/products`, {
+      auth: {
+        username: config.couchdbUsername,
+        password: config.couchdbPassword,
+      },
+    });
 
-      remoteProductDB
-        .sync(_productDB, {
-          live: true,
-          retry: true,
-        })
-        .on("change", (info) => {
-          logger.debug("[products] Sync change:", info);
-        })
-        .on("error", (err) => {
-          logger.error("[products] Sync error:", err);
-        })
-        .on("active", () => {
-          logger.debug("[products] Sync active");
-        })
-        .on("paused", () => {
-          logger.debug("[products] Sync paused");
-        });
-
-      logger.info(`[products] Sync enabled with ${COUCHDB_URL}/products`);
-    } catch (error) {
-      logger.error("[products] Failed to setup sync:", error);
-    }
-  } else {
-    logger.info("[products] Sync disabled");
+    remoteProductDB.sync(_productDB, {
+      live: true,
+      retry: true,
+    });
   }
 
   return _productDB;
@@ -79,68 +55,36 @@ export const getOrderDB = (): PouchDB.Database<Order> => {
   _orderDB = new PouchDB("orders");
 
   if (SYNCING) {
-    try {
-      const remoteOrderDB = new PouchDB<Order>(`${COUCHDB_URL}/orders`, {
-        auth: {
-          username: config.couchdbUsername,
-          password: config.couchdbPassword,
-        },
-      });
+    const remoteOrderDB = new PouchDB<Order>(`${COUCHDB_URL}/orders`, {
+      auth: {
+        username: config.couchdbUsername,
+        password: config.couchdbPassword,
+      },
+    });
 
-      // One-way sync: only push ALL local orders to remote, never pull
-      _orderDB.replicate
-        .to(remoteOrderDB, {
-          live: true,
-          retry: true,
-          // Push all orders regardless of status
-        })
-        .on("change", async (info) => {
-          logger.debug("[orders] Pushed orders to remote:", info);
-
-          // After successful push, purge all non-pending orders from local storage
-          if (info.docs && info.docs.length > 0) {
-            for (const doc of info.docs) {
-              const order = doc as Order;
-              // Purge completed and cancelled orders, keep pending orders
-              if (
-                order.status === OrderStatus.COMPLETED ||
-                order.status === OrderStatus.CANCELLED
-              ) {
-                try {
-                  if (doc._rev) {
-                    await _orderDB!.remove(doc._id, doc._rev);
-                    logger.debug(
-                      `[orders] Purged ${order.status} order ${doc._id} from local storage`
-                    );
-                  }
-                } catch (error) {
-                  logger.error(
-                    `[orders] Failed to purge order ${doc._id}:`,
-                    error
-                  );
-                }
-              }
+    // One-way sync: only push ALL local orders to remote, never pull
+    _orderDB.replicate
+      .to(remoteOrderDB, {
+        live: true,
+        retry: true,
+        // Push all orders regardless of status
+      })
+      .on("change", async (info) => {
+        // After successful push, purge all non-pending orders from local storage
+        if (info.docs && info.docs.length > 0) {
+          for (const doc of info.docs) {
+            const order = doc as Order;
+            // Purge completed and cancelled orders, keep pending orders
+            if (
+              (order.status === OrderStatus.COMPLETED ||
+                order.status === OrderStatus.CANCELLED) &&
+              doc._rev
+            ) {
+              await _orderDB!.remove(doc._id, doc._rev);
             }
           }
-        })
-        .on("error", (err) => {
-          logger.error("[orders] Sync error:", err);
-        })
-        .on("active", () => {
-          logger.debug("[orders] Sync active");
-        })
-        .on("paused", () => {
-          logger.debug("[orders] Sync paused");
-        });
-
-      logger.info(
-        `[orders] One-way sync enabled with ${COUCHDB_URL}/orders (push all orders, never pull)`
-      );
-    } catch (error) {
-      logger.error("[orders] Failed to setup sync:", error);
-    }
-  } else {
-    logger.info("[orders] Sync disabled");
+        }
+      });
   }
 
   return _orderDB;
@@ -229,112 +173,92 @@ export const getProductAffinityDB = (): PouchDB.Database<ProductAffinity> => {
   });
 
   if (SYNCING) {
-    try {
-      const remoteAffinityDB = new PouchDB<ProductAffinity>(`${COUCHDB_URL}/product-affinity`, {
+    const remoteAffinityDB = new PouchDB<ProductAffinity>(
+      `${COUCHDB_URL}/product-affinity`,
+      {
         auth: {
           username: config.couchdbUsername,
           password: config.couchdbPassword,
         },
-      });
+      }
+    );
 
-      remoteAffinityDB
-        .sync(_productAffinityDB, {
-          live: true,
-          retry: true,
-        })
-        .on("change", (info) => {
-          logger.debug("[product-affinity] Sync change:", info);
-        })
-        .on("error", (err) => {
-          logger.error("[product-affinity] Sync error:", err);
-        });
-    } catch (error) {
-      logger.error("[product-affinity] Sync setup error:", error);
-    }
+    remoteAffinityDB.sync(_productAffinityDB, {
+      live: true,
+      retry: true,
+    });
   }
 
   return _productAffinityDB;
 };
 
 // Customer Product Preferences Database
-let _customerPreferencesDB: PouchDB.Database<CustomerProductPreference> | null = null;
-export const getCustomerPreferencesDB = (): PouchDB.Database<CustomerProductPreference> => {
-  if (_customerPreferencesDB) {
-    return _customerPreferencesDB;
-  }
-
-  _customerPreferencesDB = new PouchDB("customer-preferences");
-  _customerPreferencesDB.createIndex({
-    index: { fields: ["customer_id"] },
-  });
-  _customerPreferencesDB.createIndex({
-    index: { fields: ["product_id"] },
-  });
-  _customerPreferencesDB.createIndex({
-    index: { fields: ["preference_score"] },
-  });
-
-  if (SYNCING) {
-    try {
-      const remotePreferencesDB = new PouchDB<CustomerProductPreference>(`${COUCHDB_URL}/customer-preferences`, {
-        auth: {
-          username: config.couchdbUsername,
-          password: config.couchdbPassword,
-        },
-      });
-
-      remotePreferencesDB
-        .sync(_customerPreferencesDB, {
-          live: true,
-          retry: true,
-        })
-        .on("change", (info) => {
-          logger.debug("[customer-preferences] Sync change:", info);
-        })
-        .on("error", (err) => {
-          logger.error("[customer-preferences] Sync error:", err);
-        });
-    } catch (error) {
-      logger.error("[customer-preferences] Sync setup error:", error);
+let _customerPreferencesDB: PouchDB.Database<CustomerProductPreference> | null =
+  null;
+export const getCustomerPreferencesDB =
+  (): PouchDB.Database<CustomerProductPreference> => {
+    if (_customerPreferencesDB) {
+      return _customerPreferencesDB;
     }
-  }
 
-  return _customerPreferencesDB;
-};
+    _customerPreferencesDB = new PouchDB("customer-preferences");
+    _customerPreferencesDB.createIndex({
+      index: { fields: ["customer_id"] },
+    });
+    _customerPreferencesDB.createIndex({
+      index: { fields: ["product_id"] },
+    });
+    _customerPreferencesDB.createIndex({
+      index: { fields: ["preference_score"] },
+    });
+
+    if (SYNCING) {
+      const remotePreferencesDB = new PouchDB<CustomerProductPreference>(
+        `${COUCHDB_URL}/customer-preferences`,
+        {
+          auth: {
+            username: config.couchdbUsername,
+            password: config.couchdbPassword,
+          },
+        }
+      );
+
+      remotePreferencesDB.sync(_customerPreferencesDB, {
+        live: true,
+        retry: true,
+      });
+    }
+
+    return _customerPreferencesDB;
+  };
 
 // Recommendation Configuration Database
-let _recommendationConfigDB: PouchDB.Database<RecommendationConfig> | null = null;
-export const getRecommendationConfigDB = (): PouchDB.Database<RecommendationConfig> => {
-  if (_recommendationConfigDB) {
-    return _recommendationConfigDB;
-  }
-
-  _recommendationConfigDB = new PouchDB("recommendation-config");
-
-  if (SYNCING) {
-    try {
-      const remoteConfigDB = new PouchDB<RecommendationConfig>(`${COUCHDB_URL}/recommendation-config`, {
-        auth: {
-          username: config.couchdbUsername,
-          password: config.couchdbPassword,
-        },
-      });
-
-      remoteConfigDB
-        .sync(_recommendationConfigDB, {
-          live: true,
-          retry: true,
-        })
-        .on("change", (info) => {
-          logger.debug("[recommendation-config] Sync change:", info);
-        })
-        .on("error", (err) => {
-          logger.error("[recommendation-config] Sync error:", err);
-        });
-    } catch (error) {
-      logger.error("[recommendation-config] Sync setup error:", error);
+let _recommendationConfigDB: PouchDB.Database<RecommendationConfig> | null =
+  null;
+export const getRecommendationConfigDB =
+  (): PouchDB.Database<RecommendationConfig> => {
+    if (_recommendationConfigDB) {
+      return _recommendationConfigDB;
     }
-  }
 
-  return _recommendationConfigDB;
-};
+    _recommendationConfigDB = new PouchDB("recommendation-config");
+
+    if (SYNCING) {
+      const remoteConfigDB = new PouchDB<RecommendationConfig>(
+        `${COUCHDB_URL}/recommendation-config`,
+        {
+          auth: {
+            username: config.couchdbUsername,
+            password: config.couchdbPassword,
+          },
+        }
+      );
+
+      remoteConfigDB.sync(_recommendationConfigDB, {
+        live: true,
+        retry: true,
+      });
+    }
+
+    return _recommendationConfigDB;
+  };

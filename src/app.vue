@@ -10,7 +10,6 @@ import {
   createPOSShortcuts,
   useKeyboardShortcuts,
 } from "./composables/use-keyboard-shortcuts";
-import { createLogger } from "./services/logger-service";
 import { useCustomerStore } from "./stores/customer-store";
 import { useNotificationStore } from "./stores/notification-store";
 import { useOnlineStatusStore } from "./stores/online-status-store";
@@ -19,7 +18,6 @@ import { useOrderStore } from "./stores/order-store";
 import { useProductStore } from "./stores/product-store";
 import { useSetupStore } from "./stores/setup-store";
 
-const logger = createLogger("App");
 const barcode = ref("");
 const router = useRouter();
 const clock = ref(
@@ -215,8 +213,7 @@ const completeOrder = async () => {
       "Order Completed",
       "Thank you for your order!"
     );
-  } catch (error) {
-    logger.error("Error completing order:", error);
+  } catch {
     notificationStore.showError("Error", "Failed to complete order");
   }
 };
@@ -237,8 +234,7 @@ const abandonOrder = async () => {
           "Order Abandoned",
           "Order has been cancelled"
         );
-      } catch (error) {
-        logger.error("Error abandoning order:", error);
+      } catch {
         notificationStore.showError("Error", "Failed to abandon order");
       }
     }
@@ -303,8 +299,7 @@ const addProduct = async () => {
         "No product found with this barcode"
       );
     }
-  } catch (error) {
-    logger.error("Error fetching product:", error);
+  } catch {
     notificationStore.showError(
       "Error",
       "Failed to fetch product. Please try again."
@@ -327,7 +322,10 @@ onMounted(() => {
 
   // Initialize system setup
   setupStore.initializeSystem().catch((error) => {
-    logger.error("Failed to initialize system:", error);
+    notificationStore.showError(
+      "Setup Error",
+      `Failed to initialize system setup. Please check your configuration. ${error}`
+    );
   });
 });
 

@@ -5,17 +5,17 @@ defineOptions({
 
 import { onMounted, ref } from "vue";
 import { useOperatorStore } from "../../stores/operator-store";
-import { useNavigationActions } from "../../composables/use-navigation-actions";
+import { useRouter } from "vue-router";
 import type { Operator } from "../../types/operator";
 
 const operatorStore = useOperatorStore();
-const navigation = useNavigationActions();
+const router = useRouter();
 const operators = ref<Operator[]>([]);
 
 const selectOperator = async (operatorId: string) => {
   try {
-    await operatorStore.selectOperatorFromList(operatorId, operators.value);
-    navigation.goToHomeAfterSuccess('operator', operators.value.find(op => op._id === operatorId)?.name || 'unknown', 'operators_page');
+    await operatorStore.selectOperatorFromList(operatorId);
+    router.push({ name: "home" });
   } catch (error) {
     console.error("Error selecting operator:", error);
     // Error is already tracked in the store

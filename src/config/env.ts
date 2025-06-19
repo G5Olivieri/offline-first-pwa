@@ -78,13 +78,6 @@ function toBool(value: string): boolean {
   return value.toLowerCase() === "true" || value === "1";
 }
 
-function toStringArray(value: string): string[] {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 /**
  * Convert string to number
  */
@@ -109,9 +102,6 @@ function generateTerminalId(): string {
   return terminalId;
 }
 
-/**
- * Application configuration object
- */
 export const config: AppConfig = {
   // Application Settings
   appTitle: getEnvVar("VITE_APP_TITLE", "Modern POS System"),
@@ -203,30 +193,4 @@ export function formatDate(date: Date): string {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
-}
-
-/**
- * Log message based on configuration
- */
-export function log(
-  level: "debug" | "info" | "warn" | "error",
-  message: string,
-  ...args: unknown[]
-): void {
-  if (!isDebugMode && level === "debug") {
-    return;
-  }
-
-  const logLevels = ["debug", "info", "warn", "error"];
-  const configLogLevel = logLevels.indexOf(config.logLevel);
-  const messageLogLevel = logLevels.indexOf(level);
-
-  if (messageLogLevel >= configLogLevel) {
-    console[level](`[${level.toUpperCase()}]`, message, ...args);
-  }
-}
-
-// Development helper: log configuration in debug mode
-if (isDebugMode) {
-  log("debug", "Application configuration loaded:", config);
 }

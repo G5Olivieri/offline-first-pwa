@@ -669,7 +669,6 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ProductDetailRecommendations from "../../components/product-detail-recommendations.vue";
 import { getProductDB } from "../../db";
-import { createLogger } from "../../services/logger-service";
 import { useNotificationStore } from "../../stores/notification-store";
 import { useOrderStore } from "../../stores/order-store";
 import { useProductStore } from "../../stores/product-store";
@@ -680,7 +679,6 @@ const router = useRouter();
 const productStore = useProductStore();
 const orderStore = useOrderStore();
 const notificationStore = useNotificationStore();
-const logger = createLogger("ProductDetailPage");
 
 // State
 const product = ref<Product | null>(null);
@@ -730,7 +728,6 @@ async function loadProduct(): Promise<void> {
       error.value = "Product not found";
     }
   } catch (err) {
-    logger.error("Error loading product:", err);
     error.value = err instanceof Error ? err.message : "Failed to load product";
   } finally {
     isLoading.value = false;
@@ -746,11 +743,10 @@ async function addToOrder(): Promise<void> {
       "Product Added",
       `${product.value.name} has been added to the order.`
     );
-  } catch (err) {
-    logger.error("Error adding product to order:", err);
+  } catch (error) {
     notificationStore.showError(
       "Add to Order Error",
-      "Failed to add product to order. Please try again."
+      `Failed to add product to order. Please try again. ${error}`
     );
   }
 }
@@ -772,11 +768,10 @@ async function deleteProduct(): Promise<void> {
         `${product.value.name} has been deleted successfully.`
       );
       router.push("/products");
-    } catch (err) {
-      logger.error("Error deleting product:", err);
+    } catch (error) {
       notificationStore.showError(
         "Delete Error",
-        "Failed to delete product. Please try again."
+        `Failed to delete product. Please try again. ${error}`
       );
     }
   }
@@ -789,11 +784,10 @@ async function copyToClipboard(text: string): Promise<void> {
       "Copied to Clipboard",
       `${text} has been copied to your clipboard.`
     );
-  } catch (err) {
-    logger.error("Error copying to clipboard:", err);
+  } catch (error) {
     notificationStore.showError(
       "Copy Error",
-      "Failed to copy to clipboard. Please try again."
+      `Failed to copy to clipboard. Please try again. ${error}`
     );
   }
 }
@@ -810,7 +804,3 @@ onMounted(() => {
   loadProduct();
 });
 </script>
-
-<style scoped>
-/* Custom styles if needed */
-</style>

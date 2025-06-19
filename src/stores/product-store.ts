@@ -1,11 +1,9 @@
 import { defineStore } from "pinia";
 import { getProductDB } from "../db";
-import { createLogger } from "../services/logger-service";
 import { searchService } from "../services/search-service";
 import type { Product } from "../types/product";
 
 export const useProductStore = defineStore("productStore", () => {
-  const logger = createLogger("ProductStore");
   const productDB = getProductDB();
 
   // Main search method - uses search service if available, fallback to database
@@ -13,8 +11,6 @@ export const useProductStore = defineStore("productStore", () => {
     query: string,
     { limit = 100, skip = 0 } = {}
   ) => {
-    logger.debug("Searching products with query:", query);
-
     const searchResult = searchService.search(query, { limit, skip });
 
     const products = await productDB
@@ -28,8 +24,7 @@ export const useProductStore = defineStore("productStore", () => {
               null) as Product | null
         );
       })
-      .catch((error) => {
-        logger.error("Error fetching products:", error);
+      .catch(() => {
         return [];
       });
 
@@ -55,7 +50,7 @@ export const useProductStore = defineStore("productStore", () => {
     const products = await productDB.bulkGet({
       docs: Array.from(input.keys()).map((id) => ({ id })),
     });
-    logger.debug("Bulk get products response:", products);
+
     if (products.results.length === 0) {
       throw new Error("No products found");
     }
@@ -82,8 +77,7 @@ export const useProductStore = defineStore("productStore", () => {
       },
       [[], []] as [Product[], Error[]]
     );
-    logger.debug("Bulk get products success:", success);
-    logger.debug("Bulk get products errors:", errors);
+
     if (errors.length > 0) {
       throw new Error(`Errors occurred while fetching products: ${errors}`);
     }
@@ -91,22 +85,14 @@ export const useProductStore = defineStore("productStore", () => {
       ...result,
       stock: input.get(result._id) ?? result.stock, // Update stock if input has a value for this product
     }));
-    logger.debug("Products to update:", productsToUpdate);
-    productDB
-      .bulkDocs(productsToUpdate)
-      .then((response) => {
-        logger.debug("Bulk update response:", response);
-        return response;
-      })
-      .catch((error) => {
-        logger.error("Error updating products:", error);
-      });
+
+    productDB.bulkDocs(productsToUpdate).then((response) => {
+      return response;
+    });
   };
 
   const listProducts = async ({ limit = 100, skip = 0 } = {}) => {
-    logger.debug("Listing all products");
     const count = await productDB.info().then((info) => info.doc_count);
-    logger.debug(`Total products count: ${count}`);
 
     const result = {
       count,
@@ -115,8 +101,7 @@ export const useProductStore = defineStore("productStore", () => {
         .then((result) => {
           return result.rows.map((row) => row.doc as Product);
         })
-        .catch((error) => {
-          logger.error("Error fetching products:", error);
+        .catch(() => {
           return [];
         }),
     };
@@ -125,7 +110,6 @@ export const useProductStore = defineStore("productStore", () => {
   };
 
   const createProduct = async (product: Omit<Product, "_id" | "rev">) => {
-    logger.debug("Creating product:", product);
     const newProduct = {
       _id: crypto.randomUUID(),
       ...product,
@@ -138,13 +122,10 @@ export const useProductStore = defineStore("productStore", () => {
       barcode: newProduct.barcode,
     });
 
-    logger.debug("Product created:", newProduct);
-
     return newProduct;
   };
 
   const updateProduct = async (product: Product) => {
-    logger.debug("Updating product:", product);
     await productDB.put(product);
     await searchService.add({
       id: product._id,
@@ -152,43 +133,34 @@ export const useProductStore = defineStore("productStore", () => {
       barcode: product.barcode,
     });
 
-    logger.debug("Product updated:", product);
     return product;
   };
 
   const deleteProduct = async (id: string) => {
-    logger.debug("Deleting product with ID:", id);
     const productToDelete = await productDB.get(id);
 
     await productDB.remove(productToDelete);
     await searchService.remove(id);
 
-    logger.debug("Product deleted:", id);
     return id;
   };
 
   const bulkInsertProducts = async (products: Product[]) => {
-    logger.debug("Bulk inserting products:", products.length);
     const docs = products.map((product) => ({
       ...product,
       _id: product._id || crypto.randomUUID(),
     }));
-    try {
-      const response = await productDB.bulkDocs(docs);
+    const response = await productDB.bulkDocs(docs);
 
-      const indexableProducts = docs.map((product) => ({
-        id: product._id,
-        name: product.name,
-        barcode: product.barcode,
-      }));
+    const indexableProducts = docs.map((product) => ({
+      id: product._id,
+      name: product.name,
+      barcode: product.barcode,
+    }));
 
-      await searchService.bulkAdd(indexableProducts);
+    await searchService.bulkAdd(indexableProducts);
 
-      return response;
-    } catch (error) {
-      logger.error("Error during bulk insert:", error);
-      throw error;
-    }
+    return response;
   };
 
   return {

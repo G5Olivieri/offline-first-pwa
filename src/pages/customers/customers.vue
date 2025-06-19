@@ -6,11 +6,11 @@ defineOptions({
 import { computed, ref } from "vue";
 import { useCustomerStore } from "../../stores/customer-store";
 import { type Customer } from "../../types/customer";
-import { useNavigationActions } from "../../composables/use-navigation-actions";
+import { useRouter } from "vue-router";
 
 const searchDocument = ref("");
 const customerStore = useCustomerStore();
-const navigation = useNavigationActions();
+const router = useRouter();
 const customerFound = ref<Customer | null>(null);
 const error = ref<string>("");
 const isLoading = ref(false);
@@ -44,12 +44,8 @@ const onSubmit = async () => {
 const selectCustomer = async (customerId: string) => {
   isLoading.value = true;
   try {
-    await customerStore.selectCustomerFromSearch(
-      customerId,
-      searchDocument.value,
-      customerFound.value || undefined
-    );
-    navigation.goToHomeAfterSuccess('customer', customerFound.value?.name || 'unknown', 'customers_page');
+    await customerStore.selectCustomerFromSearch(customerId);
+    router.push({ name: "home" });
   } catch (err) {
     console.error("Error selecting customer:", err);
     error.value = "Failed to select customer. Please try again.";

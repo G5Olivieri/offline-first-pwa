@@ -1,24 +1,23 @@
-import { defineStore } from 'pinia';
-import { ref, computed, readonly } from 'vue';
+import { defineStore } from "pinia";
+import { ref, computed, readonly } from "vue";
 import type {
   ProductRecommendation,
-  RecommendationSet
-} from '../types/recommendation';
-import { RecommendationContext } from '../types/recommendation';
-import type { Product } from '../types/product';
-import type { Customer } from '../types/customer';
-import type { Item } from '../types/order';
-import { recommendationEngine } from '../services/recommendation-engine';
-import { createLogger } from '../services/logger-service';
-import { useProductStore } from './product-store';
+  RecommendationSet,
+} from "../types/recommendation";
+import { RecommendationContext } from "../types/recommendation";
+import type { Product } from "../types/product";
+import type { Customer } from "../types/customer";
+import type { Item } from "../types/order";
+import { recommendationEngine } from "../services/recommendation-engine";
+import { useProductStore } from "./product-store";
 
-const logger = createLogger('RecommendationStore');
-
-export const useRecommendationStore = defineStore('recommendationStore', () => {
+export const useRecommendationStore = defineStore("recommendationStore", () => {
   const productStore = useProductStore();
 
   // State
-  const currentRecommendations = ref<Record<RecommendationContext, ProductRecommendation[]>>({
+  const currentRecommendations = ref<
+    Record<RecommendationContext, ProductRecommendation[]>
+  >({
     [RecommendationContext.CHECKOUT]: [],
     [RecommendationContext.PRODUCT_DETAIL]: [],
     [RecommendationContext.CUSTOMER_PROFILE]: [],
@@ -34,20 +33,20 @@ export const useRecommendationStore = defineStore('recommendationStore', () => {
   const sessionId = ref<string>(generateSessionId());
 
   // Computed
-  const checkoutRecommendations = computed(() =>
-    currentRecommendations.value[RecommendationContext.CHECKOUT]
+  const checkoutRecommendations = computed(
+    () => currentRecommendations.value[RecommendationContext.CHECKOUT]
   );
 
-  const homepageRecommendations = computed(() =>
-    currentRecommendations.value[RecommendationContext.HOMEPAGE]
+  const homepageRecommendations = computed(
+    () => currentRecommendations.value[RecommendationContext.HOMEPAGE]
   );
 
-  const productDetailRecommendations = computed(() =>
-    currentRecommendations.value[RecommendationContext.PRODUCT_DETAIL]
+  const productDetailRecommendations = computed(
+    () => currentRecommendations.value[RecommendationContext.PRODUCT_DETAIL]
   );
 
-  const customerProfileRecommendations = computed(() =>
-    currentRecommendations.value[RecommendationContext.CUSTOMER_PROFILE]
+  const customerProfileRecommendations = computed(
+    () => currentRecommendations.value[RecommendationContext.CUSTOMER_PROFILE]
   );
 
   // Actions
@@ -66,7 +65,8 @@ export const useRecommendationStore = defineStore('recommendationStore', () => {
     // Check cache first
     if (!options.forceRefresh && recommendationCache.value.has(cacheKey)) {
       const cached = recommendationCache.value.get(cacheKey)!;
-      const isExpired = Date.now() - new Date(cached.generated_at).getTime() > 60 * 60 * 1000; // 1 hour
+      const isExpired =
+        Date.now() - new Date(cached.generated_at).getTime() > 60 * 60 * 1000; // 1 hour
 
       if (!isExpired) {
         currentRecommendations.value[context] = cached.recommendations;
@@ -79,14 +79,17 @@ export const useRecommendationStore = defineStore('recommendationStore', () => {
 
     try {
       // Get all products for the recommendation engine
-      const allProductsResult = await productStore.searchProducts('', { limit: 1000 });
+      const allProductsResult = await productStore.searchProducts("", {
+        limit: 1000,
+      });
       const allProducts = allProductsResult.products;
 
       // Generate recommendations
-      const recommendations = await recommendationEngine.generateRecommendations(context, {
-        ...options,
-        allProducts
-      });
+      const recommendations =
+        await recommendationEngine.generateRecommendations(context, {
+          ...options,
+          allProducts,
+        });
 
       // Update state
       currentRecommendations.value[context] = recommendations;
@@ -100,46 +103,77 @@ export const useRecommendationStore = defineStore('recommendationStore', () => {
         generated_at: new Date().toISOString(),
         customer_id: options.customer?._id,
         session_id: sessionId.value,
-        cart_items: options.cartItems?.map(item => item.product._id)
+        cart_items: options.cartItems?.map((item) => item.product._id),
       };
 
       recommendationCache.value.set(cacheKey, recommendationSet);
 
-      logger.debug(`Generated ${recommendations.length} recommendations for context: ${context}`);
-
       return recommendations;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to generate recommendations';
-      logger.error('Error generating recommendations:', err);
+      error.value =
+        err instanceof Error
+          ? err.message
+          : "Failed to generate recommendations";
+
       return [];
     } finally {
       isLoading.value = false;
     }
   }
 
-  async function getRecommendationsForCheckout(cartItems: Item[], customer?: Customer): Promise<ProductRecommendation[]> {
-    return generateRecommendations(RecommendationContext.CHECKOUT, { cartItems, customer });
+  async function getRecommendationsForCheckout(
+    cartItems: Item[],
+    customer?: Customer
+  ): Promise<ProductRecommendation[]> {
+    return generateRecommendations(RecommendationContext.CHECKOUT, {
+      cartItems,
+      customer,
+    });
   }
 
-  async function getRecommendationsForProduct(product: Product, customer?: Customer): Promise<ProductRecommendation[]> {
-    return generateRecommendations(RecommendationContext.PRODUCT_DETAIL, { currentProduct: product, customer });
+  async function getRecommendationsForProduct(
+    product: Product,
+    customer?: Customer
+  ): Promise<ProductRecommendation[]> {
+    return generateRecommendations(RecommendationContext.PRODUCT_DETAIL, {
+      currentProduct: product,
+      customer,
+    });
   }
 
-  async function getRecommendationsForHomepage(customer?: Customer): Promise<ProductRecommendation[]> {
-    return generateRecommendations(RecommendationContext.HOMEPAGE, { customer });
+  async function getRecommendationsForHomepage(
+    customer?: Customer
+  ): Promise<ProductRecommendation[]> {
+    return generateRecommendations(RecommendationContext.HOMEPAGE, {
+      customer,
+    });
   }
 
-  async function getRecommendationsForCustomer(customer: Customer): Promise<ProductRecommendation[]> {
-    return generateRecommendations(RecommendationContext.CUSTOMER_PROFILE, { customer });
+  async function getRecommendationsForCustomer(
+    customer: Customer
+  ): Promise<ProductRecommendation[]> {
+    return generateRecommendations(RecommendationContext.CUSTOMER_PROFILE, {
+      customer,
+    });
   }
 
-  async function getRecommendationsForCategory(_category: string, customer?: Customer): Promise<ProductRecommendation[]> {
+  async function getRecommendationsForCategory(
+    _category: string,
+    customer?: Customer
+  ): Promise<ProductRecommendation[]> {
     // This is a simplified approach - in a real implementation, you'd pass category info
-    return generateRecommendations(RecommendationContext.CATEGORY_BROWSE, { customer });
+    return generateRecommendations(RecommendationContext.CATEGORY_BROWSE, {
+      customer,
+    });
   }
 
-  async function getRecommendationsForSearch(_searchQuery: string, customer?: Customer): Promise<ProductRecommendation[]> {
-    return generateRecommendations(RecommendationContext.SEARCH_RESULTS, { customer });
+  async function getRecommendationsForSearch(
+    _searchQuery: string,
+    customer?: Customer
+  ): Promise<ProductRecommendation[]> {
+    return generateRecommendations(RecommendationContext.SEARCH_RESULTS, {
+      customer,
+    });
   }
 
   function clearCache(): void {
@@ -170,20 +204,24 @@ export const useRecommendationStore = defineStore('recommendationStore', () => {
   }
 
   // Helper functions
-  function generateCacheKey(context: RecommendationContext, options: {
-    customer?: Customer;
-    cartItems?: Item[];
-    currentProduct?: Product;
-    limit?: number;
-  }): string {
+  function generateCacheKey(
+    context: RecommendationContext,
+    options: {
+      customer?: Customer;
+      cartItems?: Item[];
+      currentProduct?: Product;
+      limit?: number;
+    }
+  ): string {
     const keyParts = [
       context,
-      options.customer?._id || 'no-customer',
-      options.currentProduct?._id || 'no-product',
-      options.cartItems?.map((item: Item) => item.product._id).join(',') || 'no-cart',
-      options.limit || 'default-limit'
+      options.customer?._id || "no-customer",
+      options.currentProduct?._id || "no-product",
+      options.cartItems?.map((item: Item) => item.product._id).join(",") ||
+        "no-cart",
+      options.limit || "default-limit",
     ];
-    return keyParts.join('|');
+    return keyParts.join("|");
   }
 
   function generateSessionId(): string {
@@ -217,6 +255,6 @@ export const useRecommendationStore = defineStore('recommendationStore', () => {
 
     // Utility
     clearCache,
-    refreshRecommendations
+    refreshRecommendations,
   };
 });

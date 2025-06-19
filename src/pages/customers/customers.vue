@@ -4,7 +4,8 @@ defineOptions({
 });
 
 import { computed, ref } from "vue";
-import { useCustomerStore, type Customer } from "../../stores/customer-store";
+import { useCustomerStore } from "../../stores/customer-store";
+import { type Customer } from "../../types/customer";
 import { useNavigationActions } from "../../composables/use-navigation-actions";
 
 const searchDocument = ref("");

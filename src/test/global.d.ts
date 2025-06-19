@@ -1,4 +1,4 @@
-import type { Customer } from "../stores/customer-store";
+import type { Customer } from "../types/customer";
 import type { Operator } from "../types/operator";
 import type { Order } from "../types/order";
 import type { Product } from "../types/product";

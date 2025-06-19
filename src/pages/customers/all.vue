@@ -4,7 +4,8 @@ defineOptions({
 });
 
 import { onMounted, ref } from "vue";
-import { useCustomerStore, type Customer } from "../../stores/customer-store";
+import { useCustomerStore } from "../../stores/customer-store";
+import { type Customer } from "../../types/customer";
 
 const customerStore = useCustomerStore();
 const customers = ref<Customer[]>([]);

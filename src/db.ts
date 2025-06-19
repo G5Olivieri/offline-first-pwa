@@ -2,7 +2,7 @@ import PouchDB from "pouchdb-browser";
 import PouchDBFind from "pouchdb-find";
 import { config } from "./config/env";
 import { createLogger } from "./services/logger-service";
-import type { Customer } from "./stores/customer-store";
+import type { Customer } from "./types/customer";
 import type { Operator } from "./types/operator";
 import type { Order } from "./types/order";
 import { OrderStatus } from "./types/order";

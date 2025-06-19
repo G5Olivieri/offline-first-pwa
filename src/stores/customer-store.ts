@@ -3,13 +3,7 @@ import { onMounted, ref } from "vue";
 import { getCustomerDB } from "../db";
 import { analytics } from "../services/analytics-service";
 import { createLogger } from "../services/logger-service";
-
-export type Customer = {
-  _id: string;
-  _rev?: string;
-  name: string;
-  document: string;
-};
+import type { Customer } from "../types/customer";
 
 export const useCustomerStore = defineStore("customerStore", () => {
   const logger = createLogger("CustomerStore");

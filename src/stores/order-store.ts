@@ -1,4 +1,5 @@
 import { useLocalStorage } from "@vueuse/core";
+import throttle from "lodash.throttle";
 import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { getOrderDB } from "../db";
@@ -16,24 +17,39 @@ export const useOrderStore = defineStore("orderStore", () => {
   const productStore = useProductStore();
   const currentOrderId = useLocalStorage("currentOrderId", "");
   const currentOrderRev = useLocalStorage("currentOrderRev", "");
-  const order = reactive<Map<string, Item>>(new Map());
   const operatorStore = useOperatorStore();
   const customerStore = useCustomerStore();
   const terminalStore = useTerminalStore();
-  const syncing = ref(false);
   const amount = ref("");
   const amountError = ref<string | null>(null);
   const paymentMethod = ref<PaymentMethod>("card");
   const change = ref<number | null>(null);
-  const createdAt = ref<string>(new Date().toISOString());
+  let createdAt = "";
+
+  const itemsMap = reactive<Map<string, Item>>(new Map());
+  const items = computed(() => Array.from(itemsMap.values()));
+  const total = computed(() =>
+    items.value.reduce(
+      (sum, item) => sum + item.product.price * item.quantity,
+      0
+    )
+  );
 
   const mapOrderToDocument = (
     status: OrderStatus = OrderStatus.PENDING
   ): Order => {
+    if (currentOrderId.value === "") {
+      currentOrderId.value = crypto.randomUUID();
+    }
+
+    if (createdAt === "") {
+      createdAt = new Date().toISOString();
+    }
+
     return {
       _id: currentOrderId.value,
       _rev: currentOrderRev.value || undefined,
-      items: Array.from(order.values()),
+      items: Array.from(itemsMap.values()),
       total: total.value,
       status,
       terminal_id: terminalStore.terminalId,
@@ -41,14 +57,19 @@ export const useOrderStore = defineStore("orderStore", () => {
       amount: paymentMethod.value === "cash" ? parseFloat(amount.value) : null,
       operator_id: operatorStore.operatorId || undefined,
       customer_id: customerStore.customerId || undefined,
-      created_at: createdAt.value,
+      created_at: createdAt,
       updated_at: new Date().toISOString(),
     };
   };
 
+  const putOrder = throttle(async (order: Order) => {
+    const result = await orderDB.put(order);
+    currentOrderRev.value = result.rev;
+  }, 1000);
+
   const addProduct = (product: Product) => {
-    if (order.has(product._id)) {
-      const existingItem = order.get(product._id);
+    if (itemsMap.has(product._id)) {
+      const existingItem = itemsMap.get(product._id);
       if (existingItem) {
         if (!product.stock || existingItem.quantity < product.stock) {
           existingItem.quantity++;
@@ -57,9 +78,9 @@ export const useOrderStore = defineStore("orderStore", () => {
         }
       }
     } else {
-      order.set(product._id, { quantity: 1, product });
+      itemsMap.set(product._id, { quantity: 1, product });
     }
-    syncOrder();
+    putOrder(mapOrderToDocument(OrderStatus.PENDING));
   };
 
   const increase = (item: Item) => {
@@ -68,52 +89,34 @@ export const useOrderStore = defineStore("orderStore", () => {
     } else {
       alert("Cannot increase quantity beyond stock limit.");
     }
-    syncOrder();
+    putOrder(mapOrderToDocument(OrderStatus.PENDING));
   };
 
   const decrease = async (item: Item) => {
     if (item.quantity > 1) {
       item.quantity--;
     } else {
-      order.delete(item.product._id);
+      itemsMap.delete(item.product._id);
     }
-    await syncOrder();
+    putOrder(mapOrderToDocument(OrderStatus.PENDING));
   };
 
   const abandon = async () => {
     if (!currentOrderId.value) {
       return;
     }
-    if (order.size === 0) {
+    if (itemsMap.size === 0) {
       return;
     }
 
-    const orderDocument = mapOrderToDocument(OrderStatus.CANCELLED);
-    await orderDB.put(orderDocument);
+    putOrder(mapOrderToDocument(OrderStatus.CANCELLED));
+    await putOrder.flush();
 
-    order.clear();
+    itemsMap.clear();
     currentOrderId.value = "";
     currentOrderRev.value = undefined;
     await customerStore.clearCustomer();
-    syncOrder();
-  };
-
-  const syncOrder = async () => {
-    if (syncing.value) {
-      return;
-    }
-    syncing.value = true;
-
-    if (currentOrderId.value === "") {
-      currentOrderId.value = crypto.randomUUID();
-    }
-
-    try {
-      const result = await orderDB.put(mapOrderToDocument(OrderStatus.PENDING));
-      currentOrderRev.value = result.rev;
-    } finally {
-      syncing.value = false;
-    }
+    putOrder(mapOrderToDocument(OrderStatus.PENDING));
   };
 
   const calculateTotal = (item: Item) => {
@@ -124,7 +127,7 @@ export const useOrderStore = defineStore("orderStore", () => {
     if (!currentOrderId.value) {
       return;
     }
-    if (order.size === 0) {
+    if (itemsMap.size === 0) {
       return;
     }
     if (paymentMethod.value === "cash" && !amount.value) {
@@ -142,36 +145,28 @@ export const useOrderStore = defineStore("orderStore", () => {
     amount.value = "";
     paymentMethod.value = "card";
 
-    // Complete the order
     const orderDocument = mapOrderToDocument(OrderStatus.COMPLETED);
-    await orderDB.put(orderDocument);
+    putOrder(orderDocument);
+    await putOrder.flush();
 
-    // Update recommendation system with completed order data
     await recommendationEngine.updateProductAffinities(orderDocument);
     await recommendationEngine.updateCustomerPreferences(orderDocument);
 
-    const productsToUpdate: [string, number][] = Array.from(order.values()).map(
-      (item) => [item.product._id, item.product.stock - item.quantity]
-    );
+    const productsToUpdate: [string, number][] = Array.from(
+      itemsMap.values()
+    ).map((item) => [item.product._id, item.product.stock - item.quantity]);
 
-    order.clear();
+    itemsMap.clear();
     currentOrderId.value = "";
     currentOrderRev.value = "";
     await productStore.changeStock(new Map(productsToUpdate));
     await customerStore.clearCustomer();
+    putOrder(mapOrderToDocument(OrderStatus.PENDING));
   };
 
-  const items = computed(() => Array.from(order.values()));
-  const total = computed(() =>
-    items.value.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
-      0
-    )
-  );
-
   const loadOrder = async () => {
-    if (!currentOrderId.value) {
-      syncOrder();
+    if (currentOrderId.value === "") {
+      putOrder(mapOrderToDocument(OrderStatus.PENDING));
       return;
     }
     const doc = await orderDB.get(currentOrderId.value);
@@ -183,12 +178,13 @@ export const useOrderStore = defineStore("orderStore", () => {
       currentOrderId.value = "";
       currentOrderRev.value = "";
       customerStore.clearCustomer();
+      putOrder(mapOrderToDocument(OrderStatus.PENDING));
       return;
     }
     currentOrderRev.value = doc._rev;
-    order.clear();
+    itemsMap.clear();
     doc.items.forEach((item: Item) => {
-      order.set(item.product._id, item);
+      itemsMap.set(item.product._id, item);
     });
 
     if (doc.customer_id && !customerStore.customerId) {
@@ -203,8 +199,7 @@ export const useOrderStore = defineStore("orderStore", () => {
       doc.customer_id !== customerStore.customerId ||
       operatorStore.operatorId !== doc.operator_id
     ) {
-      syncOrder();
-      return;
+      putOrder(mapOrderToDocument(OrderStatus.PENDING));
     }
   };
 
@@ -215,14 +210,14 @@ export const useOrderStore = defineStore("orderStore", () => {
   watch(
     () => operatorStore.operatorId,
     () => {
-      syncOrder();
+      putOrder(mapOrderToDocument(OrderStatus.PENDING));
     }
   );
 
   watch(
     () => customerStore.customerId,
     () => {
-      syncOrder();
+      putOrder(mapOrderToDocument(OrderStatus.PENDING));
     }
   );
 
@@ -242,52 +237,6 @@ export const useOrderStore = defineStore("orderStore", () => {
     }
   );
 
-  const purgeNonPendingOrders = async (): Promise<number> => {
-    try {
-      const allOrders = await orderDB.allDocs({
-        include_docs: true,
-      });
-
-      const nonPendingOrders = allOrders.rows
-        .map((row) => row.doc as Order)
-        .filter(
-          (order) =>
-            order.status === OrderStatus.COMPLETED ||
-            order.status === OrderStatus.CANCELLED
-        );
-
-      let purgedCount = 0;
-      for (const order of nonPendingOrders) {
-        if (order._rev) {
-          await orderDB.remove(order._id, order._rev);
-          purgedCount++;
-        }
-      }
-
-      return purgedCount;
-    } catch {
-      return 0;
-    }
-  };
-
-  const fetchOrders = async (): Promise<Order[]> => {
-    try {
-      const orders = await orderDB.allDocs({
-        include_docs: true,
-      });
-      return orders.rows
-        .map((row) => row.doc as Order)
-        .filter((order) => order.status === OrderStatus.PENDING) // Only return pending orders (non-pending are auto-purged)
-        .sort((a, b) => {
-          return (
-            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-          );
-        });
-    } catch {
-      return [];
-    }
-  };
-
   return {
     id: currentOrderId,
     increase,
@@ -302,7 +251,5 @@ export const useOrderStore = defineStore("orderStore", () => {
     paymentMethod,
     amountError,
     change,
-    fetchOrders,
-    purgeNonPendingOrders,
   };
 });

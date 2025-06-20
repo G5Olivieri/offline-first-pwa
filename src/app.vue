@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppModal from "@/components/app-modal.vue";
+import ClockComponent from "@/components/clock.vue";
 import HelpDialog from "@/components/help-dialog.vue";
 import OrderDialog from "@/components/order-dialog.vue";
 import SetupLoading from "@/components/setup-loading.vue";
@@ -13,18 +14,11 @@ import { useNotificationStore } from "@/stores/notification-store";
 import { useOnlineStatusStore } from "@/stores/online-status-store";
 import { useOrderStore } from "@/stores/order-store";
 import { useSetupStore } from "@/stores/setup-store";
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
 const barcode = ref("");
 const router = useRouter();
-const clock = ref(
-  new Date().toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  }),
-);
 const barcodeInput = ref<HTMLInputElement | null>(null);
 const showHelpDialog = ref(false);
 const showOrderDialog = ref(false);
@@ -34,7 +28,7 @@ const notificationStore = useNotificationStore();
 const setupStore = useSetupStore();
 const isHome = computed(() => router.currentRoute.value.path === "/");
 const isCheckout = computed(
-  () => router.currentRoute.value.path === "/checkout",
+  () => router.currentRoute.value.path === "/checkout"
 );
 
 const getSyncStatus = (dbName: string) => {
@@ -99,13 +93,13 @@ const databaseStatus = computed(() => {
 
 const dbStatusSummary = computed(() => {
   const allReady = databaseStatus.value.every(
-    (db) => db.status.text === "Ready" || db.status.text === "Push Only",
+    (db) => db.status.text === "Ready" || db.status.text === "Push Only"
   );
   const hasOffline = databaseStatus.value.some(
-    (db) => db.status.text === "Offline",
+    (db) => db.status.text === "Offline"
   );
   const hasDisabled = databaseStatus.value.some(
-    (db) => db.status.text === "Disabled",
+    (db) => db.status.text === "Disabled"
   );
 
   if (hasOffline) {
@@ -153,7 +147,7 @@ const removeOperator = () => {
   orderStore.unselectOperator();
   notificationStore.showInfo(
     "Operator removed",
-    "Please select a new operator",
+    "Please select a new operator"
   );
 };
 
@@ -198,7 +192,7 @@ const completeOrder = async () => {
 
     notificationStore.showSuccess(
       "Order Completed",
-      "Thank you for your order!",
+      "Thank you for your order!"
     );
   } catch {
     notificationStore.showError("Error", "Failed to complete order");
@@ -210,7 +204,7 @@ const abandonOrder = async () => {
     const result = await notificationStore.showConfirm(
       "Abandon Order",
       "Are you sure you want to abandon this order? All items will be lost.",
-      { type: "warning" },
+      { type: "warning" }
     );
 
     if (result.confirmed) {
@@ -219,7 +213,7 @@ const abandonOrder = async () => {
 
         notificationStore.showInfo(
           "Order Abandoned",
-          "Order has been cancelled",
+          "Order has been cancelled"
         );
       } catch {
         notificationStore.showError("Error", "Failed to abandon order");
@@ -266,7 +260,7 @@ const addProduct = async () => {
 
   try {
     const fetchedProduct = await productService.findProductByBarcode(
-      barcode.value,
+      barcode.value
     );
 
     if (fetchedProduct) {
@@ -274,7 +268,7 @@ const addProduct = async () => {
 
       notificationStore.showSuccess(
         "Product Added",
-        `${fetchedProduct.name} added to order`,
+        `${fetchedProduct.name} added to order`
       );
       if (!isHome.value) {
         router.push("/");
@@ -282,43 +276,26 @@ const addProduct = async () => {
     } else {
       notificationStore.showWarning(
         "Product Not Found",
-        "No product found with this barcode",
+        "No product found with this barcode"
       );
     }
   } catch {
     notificationStore.showError(
       "Error",
-      "Failed to fetch product. Please try again.",
+      "Failed to fetch product. Please try again."
     );
   }
 
   barcode.value = "";
 };
 
-let intervalId: ReturnType<typeof setInterval> | undefined;
-
 onMounted(() => {
-  intervalId = setInterval(() => {
-    clock.value = new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  }, 1000);
-
-  // Initialize system setup
   setupStore.initializeSystem().catch((error) => {
     notificationStore.showError(
       "Setup Error",
-      `Failed to initialize system setup. Please check your configuration. ${error}`,
+      `Failed to initialize system setup. Please check your configuration. ${error}`
     );
   });
-});
-
-onUnmounted(() => {
-  if (intervalId) {
-    clearInterval(intervalId);
-  }
 });
 </script>
 <template>
@@ -327,10 +304,10 @@ onUnmounted(() => {
   <!-- Main App Content -->
   <div
     v-else
-    class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100"
+    class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-100 to-indigo-100"
   >
     <header
-      class="bg-white/90 backdrop-blur-md border-b border-white/20 shadow-xl sticky top-0 z-50"
+      class="backdrop-blur-md border-b border-white/20 shadow-xl sticky top-0 z-50"
     >
       <div class="max-w-7xl mx-auto px-4 py-3">
         <div class="flex items-center justify-between gap-4">
@@ -356,7 +333,7 @@ onUnmounted(() => {
               </svg>
             </div>
             <h1
-              class="text-lg font-bold text-zinc-300 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300 group-hover:text-white"
+              class="text-lg font-bold text-zinc-600 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300 group-hover:text-zinc-800"
             >
               POS
             </h1>
@@ -367,7 +344,7 @@ onUnmounted(() => {
             class="flex flex-1 items-center gap-2 flex-shrink-0"
           >
             <div
-              class="flex w-full items-center gap-2 bg-white/60 backdrop-blur-sm rounded-lg px-3 py-2"
+              class="flex w-full items-center gap-2 bg-white/60 backdrop-blur-sm rounded-lg px-3 py-2 border"
             >
               <svg
                 class="w-4 h-4 text-purple-600"
@@ -393,7 +370,7 @@ onUnmounted(() => {
                 v-model="barcode"
                 type="text"
                 placeholder="Barcode (F1)"
-                class="w-full text-white bg-transparent border-0 focus:ring-0 focus:outline-none placeholder-gray-500 text-sm"
+                class="w-full bg-transparent border-0 focus:ring-0 focus:outline-none placeholder-gray-500 text-sm rounded"
               />
             </div>
           </form>
@@ -552,22 +529,7 @@ onUnmounted(() => {
             </div>
 
             <div class="flex flex-col items-center gap-2 flex-shrink-0">
-              <div
-                class="flex items-center gap-1 bg-white/60 backdrop-blur-sm rounded-lg px-2 py-1 text-xs"
-              >
-                <svg
-                  class="w-3 h-3 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12,6 12,12 16,14"></polyline>
-                </svg>
-                <span class="font-mono font-medium text-gray-800">{{
-                  clock
-                }}</span>
-              </div>
+              <ClockComponent />
 
               <!-- Online Status -->
               <div
@@ -658,7 +620,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Compact header animations and effects */
 @keyframes fadeInDown {
   from {
     opacity: 0;
@@ -696,53 +657,6 @@ header {
   animation: fadeInDown 0.6s ease-out;
 }
 
-/* Compact layout responsiveness */
-@media (max-width: 1024px) {
-  .flex-1 {
-    min-width: 0;
-  }
-
-  .truncate {
-    max-width: 120px;
-  }
-
-  .hidden.sm\\:inline {
-    display: none !important;
-  }
-}
-
-@media (max-width: 768px) {
-  header .flex {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .w-32 {
-    width: 100px;
-  }
-
-  .truncate {
-    max-width: 80px;
-  }
-
-  .px-4 {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
-}
-
-/* Glassmorphism effect */
-.bg-white\/60 {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.bg-white\/90 {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-}
-
 /* Button hover effects */
 button:hover:not(:disabled) {
   transform: translateY(-1px);
@@ -774,81 +688,9 @@ input:focus {
   }
 }
 
-/* Logo hover effect */
-.group:hover .bg-gradient-to-r {
-  background: linear-gradient(to right, #3b82f6, #6366f1);
-}
-
 /* Smooth transitions */
 * {
   transition: all 0.2s ease;
-}
-
-/* Order status badge */
-.bg-blue-100 {
-  background-color: #dbeafe;
-  animation: slideIn 0.3s ease-out;
-}
-
-/* Button size consistency */
-button {
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Text truncation improvements */
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Focus improvements for accessibility */
-button:focus,
-input:focus,
-a:focus {
-  outline: 2px solid rgba(147, 51, 234, 0.5);
-  outline-offset: 2px;
-}
-
-/* Compact spacing adjustments */
-.gap-4 > * + * {
-  margin-left: 1rem;
-}
-
-.gap-2 > * + * {
-  margin-left: 0.5rem;
-}
-
-.gap-1 > * + * {
-  margin-left: 0.25rem;
-}
-
-/* Icon consistency */
-svg {
-  flex-shrink: 0;
-}
-
-/* Mobile menu considerations */
-@media (max-width: 640px) {
-  .flex-shrink-0 {
-    flex-shrink: 1;
-  }
-
-  .min-w-0 {
-    min-width: 60px;
-  }
-
-  .text-lg {
-    font-size: 1rem;
-  }
-
-  .px-3 {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
 }
 
 /* Performance optimizations */
@@ -868,41 +710,6 @@ svg {
   .backdrop-blur-md,
   .backdrop-blur-sm {
     backdrop-filter: none !important;
-  }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .bg-white\/90 {
-    background: rgba(31, 41, 55, 0.9);
-  }
-
-  .bg-white\/60 {
-    background: rgba(31, 41, 55, 0.6);
-  }
-
-  .text-gray-800 {
-    color: #f3f4f6;
-  }
-
-  .text-gray-600 {
-    color: #d1d5db;
-  }
-
-  .border-white\/20 {
-    border-color: rgba(75, 85, 99, 0.2);
-  }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .bg-gradient-to-r {
-    background: solid !important;
-  }
-
-  .text-transparent {
-    color: inherit !important;
-    background-clip: unset !important;
   }
 }
 

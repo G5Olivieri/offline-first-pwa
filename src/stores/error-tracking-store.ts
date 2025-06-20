@@ -239,14 +239,12 @@ export const useErrorTrackingStore = defineStore("errorTracking", () => {
   });
 
   return {
-    // State
     errors: computed(() => errors.value),
     unresolvedErrors,
     criticalErrors,
     errorsByType,
     errorsBySeverity,
 
-    // Methods
     logError,
     resolveError,
     resolveErrorsByType,

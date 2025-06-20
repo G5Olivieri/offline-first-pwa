@@ -1,6 +1,6 @@
 import { config } from "@/config/env";
 import { defineStore } from "pinia";
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 
 // Extend navigator interface for non-standard properties
 interface ExtendedNavigator extends Navigator {
@@ -10,15 +10,6 @@ interface ExtendedNavigator extends Navigator {
     addEventListener?: (event: string, handler: () => void) => void;
   };
   deviceMemory?: number;
-}
-
-// Extend performance interface for memory info
-interface ExtendedPerformance extends Performance {
-  memory?: {
-    usedJSHeapSize: number;
-    totalJSHeapSize: number;
-    jsHeapSizeLimit: number;
-  };
 }
 
 interface SystemInfo {
@@ -71,10 +62,6 @@ export const useSystemInfoStore = defineStore("systemInfo", () => {
     language: "en",
     platform: "unknown",
   });
-  const performanceInfo = ref<{
-    memoryUsage?: number;
-    timing?: PerformanceNavigationTiming;
-  }>({});
 
   // Getters
   const systemInfo = computed<SystemInfo>(() => ({
@@ -172,7 +159,6 @@ export const useSystemInfoStore = defineStore("systemInfo", () => {
     webAssembly: "WebAssembly" in window,
     intersectionObserver: "IntersectionObserver" in window,
     resizeObserver: "ResizeObserver" in window,
-    performanceObserver: "PerformanceObserver" in window,
     geolocation: "geolocation" in navigator,
     camera:
       "mediaDevices" in navigator && "getUserMedia" in navigator.mediaDevices,
@@ -220,21 +206,6 @@ export const useSystemInfoStore = defineStore("systemInfo", () => {
     if ("hardwareConcurrency" in navigator) {
       deviceCapabilities.value.cores = navigator.hardwareConcurrency;
     }
-
-    // Get performance info
-    if (window.performance && window.performance.getEntriesByType) {
-      const navigation = window.performance.getEntriesByType(
-        "navigation",
-      )[0] as PerformanceNavigationTiming;
-      if (navigation) {
-        performanceInfo.value.timing = navigation;
-      }
-    }
-
-    if ("memory" in performance) {
-      const memory = (performance as ExtendedPerformance).memory;
-      performanceInfo.value.memoryUsage = memory?.usedJSHeapSize;
-    }
   };
 
   const updateConnectionInfo = () => {
@@ -254,7 +225,6 @@ export const useSystemInfoStore = defineStore("systemInfo", () => {
     device: deviceInfo.value,
     capabilities: deviceCapabilities.value,
     supportedFeatures: supportedFeatures.value,
-    performance: performanceInfo.value,
     isLowEndDevice: isLowEndDevice.value,
   });
 
@@ -264,7 +234,7 @@ export const useSystemInfoStore = defineStore("systemInfo", () => {
       (feature) =>
         !supportedFeatures.value[
           feature as keyof typeof supportedFeatures.value
-        ],
+        ]
     );
 
     return {
@@ -291,7 +261,7 @@ export const useSystemInfoStore = defineStore("systemInfo", () => {
     if ("connection" in navigator) {
       (navigator as ExtendedNavigator).connection?.addEventListener?.(
         "change",
-        updateConnectionInfo,
+        updateConnectionInfo
       );
     }
 
@@ -309,7 +279,6 @@ export const useSystemInfoStore = defineStore("systemInfo", () => {
     screenInfo,
     connectionInfo,
     deviceCapabilities,
-    performanceInfo,
 
     // Getters
     systemInfo,
@@ -327,19 +296,3 @@ export const useSystemInfoStore = defineStore("systemInfo", () => {
     initialize,
   };
 });
-
-// Auto-initialize when store is first used
-let initialized = false;
-export const useSystemInfoStoreWithAutoInit = () => {
-  const store = useSystemInfoStore();
-
-  if (!initialized) {
-    initialized = true;
-
-    onMounted(() => {
-      store.initialize();
-    });
-  }
-
-  return store;
-};

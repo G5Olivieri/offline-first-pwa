@@ -3,20 +3,20 @@ import throttle from "lodash.throttle";
 import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { getOrderDB } from "../db";
+import { productService } from "../services/product-service";
 import { recommendationEngine } from "../services/recommendation-engine";
 import type { Item, Order, PaymentMethod } from "../types/order";
 import { OrderStatus } from "../types/order";
 import type { Product } from "../types/product";
 import { useCustomerStore } from "./customer-store";
 import { useOperatorStore } from "./operator-store";
-import { useProductStore } from "./product-store";
 import { useTerminalStore } from "./terminal-store";
 
 export const useOrderStore = defineStore("orderStore", () => {
   const orderDB = getOrderDB();
-  const productStore = useProductStore();
   const currentOrderId = useLocalStorage("currentOrderId", "");
   const currentOrderRev = useLocalStorage("currentOrderRev", "");
+  const createdAt = useLocalStorage("orderCreatedAt", "");
   const operatorStore = useOperatorStore();
   const customerStore = useCustomerStore();
   const terminalStore = useTerminalStore();
@@ -24,7 +24,6 @@ export const useOrderStore = defineStore("orderStore", () => {
   const amountError = ref<string | null>(null);
   const paymentMethod = ref<PaymentMethod>("card");
   const change = ref<number | null>(null);
-  let createdAt = "";
 
   const itemsMap = reactive<Map<string, Item>>(new Map());
   const items = computed(() => Array.from(itemsMap.values()));
@@ -42,8 +41,8 @@ export const useOrderStore = defineStore("orderStore", () => {
       currentOrderId.value = crypto.randomUUID();
     }
 
-    if (createdAt === "") {
-      createdAt = new Date().toISOString();
+    if (createdAt.value === "") {
+      createdAt.value = new Date().toISOString();
     }
 
     return {
@@ -57,7 +56,7 @@ export const useOrderStore = defineStore("orderStore", () => {
       amount: paymentMethod.value === "cash" ? parseFloat(amount.value) : null,
       operator_id: operatorStore.operatorId || undefined,
       customer_id: customerStore.customerId || undefined,
-      created_at: createdAt,
+      created_at: createdAt.value,
       updated_at: new Date().toISOString(),
     };
   };
@@ -111,10 +110,14 @@ export const useOrderStore = defineStore("orderStore", () => {
 
     putOrder(mapOrderToDocument(OrderStatus.CANCELLED));
     await putOrder.flush();
+    await createNewOrder();
+  };
 
+  const createNewOrder = async () => {
     itemsMap.clear();
     currentOrderId.value = "";
-    currentOrderRev.value = undefined;
+    currentOrderRev.value = "";
+    createdAt.value = "";
     await customerStore.clearCustomer();
     putOrder(mapOrderToDocument(OrderStatus.PENDING));
   };
@@ -156,12 +159,8 @@ export const useOrderStore = defineStore("orderStore", () => {
       itemsMap.values()
     ).map((item) => [item.product._id, item.product.stock - item.quantity]);
 
-    itemsMap.clear();
-    currentOrderId.value = "";
-    currentOrderRev.value = "";
-    await productStore.changeStock(new Map(productsToUpdate));
-    await customerStore.clearCustomer();
-    putOrder(mapOrderToDocument(OrderStatus.PENDING));
+    await productService.changeStock(new Map(productsToUpdate));
+    await createNewOrder();
   };
 
   const loadOrder = async () => {
@@ -178,6 +177,7 @@ export const useOrderStore = defineStore("orderStore", () => {
       currentOrderId.value = "";
       currentOrderRev.value = "";
       customerStore.clearCustomer();
+      createdAt.value = "";
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
       return;
     }

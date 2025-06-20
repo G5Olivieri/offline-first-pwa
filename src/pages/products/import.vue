@@ -223,9 +223,9 @@ defineOptions({
 
 import { ref } from "vue";
 import { useNotificationStore } from "../../stores/notification-store";
-import { useProductStore } from "../../stores/product-store";
+import { useProductService } from "../../services/product-service";
 
-const productStore = useProductStore();
+const productStore = useProductService();
 const notificationStore = useNotificationStore();
 
 const file = ref<File | null>(null);

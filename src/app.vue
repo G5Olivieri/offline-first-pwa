@@ -10,12 +10,12 @@ import {
   createPOSShortcuts,
   useKeyboardShortcuts,
 } from "./composables/use-keyboard-shortcuts";
+import { productService } from "./services/product-service";
 import { useCustomerStore } from "./stores/customer-store";
 import { useNotificationStore } from "./stores/notification-store";
 import { useOnlineStatusStore } from "./stores/online-status-store";
 import { useOperatorStore } from "./stores/operator-store";
 import { useOrderStore } from "./stores/order-store";
-import { useProductStore } from "./stores/product-store";
 import { useSetupStore } from "./stores/setup-store";
 
 const barcode = ref("");
@@ -30,7 +30,6 @@ const clock = ref(
 const barcodeInput = ref<HTMLInputElement | null>(null);
 const showHelpDialog = ref(false);
 const showOrderDialog = ref(false);
-const productStore = useProductStore();
 const orderStore = useOrderStore();
 const onlineStatusStore = useOnlineStatusStore();
 const operatorStore = useOperatorStore();
@@ -279,7 +278,7 @@ const addProduct = async () => {
   }
 
   try {
-    const fetchedProduct = await productStore.findProductByBarcode(
+    const fetchedProduct = await productService.findProductByBarcode(
       barcode.value
     );
 

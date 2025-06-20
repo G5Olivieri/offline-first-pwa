@@ -1,20 +1,17 @@
 import { defineStore } from "pinia";
-import { ref, computed, readonly } from "vue";
+import { computed, readonly, ref } from "vue";
+import { productService } from "../services/product-service";
+import { recommendationEngine } from "../services/recommendation-engine";
+import type { Customer } from "../types/customer";
+import type { Item } from "../types/order";
+import type { Product } from "../types/product";
 import type {
   ProductRecommendation,
   RecommendationSet,
 } from "../types/recommendation";
 import { RecommendationContext } from "../types/recommendation";
-import type { Product } from "../types/product";
-import type { Customer } from "../types/customer";
-import type { Item } from "../types/order";
-import { recommendationEngine } from "../services/recommendation-engine";
-import { useProductStore } from "./product-store";
 
 export const useRecommendationStore = defineStore("recommendationStore", () => {
-  const productStore = useProductStore();
-
-  // State
   const currentRecommendations = ref<
     Record<RecommendationContext, ProductRecommendation[]>
   >({
@@ -78,23 +75,19 @@ export const useRecommendationStore = defineStore("recommendationStore", () => {
     error.value = null;
 
     try {
-      // Get all products for the recommendation engine
-      const allProductsResult = await productStore.searchProducts("", {
+      const allProductsResult = await productService.listProducts({
         limit: 1000,
       });
       const allProducts = allProductsResult.products;
 
-      // Generate recommendations
       const recommendations =
         await recommendationEngine.generateRecommendations(context, {
           ...options,
           allProducts,
         });
 
-      // Update state
       currentRecommendations.value[context] = recommendations;
 
-      // Cache results
       const recommendationSet: RecommendationSet = {
         id: `set-${context}-${Date.now()}`,
         context,

@@ -1,19 +1,17 @@
-import { defineStore } from "pinia";
 import { getProductDB } from "../db";
-import { searchService } from "../services/search-service";
 import type { Product } from "../types/product";
+import { searchService, SearchService } from "./search-service";
 
-export const useProductStore = defineStore("productStore", () => {
-  const productDB = getProductDB();
+export class ProductService {
+  public constructor(
+    private readonly db: PouchDB.Database<Product>,
+    private readonly search: SearchService
+  ) {}
 
-  // Main search method - uses search service if available, fallback to database
-  const searchProducts = async (
-    query: string,
-    { limit = 100, skip = 0 } = {}
-  ) => {
-    const searchResult = searchService.search(query, { limit, skip });
+  async searchProducts(query: string, { limit = 100, skip = 0 } = {}) {
+    const searchResult = this.search.search(query, { limit, skip });
 
-    const products = await productDB
+    const products = await this.db
       .bulkGet({
         docs: searchResult.productIds.map((id) => ({ id })),
       })
@@ -32,11 +30,10 @@ export const useProductStore = defineStore("productStore", () => {
       count: searchResult.count,
       products: products.filter((p) => p !== null) as Product[],
     };
-  };
+  }
 
-  // Legacy method for backward compatibility - now uses main search
-  const findProductByBarcode = async (barcode: string) => {
-    const result = await productDB.find({
+  async findProductByBarcode(barcode: string) {
+    const result = await this.db.find({
       selector: { barcode },
       limit: 1,
     });
@@ -44,10 +41,10 @@ export const useProductStore = defineStore("productStore", () => {
       return result.docs[0];
     }
     return null;
-  };
+  }
 
-  const changeStock = async (input: Map<string, number>) => {
-    const products = await productDB.bulkGet({
+  async changeStock(input: Map<string, number>) {
+    const products = await this.db.bulkGet({
       docs: Array.from(input.keys()).map((id) => ({ id })),
     });
 
@@ -86,17 +83,17 @@ export const useProductStore = defineStore("productStore", () => {
       stock: input.get(result._id) ?? result.stock, // Update stock if input has a value for this product
     }));
 
-    productDB.bulkDocs(productsToUpdate).then((response) => {
+    this.db.bulkDocs(productsToUpdate).then((response) => {
       return response;
     });
-  };
+  }
 
-  const listProducts = async ({ limit = 100, skip = 0 } = {}) => {
-    const count = await productDB.info().then((info) => info.doc_count);
+  async listProducts({ limit = 100, skip = 0 } = {}) {
+    const count = await this.db.info().then((info) => info.doc_count);
 
     const result = {
       count,
-      products: await productDB
+      products: await this.db
         .allDocs({ include_docs: true, limit, skip })
         .then((result) => {
           return result.rows.map((row) => row.doc as Product);
@@ -107,50 +104,50 @@ export const useProductStore = defineStore("productStore", () => {
     };
 
     return result;
-  };
+  }
 
-  const createProduct = async (product: Omit<Product, "_id" | "rev">) => {
+  async createProduct(product: Omit<Product, "_id" | "rev">) {
     const newProduct = {
       _id: crypto.randomUUID(),
       ...product,
     };
-    await productDB.put(newProduct);
+    await this.db.put(newProduct);
 
-    await searchService.add({
+    await this.search.add({
       id: newProduct._id,
       name: newProduct.name,
       barcode: newProduct.barcode,
     });
 
     return newProduct;
-  };
+  }
 
-  const updateProduct = async (product: Product) => {
-    await productDB.put(product);
-    await searchService.add({
+  async updateProduct(product: Product) {
+    await this.db.put(product);
+    await this.search.add({
       id: product._id,
       name: product.name,
       barcode: product.barcode,
     });
 
     return product;
-  };
+  }
 
-  const deleteProduct = async (id: string) => {
-    const productToDelete = await productDB.get(id);
+  async deleteProduct(id: string) {
+    const productToDelete = await this.db.get(id);
 
-    await productDB.remove(productToDelete);
-    await searchService.remove(id);
+    await this.db.remove(productToDelete);
+    await this.search.remove(id);
 
     return id;
-  };
+  }
 
-  const bulkInsertProducts = async (products: Product[]) => {
+  async bulkInsertProducts(products: Product[]) {
     const docs = products.map((product) => ({
       ...product,
       _id: product._id || crypto.randomUUID(),
     }));
-    const response = await productDB.bulkDocs(docs);
+    const response = await this.db.bulkDocs(docs);
 
     const indexableProducts = docs.map((product) => ({
       id: product._id,
@@ -158,19 +155,11 @@ export const useProductStore = defineStore("productStore", () => {
       barcode: product.barcode,
     }));
 
-    await searchService.bulkAdd(indexableProducts);
+    await this.search.bulkAdd(indexableProducts);
 
     return response;
-  };
+  }
+}
 
-  return {
-    findProductByBarcode,
-    searchProducts,
-    changeStock,
-    listProducts,
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    bulkInsertProducts,
-  };
-});
+const productDB = getProductDB();
+export const productService = new ProductService(productDB, searchService);

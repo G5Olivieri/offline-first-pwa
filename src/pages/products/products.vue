@@ -7,10 +7,10 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { searchService } from "../../services/search-service";
 import { useNotificationStore } from "../../stores/notification-store";
 import { useOrderStore } from "../../stores/order-store";
-import { useProductStore } from "../../stores/product-store";
+import { useProductService } from "../../services/product-service";
 import type { Product } from "../../types/product";
 
-const productStore = useProductStore();
+const productStore = useProductService();
 const notificationStore = useNotificationStore();
 const orderStore = useOrderStore();
 

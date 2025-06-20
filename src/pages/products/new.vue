@@ -7,9 +7,9 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
 import * as z from "zod";
-import { useProductStore } from "../../stores/product-store";
+import { useProductService } from "../../services/product-service";
 
-const productStore = useProductStore();
+const productStore = useProductService();
 const router = useRouter();
 
 const validationSchema = toTypedSchema(

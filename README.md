@@ -1,3 +1,7 @@
+# Don't be fooled by the cute AI text
+
+This is just a POC for offline-first PWA.
+
 # 🛒 Modern POS System - Vue PWA
 
 [![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)](https://vuejs.org/)

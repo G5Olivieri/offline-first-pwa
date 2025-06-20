@@ -1,19 +1,20 @@
+import Checkout from "@/pages/checkout/checkout.vue";
+import ListAllCustomers from "@/pages/customers/all.vue";
+import Customers from "@/pages/customers/customers.vue";
+import NewCustomer from "@/pages/customers/new.vue";
+import Home from "@/pages/home/home.vue";
+import NotFound from "@/pages/not-found.vue";
+import NewOperator from "@/pages/operators/new.vue";
+import Operators from "@/pages/operators/operators.vue";
+import ProductDetail from "@/pages/products/detail-simple.vue";
+import EditProduct from "@/pages/products/edit.vue";
+import ImportProducts from "@/pages/products/import.vue";
+import NewProduct from "@/pages/products/new.vue";
+import Products from "@/pages/products/products.vue";
+import Monitoring from "@/pages/utils/monitoring.vue";
+import Utils from "@/pages/utils/utils.vue";
 import type { RouteRecordRaw } from "vue-router";
 import { createRouter, createWebHistory } from "vue-router";
-import Checkout from "./pages/checkout/checkout.vue";
-import ListAllCustomers from "./pages/customers/all.vue";
-import Customers from "./pages/customers/customers.vue";
-import NewCustomer from "./pages/customers/new.vue";
-import Home from "./pages/home/home.vue";
-import NewOperator from "./pages/operators/new.vue";
-import Operators from "./pages/operators/operators.vue";
-import ProductDetail from "./pages/products/detail-simple.vue";
-import EditProduct from "./pages/products/edit.vue";
-import ImportProducts from "./pages/products/import.vue";
-import NewProduct from "./pages/products/new.vue";
-import Products from "./pages/products/products.vue";
-import Monitoring from "./pages/utils/monitoring.vue";
-import Utils from "./pages/utils/utils.vue";
 
 const routes: RouteRecordRaw[] = [
   { path: "/", name: "home", component: Home },
@@ -38,6 +39,8 @@ const routes: RouteRecordRaw[] = [
   { path: "/products/new", name: "new-product", component: NewProduct },
   { path: "/_utils", name: "utils", component: Utils },
   { path: "/_utils/monitoring", name: "monitoring", component: Monitoring },
+  // Catch-all route - must be last
+  { path: "/:pathMatch(.*)*", name: "not-found", component: NotFound },
 ];
 
 export const router = createRouter({

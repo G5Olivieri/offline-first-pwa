@@ -31,6 +31,18 @@
             <div v-if="toast.message" class="text-sm text-gray-600 mt-1">
               {{ toast.message }}
             </div>
+            <!-- Actions -->
+            <div v-if="toast.actions && toast.actions.length > 0" class="mt-3 flex space-x-2">
+              <button
+                v-for="action in toast.actions"
+                :key="action.label"
+                @click="handleActionClick(action, toast.id)"
+                class="px-3 py-1 text-xs font-medium rounded-md transition-colors"
+                :class="getActionClasses(action.style || 'secondary')"
+              >
+                {{ action.label }}
+              </button>
+            </div>
           </div>
           <button
             @click="removeToast(toast.id)"
@@ -59,6 +71,12 @@
 <script setup lang="ts">
 import { h, onMounted, onUnmounted, ref } from 'vue'
 
+export interface ToastAction {
+  label: string;
+  action: () => void;
+  style?: 'primary' | 'secondary' | 'danger';
+}
+
 export interface Toast {
   id: string
   type: 'success' | 'error' | 'warning' | 'info'
@@ -66,6 +84,8 @@ export interface Toast {
   message?: string
   duration?: number
   startTime?: number
+  actions?: ToastAction[]
+  metadata?: Record<string, unknown>
 }
 
 interface Props {
@@ -106,6 +126,24 @@ onUnmounted(() => {
 
 const removeToast = (id: string) => {
   emit('remove', id)
+}
+
+const handleActionClick = (action: ToastAction, toastId: string) => {
+  // Execute the action
+  action.action()
+
+  // Remove the toast after action is executed (optional behavior)
+  // You can modify this based on whether you want the toast to persist
+  removeToast(toastId)
+}
+
+const getActionClasses = (style: ToastAction['style'] = 'secondary') => {
+  const classes = {
+    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500',
+    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500',
+    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500'
+  }
+  return classes[style]
 }
 
 const getProgress = (toast: Toast): number => {

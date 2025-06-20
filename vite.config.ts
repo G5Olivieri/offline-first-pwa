@@ -95,6 +95,7 @@ export default defineConfig(({ mode }) => {
         path: "path-browserify",
         events: "events",
         constants: "constants-browserify",
+        "@": "/src",
       },
     },
 

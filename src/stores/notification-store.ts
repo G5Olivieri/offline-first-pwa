@@ -103,6 +103,38 @@ export const useNotificationStore = defineStore('notifications', () => {
     return addToast({ type: 'error', title, message, duration: duration ?? 6000 });
   };
 
+  const showErrorWithRetry = (
+    title: string,
+    message: string,
+    retryFn: () => void,
+    metadata?: Record<string, unknown>
+  ) => {
+    return addToast({
+      type: 'error',
+      title,
+      message,
+      duration: 0, // Don't auto-dismiss error with retry
+      actions: [
+        {
+          label: 'Retry',
+          onClick: () => {
+            retryFn();
+            // Remove this specific toast after retry
+          },
+          style: 'primary'
+        },
+        {
+          label: 'Dismiss',
+          onClick: () => {
+            // Toast will be removed by the action handler
+          },
+          style: 'secondary'
+        }
+      ],
+      metadata
+    });
+  };
+
   const showWarning = (title: string, message?: string, duration?: number) => {
     return addToast({ type: 'warning', title, message, duration });
   };

@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
-import { useRouter } from "vue-router";
-import AppModal from "./components/app-modal.vue";
-import HelpDialog from "./components/help-dialog.vue";
-import OrderDialog from "./components/order-dialog.vue";
-import SetupLoading from "./components/setup-loading.vue";
-import ToastContainer from "./components/toast-container.vue";
+import AppModal from "@/components/app-modal.vue";
+import HelpDialog from "@/components/help-dialog.vue";
+import OrderDialog from "@/components/order-dialog.vue";
+import SetupLoading from "@/components/setup-loading.vue";
+import ToastContainer from "@/components/toast-container.vue";
 import {
   createPOSShortcuts,
   useKeyboardShortcuts,
-} from "./composables/use-keyboard-shortcuts";
-import { productService } from "./services/product-service";
-import { useNotificationStore } from "./stores/notification-store";
-import { useOnlineStatusStore } from "./stores/online-status-store";
-import { useOrderStore } from "./stores/order-store";
-import { useSetupStore } from "./stores/setup-store";
+} from "@/composables/use-keyboard-shortcuts";
+import { productService } from "@/services/product-service";
+import { useNotificationStore } from "@/stores/notification-store";
+import { useOnlineStatusStore } from "@/stores/online-status-store";
+import { useOrderStore } from "@/stores/order-store";
+import { useSetupStore } from "@/stores/setup-store";
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 const barcode = ref("");
 const router = useRouter();

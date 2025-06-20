@@ -1,15 +1,15 @@
 import PouchDB from "pouchdb-browser";
 import PouchDBFind from "pouchdb-find";
-import { config } from "./config/env";
-import type { Customer } from "./types/customer";
-import type { Operator } from "./types/operator";
-import { type Order } from "./types/order";
-import type { Product } from "./types/product";
+import { config } from "@/config/env";
+import type { Customer } from "@/types/customer";
+import type { Operator } from "@/types/operator";
+import { type Order } from "@/types/order";
+import type { Product } from "@/types/product";
 import type {
   CustomerProductPreference,
   ProductAffinity,
   RecommendationConfig,
-} from "./types/recommendation";
+} from "@/types/recommendation";
 
 PouchDB.plugin(PouchDBFind);
 

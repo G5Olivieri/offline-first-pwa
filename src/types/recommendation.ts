@@ -1,27 +1,27 @@
-import type { Product } from './product';
-import type { Customer } from './customer';
+import type { Customer } from "@/types/customer";
+import type { Product } from "@/types/product";
 
 export enum RecommendationType {
-  CROSS_SELL = 'cross-sell',
-  UPSELL = 'upsell',
-  FREQUENTLY_BOUGHT_TOGETHER = 'frequently-bought-together',
-  CUSTOMER_BASED = 'customer-based',
-  SEASONAL = 'seasonal',
-  TRENDING = 'trending',
-  INVENTORY_BASED = 'inventory-based',
-  CATEGORY_BASED = 'category-based',
-  SUBSTITUTION = 'substitution',
-  REORDER = 'reorder'
+  CROSS_SELL = "cross-sell",
+  UPSELL = "upsell",
+  FREQUENTLY_BOUGHT_TOGETHER = "frequently-bought-together",
+  CUSTOMER_BASED = "customer-based",
+  SEASONAL = "seasonal",
+  TRENDING = "trending",
+  INVENTORY_BASED = "inventory-based",
+  CATEGORY_BASED = "category-based",
+  SUBSTITUTION = "substitution",
+  REORDER = "reorder",
 }
 
 export enum RecommendationContext {
-  CHECKOUT = 'checkout',
-  PRODUCT_DETAIL = 'product-detail',
-  CUSTOMER_PROFILE = 'customer-profile',
-  HOMEPAGE = 'homepage',
-  CATEGORY_BROWSE = 'category-browse',
-  SEARCH_RESULTS = 'search-results',
-  LOW_STOCK_ALERT = 'low-stock-alert'
+  CHECKOUT = "checkout",
+  PRODUCT_DETAIL = "product-detail",
+  CUSTOMER_PROFILE = "customer-profile",
+  HOMEPAGE = "homepage",
+  CATEGORY_BROWSE = "category-browse",
+  SEARCH_RESULTS = "search-results",
+  LOW_STOCK_ALERT = "low-stock-alert",
 }
 
 export type RecommendationRule = {
@@ -39,7 +39,13 @@ export type RecommendationRule = {
 
 export type RecommendationCondition = {
   field: string;
-  operator: 'equals' | 'greater_than' | 'less_than' | 'contains' | 'in' | 'not_in';
+  operator:
+    | "equals"
+    | "greater_than"
+    | "less_than"
+    | "contains"
+    | "in"
+    | "not_in";
   value: string | number | boolean | string[];
 };
 

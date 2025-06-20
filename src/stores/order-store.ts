@@ -1,6 +1,8 @@
 import { getOrderDB } from "@/db";
 import { customerService } from "@/services/customer-service";
 import { operatorService } from "@/services/operator-service";
+import { orderEventEmitter } from "@/services/order-event-emitter";
+import { startOrderNotificationHandler } from "@/services/order-notification-handler";
 import { productService } from "@/services/product-service";
 import { recommendationEngine } from "@/services/recommendation-engine";
 import type { Customer } from "@/types/customer";
@@ -11,15 +13,14 @@ import type { Product } from "@/types/product";
 import { useLocalStorage } from "@vueuse/core";
 import throttle from "lodash.throttle";
 import { defineStore } from "pinia";
-import { computed, onMounted, reactive, ref, watch } from "vue";
-import { useErrorTrackingStore } from "./error-tracking-store";
-import { useOrderEventsStore } from "./order-events-store";
+import { computed, onMounted, reactive, ref, toValue, watch } from "vue";
+import { errorTrackingService } from "../services/error-tracking-service";
+import { useNotificationStore } from "./notification-store";
 import { useTerminalStore } from "./terminal-store";
 
 export const useOrderStore = defineStore("orderStore", () => {
   const orderDB = getOrderDB();
-  const errorTrackingStore = useErrorTrackingStore();
-  const orderEventsStore = useOrderEventsStore();
+  const notificationStore = useNotificationStore();
 
   // order
   const id = useLocalStorage("currentOrderId", "");
@@ -90,37 +91,19 @@ export const useOrderStore = defineStore("orderStore", () => {
             existingItem.quantity++;
             existingItem.total = calculateTotal(existingItem);
 
-            orderEventsStore.emit("product_added", { product });
+            orderEventEmitter.emit("product_added", { product });
           } else {
-            orderEventsStore.emit("stock_limit_reached", {
+            orderEventEmitter.emit("stock_limit_reached", {
               product,
               currentQuantity: existingItem.quantity,
               stockLimit: product.stock,
-            });
-
-            const error = new Error(
-              `Cannot increase quantity beyond stock limit for product: ${product.name}`
-            );
-            errorTrackingStore.logError(error, {
-              component: "OrderStore",
-              operation: "addProduct",
-              timestamp: new Date(),
             });
             return;
           }
         }
       } else {
         if (product.stock && product.stock <= 0) {
-          orderEventsStore.emit("out_of_stock", { product });
-
-          const error = new Error(
-            `Cannot add out-of-stock product: ${product.name}`
-          );
-          errorTrackingStore.logError(error, {
-            component: "OrderStore",
-            operation: "addProduct",
-            timestamp: new Date(),
-          });
+          orderEventEmitter.emit("out_of_stock", { product });
           return;
         }
 
@@ -130,12 +113,12 @@ export const useOrderStore = defineStore("orderStore", () => {
           total: product.price,
         });
 
-        orderEventsStore.emit("product_added", { product });
+        orderEventEmitter.emit("product_added", { product });
       }
 
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
     } catch (error) {
-      orderEventsStore.emit("order_error", {
+      orderEventEmitter.emit("order_error", {
         error: error as Error,
         context: { operation: "addProduct" },
       });
@@ -148,28 +131,19 @@ export const useOrderStore = defineStore("orderStore", () => {
         item.quantity++;
         item.total = calculateTotal(item);
 
-        orderEventsStore.emit("quantity_increased", { product: item.product });
+        orderEventEmitter.emit("quantity_increased", { product: item.product });
       } else {
-        orderEventsStore.emit("stock_limit_reached", {
+        orderEventEmitter.emit("stock_limit_reached", {
           product: item.product,
           currentQuantity: item.quantity,
           stockLimit: item.product.stock,
-        });
-
-        const error = new Error(
-          `Cannot increase quantity beyond stock limit for product: ${item.product.name}`
-        );
-        errorTrackingStore.logError(error, {
-          component: "OrderStore",
-          operation: "increase",
-          timestamp: new Date(),
         });
         return;
       }
 
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
     } catch (error) {
-      orderEventsStore.emit("order_error", {
+      orderEventEmitter.emit("order_error", {
         error: error as Error,
         context: { operation: "increase" },
       });
@@ -185,10 +159,10 @@ export const useOrderStore = defineStore("orderStore", () => {
         itemsMap.delete(item.product._id);
       }
 
-      orderEventsStore.emit("quantity_decreased", { product: item.product });
+      orderEventEmitter.emit("quantity_decreased", { product: item.product });
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
     } catch (error) {
-      orderEventsStore.emit("order_error", {
+      orderEventEmitter.emit("order_error", {
         error: error as Error,
         context: { operation: "decrease" },
       });
@@ -198,29 +172,30 @@ export const useOrderStore = defineStore("orderStore", () => {
   const abandon = async () => {
     try {
       if (!id.value) {
-        orderEventsStore.emit("order_error", {
+        orderEventEmitter.emit("order_error", {
           error: new Error("No active order to abandon"),
           context: { operation: "abandon", reason: "no_active_order" },
         });
         return;
       }
       if (itemsMap.size === 0) {
-        orderEventsStore.emit("order_error", {
+        orderEventEmitter.emit("order_error", {
           error: new Error("Order is already empty"),
           context: { operation: "abandon", reason: "empty_order" },
         });
         return;
       }
 
-      putOrder(mapOrderToDocument(OrderStatus.CANCELLED));
+      const doc = mapOrderToDocument(OrderStatus.CANCELLED);
+      putOrder(doc);
       await putOrder.flush();
       await createNewOrder();
 
-      orderEventsStore.emit("order_abandoned", {
-        message: "Order successfully abandoned",
+      orderEventEmitter.emit("order_abandoned", {
+        order: doc,
       });
     } catch (error) {
-      orderEventsStore.emit("order_error", {
+      orderEventEmitter.emit("order_error", {
         error: error as Error,
         context: { operation: "abandon" },
       });
@@ -233,9 +208,10 @@ export const useOrderStore = defineStore("orderStore", () => {
     rev.value = "";
     createdAt.value = "";
     unselectCustomer();
-    await putOrder(mapOrderToDocument(OrderStatus.PENDING));
-    orderEventsStore.emit("order_created", {
-      message: "New order created successfully",
+    const doc = mapOrderToDocument(OrderStatus.PENDING);
+    await putOrder(doc);
+    orderEventEmitter.emit("order_created", {
+      order: doc,
     });
   };
 
@@ -246,20 +222,20 @@ export const useOrderStore = defineStore("orderStore", () => {
   const complete = async () => {
     try {
       if (!id.value) {
-        orderEventsStore.emit("payment_validation_failed", {
+        orderEventEmitter.emit("payment_validation_failed", {
           message: "No active order to complete",
         });
         return;
       }
       if (itemsMap.size === 0) {
-        orderEventsStore.emit("payment_validation_failed", {
+        orderEventEmitter.emit("payment_validation_failed", {
           message: "Cannot complete an empty order. Please add items first.",
         });
         return;
       }
       if (paymentMethod.value === "cash" && !amount.value) {
         amountError.value = "Please enter the amount paid.";
-        orderEventsStore.emit("payment_validation_failed", {
+        orderEventEmitter.emit("payment_validation_failed", {
           message: "Please enter the amount paid for cash transactions.",
         });
         return;
@@ -269,7 +245,7 @@ export const useOrderStore = defineStore("orderStore", () => {
         parseFloat(amount.value) < total.value
       ) {
         amountError.value = "Amount paid is less than the total.";
-        orderEventsStore.emit("payment_validation_failed", {
+        orderEventEmitter.emit("payment_validation_failed", {
           message: `Amount paid (${parseFloat(amount.value).toFixed(
             2
           )}) is less than the total (${total.value.toFixed(2)}).`,
@@ -294,10 +270,8 @@ export const useOrderStore = defineStore("orderStore", () => {
 
       await productService.changeStock(new Map(productsToUpdate));
       await createNewOrder();
-
-      orderEventsStore.emit("order_completed", { order: orderDocument });
     } catch (error) {
-      orderEventsStore.emit("order_error", {
+      orderEventEmitter.emit("order_error", {
         error: error as Error,
         context: { operation: "complete" },
       });
@@ -324,6 +298,13 @@ export const useOrderStore = defineStore("orderStore", () => {
         customer.value = null;
         createdAt.value = "";
         putOrder(mapOrderToDocument(OrderStatus.PENDING));
+        if (doc) {
+          orderEventEmitter.emit("order_load_failed", {
+            error: new Error(
+              `Order with ID ${id.value} is already completed or cancelled.`
+            ),
+          });
+        }
         return;
       }
 
@@ -342,33 +323,13 @@ export const useOrderStore = defineStore("orderStore", () => {
       }
 
       if (customerId.value) {
-        try {
-          const result = await customerService.getCustomerByID(
-            customerId.value
-          );
-          customer.value = result;
-        } catch (error) {
-          errorTrackingStore.logError(error as Error, {
-            component: "OrderStore",
-            operation: "loadOrder-getCustomer",
-            timestamp: new Date(),
-          });
-        }
+        const result = await customerService.getCustomerByID(customerId.value);
+        customer.value = result;
       }
 
       if (operatorId.value) {
-        try {
-          const result = await operatorService.getOperatorByID(
-            operatorId.value
-          );
-          operator.value = result;
-        } catch (error) {
-          errorTrackingStore.logError(error as Error, {
-            component: "OrderStore",
-            operation: "loadOrder-getOperator",
-            timestamp: new Date(),
-          });
-        }
+        const result = await operatorService.getOperatorByID(operatorId.value);
+        operator.value = result;
       }
 
       if (
@@ -378,7 +339,7 @@ export const useOrderStore = defineStore("orderStore", () => {
         putOrder(mapOrderToDocument(OrderStatus.PENDING));
       }
     } catch (error) {
-      orderEventsStore.emit("order_load_failed", {
+      orderEventEmitter.emit("order_load_failed", {
         error: error as Error,
       });
 
@@ -393,15 +354,15 @@ export const useOrderStore = defineStore("orderStore", () => {
 
   const unselectCustomer = () => {
     try {
+      const old = toValue(customer);
       customerId.value = "";
       customer.value = null;
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
-
-      orderEventsStore.emit("customer_unselected", {
-        message: "Customer removed from order",
+      orderEventEmitter.emit("customer_unselected", {
+        customer: old,
       });
     } catch (error) {
-      orderEventsStore.emit("order_error", {
+      orderEventEmitter.emit("order_error", {
         error: error as Error,
         context: { operation: "unselectCustomer" },
       });
@@ -413,12 +374,9 @@ export const useOrderStore = defineStore("orderStore", () => {
       customer.value = selected;
       customerId.value = selected._id;
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
-
-      // Emit customer selected event
-      orderEventsStore.emit("customer_selected", { customer: selected });
+      orderEventEmitter.emit("customer_selected", { customer: selected });
     } catch (error) {
-      // Emit error event
-      orderEventsStore.emit("order_error", {
+      orderEventEmitter.emit("order_error", {
         error: error as Error,
         context: { operation: "selectCustomer" },
       });
@@ -427,17 +385,16 @@ export const useOrderStore = defineStore("orderStore", () => {
 
   const unselectOperator = () => {
     try {
+      const old = toValue(operator);
       operatorId.value = "";
       operator.value = null;
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
 
-      // Emit operator unselected event
-      orderEventsStore.emit("operator_unselected", {
-        message: "Operator removed from order",
+      orderEventEmitter.emit("operator_unselected", {
+        operator: old,
       });
     } catch (error) {
-      // Emit error event
-      orderEventsStore.emit("order_error", {
+      orderEventEmitter.emit("order_error", {
         error: error as Error,
         context: { operation: "unselectOperator" },
       });
@@ -449,12 +406,9 @@ export const useOrderStore = defineStore("orderStore", () => {
       operator.value = selected;
       operatorId.value = selected._id;
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
-
-      // Emit operator selected event
-      orderEventsStore.emit("operator_selected", { operator: selected });
+      orderEventEmitter.emit("operator_selected", { operator: selected });
     } catch (error) {
-      // Emit error event
-      orderEventsStore.emit("order_error", {
+      orderEventEmitter.emit("order_error", {
         error: error as Error,
         context: { operation: "selectOperator" },
       });
@@ -462,6 +416,7 @@ export const useOrderStore = defineStore("orderStore", () => {
   };
 
   onMounted(() => {
+    startOrderNotificationHandler(notificationStore, errorTrackingService);
     loadOrder();
   });
 

@@ -149,7 +149,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { useErrorTrackingStore } from "@/stores/error-tracking-store";
+import { useErrorTrackingStore } from "@/services/error-tracking-service";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOnlineStatusStore } from "@/stores/online-status-store";
 
@@ -179,7 +179,7 @@ onMounted(() => {
     timestamp: new Date(),
   };
 
-  errorTrackingStore.logError(
+  errorTrackingStore.track(
     new Error(`Page not found: ${route.fullPath}`),
     context,
   );
@@ -229,7 +229,7 @@ const reportIssue = () => {
   };
 
   // Track the user's report action
-  errorTrackingStore.logError(
+  errorTrackingStore.track(
     new Error(`User reported 404 issue for path: ${route.fullPath}`),
     context,
   );

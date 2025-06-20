@@ -1,7 +1,7 @@
 import { ref, computed } from "vue";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOnlineStatusStore } from "@/stores/online-status-store";
-import { useErrorTrackingStore } from "@/stores/error-tracking-store";
+import { useErrorTrackingStore } from "@/services/error-tracking-service";
 import { errorBus } from "@/error/error-event-bus";
 import { errorMiddleware } from "@/error/error-middleware";
 import type { ErrorContext } from "@/error/error-middleware";
@@ -111,7 +111,7 @@ export function useErrorHandler(options: ErrorHandlerOptions = {}) {
 
         // Track error
         if (mergedOptions.logError !== false) {
-          errorTrackingStore.logError(errorObj, {
+          errorTrackingStore.track(errorObj, {
             operation: context.operation,
             userId: context.userId,
           });

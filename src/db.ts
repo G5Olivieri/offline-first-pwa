@@ -3,8 +3,7 @@ import PouchDBFind from "pouchdb-find";
 import { config } from "./config/env";
 import type { Customer } from "./types/customer";
 import type { Operator } from "./types/operator";
-import type { Order } from "./types/order";
-import { OrderStatus } from "./types/order";
+import { type Order } from "./types/order";
 import type { Product } from "./types/product";
 import type {
   CustomerProductPreference,
@@ -62,29 +61,12 @@ export const getOrderDB = (): PouchDB.Database<Order> => {
       },
     });
 
-    // One-way sync: only push ALL local orders to remote, never pull
-    _orderDB.replicate
-      .to(remoteOrderDB, {
-        live: true,
-        retry: true,
-        // Push all orders regardless of status
-      })
-      .on("change", async (info) => {
-        // After successful push, purge all non-pending orders from local storage
-        if (info.docs && info.docs.length > 0) {
-          for (const doc of info.docs) {
-            const order = doc as Order;
-            // Purge completed and cancelled orders, keep pending orders
-            if (
-              (order.status === OrderStatus.COMPLETED ||
-                order.status === OrderStatus.CANCELLED) &&
-              doc._rev
-            ) {
-              await _orderDB!.remove(doc._id, doc._rev);
-            }
-          }
-        }
-      });
+    // TODO: only push orders, never pull
+    // TODO: purge local orders when they are synced
+    _orderDB.sync(remoteOrderDB, {
+      live: true,
+      retry: true,
+    });
   }
 
   return _orderDB;
@@ -139,17 +121,10 @@ export const getCustomerDB = (): PouchDB.Database<Customer> => {
       },
     });
 
-    remoteCustomersDB
-      .sync(_customerDB, {
-        live: true,
-        retry: true,
-      })
-      .on("change", (info) => {
-        console.log("[customers] Sync change:", info);
-      })
-      .on("error", (err) => {
-        console.error("[customers] Sync error:", err);
-      });
+    remoteCustomersDB.sync(_customerDB, {
+      live: true,
+      retry: true,
+    });
   }
   return _customerDB;
 };

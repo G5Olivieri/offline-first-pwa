@@ -13,7 +13,6 @@ import {
 import { productService } from "./services/product-service";
 import { useNotificationStore } from "./stores/notification-store";
 import { useOnlineStatusStore } from "./stores/online-status-store";
-import { useOperatorStore } from "./stores/operator-store";
 import { useOrderStore } from "./stores/order-store";
 import { useSetupStore } from "./stores/setup-store";
 
@@ -31,7 +30,6 @@ const showHelpDialog = ref(false);
 const showOrderDialog = ref(false);
 const orderStore = useOrderStore();
 const onlineStatusStore = useOnlineStatusStore();
-const operatorStore = useOperatorStore();
 const notificationStore = useNotificationStore();
 const setupStore = useSetupStore();
 const isHome = computed(() => router.currentRoute.value.path === "/");
@@ -156,7 +154,7 @@ const focusBarcode = () => {
 };
 
 const removeOperator = () => {
-  operatorStore.clearOperator();
+  orderStore.unselectOperator();
   notificationStore.showInfo(
     "Operator removed",
     "Please select a new operator"
@@ -521,13 +519,13 @@ onUnmounted(() => {
               </svg>
               <span class="text-sm font-medium text-gray-800 truncate">
                 {{
-                  (operatorStore.operator && operatorStore.operator.name) ||
+                  (orderStore.operator && orderStore.operator.name) ||
                   "No operator"
                 }}
               </span>
               <div class="flex gap-1 flex-shrink-0">
                 <button
-                  v-if="operatorStore.operator"
+                  v-if="orderStore.operator"
                   @click="removeOperator"
                   class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded transition-colors"
                   title="Logout (F2)"

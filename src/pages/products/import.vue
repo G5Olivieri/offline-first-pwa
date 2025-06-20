@@ -250,11 +250,11 @@ const importProducts = async () => {
 
     await productService.bulkInsertProducts(products);
 
-    router.push({ name: "AllProducts" });
-  } catch {
+    router.push({ name: "products" });
+  } catch (error) {
     notificationStore.showError(
       "Import Failed",
-      "Failed to import products. Please check your file format and try again."
+      `Failed to import products. Please check your file format and try again. ${error}`
     );
   } finally {
     isImporting.value = false;

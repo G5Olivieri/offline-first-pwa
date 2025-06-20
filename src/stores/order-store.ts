@@ -7,10 +7,11 @@ import { customerService } from "../services/customer-service";
 import { productService } from "../services/product-service";
 import { recommendationEngine } from "../services/recommendation-engine";
 import type { Customer } from "../types/customer";
+import type { Operator } from "../types/operator";
 import type { Item, Order, PaymentMethod } from "../types/order";
 import { OrderStatus } from "../types/order";
 import type { Product } from "../types/product";
-import { useOperatorStore } from "./operator-store";
+import { operatorService } from "./operator-store";
 import { useTerminalStore } from "./terminal-store";
 
 export const useOrderStore = defineStore("orderStore", () => {
@@ -18,9 +19,12 @@ export const useOrderStore = defineStore("orderStore", () => {
   const currentOrderId = useLocalStorage("currentOrderId", "");
   const currentOrderRev = useLocalStorage("currentOrderRev", "");
   const createdAt = useLocalStorage("orderCreatedAt", "");
-  const operatorStore = useOperatorStore();
+  const operator = ref<Operator | null>(null);
+  const operatorId = useLocalStorage("operatorId", "");
+
   const customer = ref<Customer | null>(null);
   const customerId = useLocalStorage("customerId", "");
+
   const terminalStore = useTerminalStore();
   const amount = ref("");
   const amountError = ref<string | null>(null);
@@ -56,7 +60,7 @@ export const useOrderStore = defineStore("orderStore", () => {
       terminal_id: terminalStore.terminalId,
       payment_method: paymentMethod.value,
       amount: paymentMethod.value === "cash" ? parseFloat(amount.value) : null,
-      operator_id: operatorStore.operatorId || undefined,
+      operator_id: operatorId.value || undefined,
       customer_id: customerId.value || undefined,
       created_at: createdAt.value,
       updated_at: new Date().toISOString(),
@@ -191,23 +195,34 @@ export const useOrderStore = defineStore("orderStore", () => {
 
     if (doc.customer_id && !customerId.value) {
       customerId.value = doc.customer_id;
-      customer.value = await customerService.getCustomerByID(doc.customer_id);
     }
 
-    if (doc.operator_id && !operatorStore.operatorId) {
-      await operatorStore.setOperator(doc.operator_id);
+    if (doc.operator_id && !operatorId.value) {
+      operatorId.value = doc.operator_id;
+    }
+
+    if (customerId.value) {
+      customerService.getCustomerByID(customerId.value).then((result) => {
+        customer.value = result;
+      });
+    }
+
+    if (operatorId.value) {
+      operatorService.getOperatorByID(operatorId.value).then((result) => {
+        operator.value = result;
+      });
     }
 
     if (
       doc.customer_id !== customerId.value ||
-      operatorStore.operatorId !== doc.operator_id
+      operatorId.value !== doc.operator_id
     ) {
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
     }
   };
 
   const unselectCustomer = () => {
-    customerId.value = null;
+    customerId.value = "";
     customer.value = null;
     putOrder(mapOrderToDocument(OrderStatus.PENDING));
   };
@@ -218,16 +233,21 @@ export const useOrderStore = defineStore("orderStore", () => {
     putOrder(mapOrderToDocument(OrderStatus.PENDING));
   };
 
+  const unselectOperator = () => {
+    operatorId.value = "";
+    operator.value = null;
+    putOrder(mapOrderToDocument(OrderStatus.PENDING));
+  };
+
+  const selectOperator = (selected: Operator) => {
+    operator.value = selected;
+    operatorId.value = selected._id;
+    putOrder(mapOrderToDocument(OrderStatus.PENDING));
+  };
+
   onMounted(() => {
     loadOrder();
   });
-
-  watch(
-    () => operatorStore.operatorId,
-    () => {
-      putOrder(mapOrderToDocument(OrderStatus.PENDING));
-    }
-  );
 
   watch(
     () => amount.value,
@@ -262,5 +282,8 @@ export const useOrderStore = defineStore("orderStore", () => {
     customer,
     unselectCustomer,
     selectCustomer,
+    operator,
+    selectOperator,
+    unselectOperator,
   };
 });

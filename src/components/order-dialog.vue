@@ -84,7 +84,7 @@
                 <div>
                   <p class="text-sm text-gray-600">Operator</p>
                   <p class="text-sm font-medium">
-                    {{ operatorStore.operator?.name || "No Operator" }}
+                    {{ orderStore.operator?.name || "No Operator" }}
                   </p>
                 </div>
               </div>
@@ -187,7 +187,6 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useNotificationStore } from "../stores/notification-store";
-import { useOperatorStore } from "../stores/operator-store";
 import { useOrderStore } from "../stores/order-store";
 
 interface Props {
@@ -205,7 +204,6 @@ const emit = defineEmits<Emits>();
 
 const router = useRouter();
 const orderStore = useOrderStore();
-const operatorStore = useOperatorStore();
 const notificationStore = useNotificationStore();
 
 const isProcessing = ref(false);

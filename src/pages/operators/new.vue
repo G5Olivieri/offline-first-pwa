@@ -1,15 +1,15 @@
 <script setup lang="ts">
 defineOptions({
-  name: 'NewOperator'
+  name: "NewOperator",
 });
 
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
-import * as z from "zod";
-import { useOperatorStore } from "../../stores/operator-store";
 import { useRouter } from "vue-router";
+import * as z from "zod";
+import { operatorService } from "../../stores/operator-store";
+import { useOrderStore } from "../../stores/order-store";
 
-const operatorStore = useOperatorStore();
 const router = useRouter();
 
 const validationSchema = toTypedSchema(
@@ -23,12 +23,14 @@ const { handleSubmit, errors } = useForm({
 });
 
 const { value: name } = useField("name");
+const orderStore = useOrderStore();
 
 const onSubmit = handleSubmit(async (values) => {
   const { name } = values;
 
   try {
-    await operatorStore.createAndSelectOperator({ name });
+    const operator = await operatorService.create({ name });
+    orderStore.selectOperator(operator);
     router.push({ name: "home" });
   } catch (error) {
     console.error("Error creating operator:", error);

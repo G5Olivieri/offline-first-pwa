@@ -71,9 +71,10 @@ export const useSetupStore = defineStore("setupStore", () => {
         SETUP_STEP_DESCRIPTIONS[SetupStep.LOADING_PRODUCTS];
       setupState.value.progress = 40;
 
+      // TODO: stream products instead of loading 1000 at once
       const allProducts = await productDB.allDocs({
         include_docs: true,
-        limit: 10000, // Get all products
+        limit: 10000,
       });
 
       const products = allProducts.rows.map((row) => row.doc as Product);

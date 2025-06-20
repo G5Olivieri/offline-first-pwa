@@ -11,7 +11,6 @@ import EditProduct from "@/pages/products/edit.vue";
 import ImportProducts from "@/pages/products/import.vue";
 import NewProduct from "@/pages/products/new.vue";
 import Products from "@/pages/products/products.vue";
-import Monitoring from "@/pages/utils/monitoring.vue";
 import Utils from "@/pages/utils/utils.vue";
 import type { RouteRecordRaw } from "vue-router";
 import { createRouter, createWebHistory } from "vue-router";
@@ -38,7 +37,6 @@ const routes: RouteRecordRaw[] = [
   },
   { path: "/products/new", name: "new-product", component: NewProduct },
   { path: "/_utils", name: "utils", component: Utils },
-  { path: "/_utils/monitoring", name: "monitoring", component: Monitoring },
   // Catch-all route - must be last
   { path: "/:pathMatch(.*)*", name: "not-found", component: NotFound },
 ];

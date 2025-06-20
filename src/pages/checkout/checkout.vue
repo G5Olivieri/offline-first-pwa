@@ -5,8 +5,8 @@ defineOptions({
 
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
-import { useOrderStore } from "../../stores/order-store";
-import { formatCurrency } from "../../config/env";
+import { useOrderStore } from "@/stores/order-store";
+import { formatCurrency } from "@/config/env";
 
 const orderStore = useOrderStore();
 const router = useRouter();
@@ -17,7 +17,7 @@ const formatPrice = (price: number) => {
 };
 
 const hasItems = computed(
-  () => orderStore.items && orderStore.items.length > 0
+  () => orderStore.items && orderStore.items.length > 0,
 );
 const canProceed = computed(() => {
   if (!hasItems.value) return false;

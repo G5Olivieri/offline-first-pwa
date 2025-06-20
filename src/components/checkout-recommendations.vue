@@ -17,13 +17,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
-import type { ProductRecommendation } from '../types/recommendation';
-import { RecommendationContext } from '../types/recommendation';
-import type { Item } from '../types/order';
-import type { Customer } from '../types/customer';
-import { useRecommendationStore } from '../stores/recommendation-store';
-import RecommendationList from './recommendation-list.vue';
+import { computed, onMounted, watch } from "vue";
+import type { ProductRecommendation } from "@/types/recommendation";
+import { RecommendationContext } from "@/types/recommendation";
+import type { Item } from "@/types/order";
+import type { Customer } from "@/types/customer";
+import { useRecommendationStore } from "@/stores/recommendation-store";
+import RecommendationList from "./recommendation-list.vue";
 
 interface Props {
   cartItems: Item[];
@@ -31,8 +31,11 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'add-recommendation-to-cart', recommendation: ProductRecommendation): void;
-  (e: 'view-product', recommendation: ProductRecommendation): void;
+  (
+    e: "add-recommendation-to-cart",
+    recommendation: ProductRecommendation,
+  ): void;
+  (e: "view-product", recommendation: ProductRecommendation): void;
 }
 
 const props = defineProps<Props>();
@@ -41,29 +44,38 @@ const emit = defineEmits<Emits>();
 const recommendationStore = useRecommendationStore();
 
 // Computed
-const checkoutRecommendations = computed(() => recommendationStore.checkoutRecommendations);
+const checkoutRecommendations = computed(
+  () => recommendationStore.checkoutRecommendations,
+);
 const isLoading = computed(() => recommendationStore.isLoading);
 const error = computed(() => recommendationStore.error);
 
 // Methods
 async function loadRecommendations(): Promise<void> {
   if (props.cartItems.length > 0) {
-    await recommendationStore.getRecommendationsForCheckout(props.cartItems, props.customer);
+    await recommendationStore.getRecommendationsForCheckout(
+      props.cartItems,
+      props.customer,
+    );
   }
 }
 
 function handleAddToCart(recommendation: ProductRecommendation): void {
-  emit('add-recommendation-to-cart', recommendation);
+  emit("add-recommendation-to-cart", recommendation);
 }
 
-function handleClickRecommendation(recommendation: ProductRecommendation): void {
-  emit('view-product', recommendation);
+function handleClickRecommendation(
+  recommendation: ProductRecommendation,
+): void {
+  emit("view-product", recommendation);
 }
 
-function handleDismissRecommendation(recommendation: ProductRecommendation): void {
+function handleDismissRecommendation(
+  recommendation: ProductRecommendation,
+): void {
   // Remove the recommendation from the current list
   // The tracking is already handled in the RecommendationList component
-  console.log('Dismissed recommendation:', recommendation.product.name);
+  console.log("Dismissed recommendation:", recommendation.product.name);
 }
 
 function handleDismissAll(): void {
@@ -82,7 +94,7 @@ watch(
   () => {
     loadRecommendations();
   },
-  { deep: true }
+  { deep: true },
 );
 
 // Watch for customer changes
@@ -90,7 +102,7 @@ watch(
   () => props.customer,
   () => {
     loadRecommendations();
-  }
+  },
 );
 </script>
 

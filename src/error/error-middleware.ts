@@ -13,10 +13,12 @@ export interface ErrorHandler {
 // Network error handler
 export class NetworkErrorHandler implements ErrorHandler {
   canHandle(error: Error): boolean {
-    return error.name === 'TypeError' &&
-           (error.message.includes('fetch') ||
-            error.message.includes('Failed to fetch') ||
-            error.message.includes('NetworkError'));
+    return (
+      error.name === "TypeError" &&
+      (error.message.includes("fetch") ||
+        error.message.includes("Failed to fetch") ||
+        error.message.includes("NetworkError"))
+    );
   }
 
   async handle(error: Error, context: ErrorContext): Promise<void> {
@@ -36,14 +38,16 @@ export class NetworkErrorHandler implements ErrorHandler {
     queuedOperations.push({
       ...context,
       retryCount: 0,
-      maxRetries: 3
+      maxRetries: 3,
     });
-    localStorage.setItem('queuedOperations', JSON.stringify(queuedOperations));
+    localStorage.setItem("queuedOperations", JSON.stringify(queuedOperations));
   }
 
-  private getQueuedOperations(): Array<ErrorContext & { retryCount: number; maxRetries: number }> {
+  private getQueuedOperations(): Array<
+    ErrorContext & { retryCount: number; maxRetries: number }
+  > {
     try {
-      const stored = localStorage.getItem('queuedOperations');
+      const stored = localStorage.getItem("queuedOperations");
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -52,14 +56,16 @@ export class NetworkErrorHandler implements ErrorHandler {
 
   private showOfflineMessage() {
     // This will be handled by the notification store in the actual implementation
-    console.warn('Network error: Operation will be retried when connection is restored');
+    console.warn(
+      "Network error: Operation will be retried when connection is restored",
+    );
   }
 
   private logError(error: Error, context: ErrorContext) {
-    console.error('Network Error:', {
+    console.error("Network Error:", {
       message: error.message,
       context,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }
@@ -67,9 +73,11 @@ export class NetworkErrorHandler implements ErrorHandler {
 // Validation error handler
 export class ValidationErrorHandler implements ErrorHandler {
   canHandle(error: Error): boolean {
-    return error.name === 'ValidationError' ||
-           error.message.includes('validation') ||
-           error.message.includes('required field');
+    return (
+      error.name === "ValidationError" ||
+      error.message.includes("validation") ||
+      error.message.includes("required field")
+    );
   }
 
   async handle(error: Error, context: ErrorContext): Promise<void> {
@@ -83,11 +91,11 @@ export class ValidationErrorHandler implements ErrorHandler {
   }
 
   private logValidationError(error: ValidationError, context: ErrorContext) {
-    console.warn('Validation Error:', {
+    console.warn("Validation Error:", {
       message: error.message,
       details: error.details,
       context,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }
@@ -95,11 +103,13 @@ export class ValidationErrorHandler implements ErrorHandler {
 // Business logic error handler
 export class BusinessLogicErrorHandler implements ErrorHandler {
   canHandle(error: Error): boolean {
-    return error.name === 'ConflictError' ||
-           error.name === 'PermissionError' ||
-           error.name === 'BusinessRuleError' ||
-           error.message.includes('duplicate') ||
-           error.message.includes('permission denied');
+    return (
+      error.name === "ConflictError" ||
+      error.name === "PermissionError" ||
+      error.name === "BusinessRuleError" ||
+      error.message.includes("duplicate") ||
+      error.message.includes("permission denied")
+    );
   }
 
   async handle(error: Error, context: ErrorContext): Promise<void> {
@@ -110,11 +120,11 @@ export class BusinessLogicErrorHandler implements ErrorHandler {
   }
 
   private logBusinessError(error: Error, context: ErrorContext) {
-    console.info('Business Logic Error:', {
+    console.info("Business Logic Error:", {
       message: error.message,
       name: error.name,
       context,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }
@@ -122,10 +132,12 @@ export class BusinessLogicErrorHandler implements ErrorHandler {
 // System error handler
 export class SystemErrorHandler implements ErrorHandler {
   canHandle(error: Error): boolean {
-    return error.message.includes('quota') ||
-           error.message.includes('storage') ||
-           error.message.includes('memory') ||
-           error.name === 'QuotaExceededError';
+    return (
+      error.message.includes("quota") ||
+      error.message.includes("storage") ||
+      error.message.includes("memory") ||
+      error.name === "QuotaExceededError"
+    );
   }
 
   async handle(error: Error, context: ErrorContext): Promise<void> {
@@ -137,11 +149,11 @@ export class SystemErrorHandler implements ErrorHandler {
   }
 
   private logCriticalError(error: Error, context: ErrorContext) {
-    console.error('CRITICAL System Error:', {
+    console.error("CRITICAL System Error:", {
       message: error.message,
       stack: error.stack,
       context,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // In production, this would send to monitoring service
@@ -152,14 +164,13 @@ export class SystemErrorHandler implements ErrorHandler {
     try {
       // Clear old cached data
       const keys = Object.keys(localStorage);
-      const oldKeys = keys.filter(key =>
-        key.startsWith('cache_') &&
-        this.isOldCacheKey(key)
+      const oldKeys = keys.filter(
+        (key) => key.startsWith("cache_") && this.isOldCacheKey(key),
       );
 
-      oldKeys.forEach(key => localStorage.removeItem(key));
+      oldKeys.forEach((key) => localStorage.removeItem(key));
     } catch (recoveryError) {
-      console.error('Recovery attempt failed:', recoveryError);
+      console.error("Recovery attempt failed:", recoveryError);
     }
   }
 
@@ -174,7 +185,7 @@ export class SystemErrorHandler implements ErrorHandler {
 
       if (!timestamp) return true;
 
-      const dayAgo = Date.now() - (24 * 60 * 60 * 1000);
+      const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
       return timestamp < dayAgo;
     } catch {
       return true; // Remove invalid cache entries
@@ -191,7 +202,7 @@ export class ErrorMiddleware {
   }
 
   async handleError(error: Error, context: ErrorContext): Promise<void> {
-    const handler = this.handlers.find(h => h.canHandle(error, context));
+    const handler = this.handlers.find((h) => h.canHandle(error, context));
 
     if (handler) {
       await handler.handle(error, context);
@@ -202,12 +213,12 @@ export class ErrorMiddleware {
   }
 
   private async defaultErrorHandler(error: Error, context: ErrorContext) {
-    console.error('Unhandled error:', {
+    console.error("Unhandled error:", {
       message: error.message,
       name: error.name,
       stack: error.stack,
       context,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // In production, send to monitoring service
@@ -226,30 +237,30 @@ errorMiddleware.addHandler(new SystemErrorHandler());
 export class ValidationError extends Error {
   constructor(
     message: string,
-    public details?: Array<{ field: string; message: string }>
+    public details?: Array<{ field: string; message: string }>,
   ) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 
 export class ConflictError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ConflictError';
+    this.name = "ConflictError";
   }
 }
 
 export class PermissionError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'PermissionError';
+    this.name = "PermissionError";
   }
 }
 
 export class BusinessRuleError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'BusinessRuleError';
+    this.name = "BusinessRuleError";
   }
 }

@@ -20,7 +20,10 @@
             <!-- Basic Information -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="space-y-2">
-                <label for="name" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="name"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Product Name <span class="text-red-500">*</span>
                 </label>
                 <input
@@ -34,12 +37,15 @@
                   :class="{ 'border-red-500': hasFieldError('name') }"
                 />
                 <span v-if="hasFieldError('name')" class="text-sm text-red-600">
-                  {{ getFieldError('name') }}
+                  {{ getFieldError("name") }}
                 </span>
               </div>
 
               <div class="space-y-2">
-                <label for="barcode" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="barcode"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Barcode <span class="text-red-500">*</span>
                 </label>
                 <input
@@ -52,13 +58,19 @@
                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   :class="{ 'border-red-500': hasFieldError('barcode') }"
                 />
-                <span v-if="hasFieldError('barcode')" class="text-sm text-red-600">
-                  {{ getFieldError('barcode') }}
+                <span
+                  v-if="hasFieldError('barcode')"
+                  class="text-sm text-red-600"
+                >
+                  {{ getFieldError("barcode") }}
                 </span>
               </div>
 
               <div class="space-y-2">
-                <label for="price" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="price"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Price <span class="text-red-500">*</span>
                 </label>
                 <input
@@ -73,13 +85,19 @@
                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   :class="{ 'border-red-500': hasFieldError('price') }"
                 />
-                <span v-if="hasFieldError('price')" class="text-sm text-red-600">
-                  {{ getFieldError('price') }}
+                <span
+                  v-if="hasFieldError('price')"
+                  class="text-sm text-red-600"
+                >
+                  {{ getFieldError("price") }}
                 </span>
               </div>
 
               <div class="space-y-2">
-                <label for="stock" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="stock"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Initial Stock <span class="text-red-500">*</span>
                 </label>
                 <input
@@ -93,8 +111,11 @@
                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   :class="{ 'border-red-500': hasFieldError('stock') }"
                 />
-                <span v-if="hasFieldError('stock')" class="text-sm text-red-600">
-                  {{ getFieldError('stock') }}
+                <span
+                  v-if="hasFieldError('stock')"
+                  class="text-sm text-red-600"
+                >
+                  {{ getFieldError("stock") }}
                 </span>
               </div>
             </div>
@@ -102,7 +123,10 @@
             <!-- Optional Fields -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="space-y-2">
-                <label for="category" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="category"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Category
                 </label>
                 <input
@@ -117,7 +141,10 @@
               </div>
 
               <div class="space-y-2">
-                <label for="manufacturer" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="manufacturer"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Manufacturer
                 </label>
                 <input
@@ -134,7 +161,10 @@
 
             <!-- Description -->
             <div class="space-y-2">
-              <label for="description" class="block text-sm font-medium text-gray-700">
+              <label
+                for="description"
+                class="block text-sm font-medium text-gray-700"
+              >
                 Description
               </label>
               <textarea
@@ -149,7 +179,9 @@
             </div>
 
             <!-- Form Actions -->
-            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            <div
+              class="flex justify-end space-x-3 pt-6 border-t border-gray-200"
+            >
               <button
                 type="button"
                 @click="handleCancel"
@@ -164,9 +196,25 @@
                 class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span v-if="isSubmitting" class="flex items-center">
-                  <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Creating Product...
                 </span>
@@ -181,28 +229,28 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
-import { useRouter } from 'vue-router';
-import { useFormErrors } from '../../composables/use-form-errors';
-import { productService } from '../../services/product-service';
-import ErrorBoundary from '../../components/error-boundary.vue';
-import type { Product } from '../../types/product';
+import { reactive } from "vue";
+import { useRouter } from "vue-router";
+import { useFormErrors } from "@/composables/use-form-errors";
+import { productService } from "@/services/product-service";
+import ErrorBoundary from "@/components/error-boundary.vue";
+import type { Product } from "@/types/product";
 
 defineOptions({
-  name: 'NewProduct',
+  name: "NewProduct",
 });
 
 const router = useRouter();
 
 // Form state
 const form = reactive({
-  name: '',
-  barcode: '',
+  name: "",
+  barcode: "",
   price: 0,
   stock: 0,
-  category: '',
-  manufacturer: '',
-  description: ''
+  category: "",
+  manufacturer: "",
+  description: "",
 });
 
 // Error handling composables
@@ -212,7 +260,7 @@ const {
   hasFieldError,
   getFieldError,
   setFieldError,
-  withSubmission
+  withSubmission,
 } = useFormErrors();
 
 // Form submission
@@ -221,21 +269,21 @@ const handleSubmit = async () => {
   if (!validateForm()) return;
 
   const result = await withSubmission(async () => {
-    const productData: Omit<Product, '_id' | 'rev'> = {
+    const productData: Omit<Product, "_id" | "rev"> = {
       name: form.name.trim(),
       barcode: form.barcode.trim(),
       price: form.price,
       stock: form.stock,
       ...(form.category && { category: form.category.trim() }),
       ...(form.manufacturer && { manufacturer: form.manufacturer.trim() }),
-      ...(form.description && { description: form.description.trim() })
+      ...(form.description && { description: form.description.trim() }),
     };
 
     return await productService.createProduct(productData);
   });
 
   if (result) {
-    router.push('/products');
+    router.push("/products");
   }
 };
 
@@ -244,21 +292,21 @@ const validateForm = (): boolean => {
   const validationErrors: Record<string, string> = {};
 
   if (!form.name.trim()) {
-    validationErrors.name = 'Product name is required';
+    validationErrors.name = "Product name is required";
   }
 
   if (!form.barcode.trim()) {
-    validationErrors.barcode = 'Barcode is required';
+    validationErrors.barcode = "Barcode is required";
   } else if (form.barcode.length < 8) {
-    validationErrors.barcode = 'Barcode must be at least 8 characters long';
+    validationErrors.barcode = "Barcode must be at least 8 characters long";
   }
 
   if (form.price < 0) {
-    validationErrors.price = 'Price must be a positive number';
+    validationErrors.price = "Price must be a positive number";
   }
 
   if (form.stock < 0) {
-    validationErrors.stock = 'Stock cannot be negative';
+    validationErrors.stock = "Stock cannot be negative";
   }
 
   if (Object.keys(validationErrors).length > 0) {
@@ -274,11 +322,11 @@ const validateForm = (): boolean => {
 
 // Navigation
 const handleCancel = () => {
-  router.push('/products');
+  router.push("/products");
 };
 
 const handleRetry = () => {
   // Reset form state or perform other retry logic
-  console.log('Retrying form operation...');
+  console.log("Retrying form operation...");
 };
 </script>

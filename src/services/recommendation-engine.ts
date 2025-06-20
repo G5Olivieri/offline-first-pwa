@@ -3,20 +3,20 @@ import {
   getOrderDB,
   getProductAffinityDB,
   getRecommendationConfigDB,
-} from "../db";
-import type { Customer } from "../types/customer";
-import type { Item, Order } from "../types/order";
-import type { Product } from "../types/product";
+} from "@/db";
+import type { Customer } from "@/types/customer";
+import type { Item, Order } from "@/types/order";
+import type { Product } from "@/types/product";
 import type {
   CustomerProductPreference,
   ProductAffinity,
   ProductRecommendation,
   RecommendationConfig,
-} from "../types/recommendation";
+} from "@/types/recommendation";
 import {
   RecommendationContext,
   RecommendationType,
-} from "../types/recommendation";
+} from "@/types/recommendation";
 
 export class RecommendationEngine {
   private affinityDB = getProductAffinityDB();
@@ -73,7 +73,7 @@ export class RecommendationEngine {
       currentProduct?: Product;
       limit?: number;
       allProducts?: Product[];
-    } = {}
+    } = {},
   ): Promise<ProductRecommendation[]> {
     if (!this.config?.enabled) {
       return [];
@@ -93,7 +93,7 @@ export class RecommendationEngine {
     if (this.config.feature_flags.collaborative_filtering && customer) {
       const collaborativeRecs = await this.generateCollaborativeRecommendations(
         customer,
-        allProducts
+        allProducts,
       );
       recommendations.push(...collaborativeRecs);
     }
@@ -106,7 +106,7 @@ export class RecommendationEngine {
       const contentRecs = await this.generateContentBasedRecommendations(
         currentProduct,
         cartItems,
-        allProducts
+        allProducts,
       );
       recommendations.push(...contentRecs);
     }
@@ -118,7 +118,7 @@ export class RecommendationEngine {
     ) {
       const basketRecs = await this.generateMarketBasketRecommendations(
         cartItems,
-        allProducts
+        allProducts,
       );
       recommendations.push(...basketRecs);
     }
@@ -126,7 +126,7 @@ export class RecommendationEngine {
     // 4. Trending/Popular Products
     const trendingRecs = await this.generateTrendingRecommendations(
       allProducts,
-      cartItems
+      cartItems,
     );
     recommendations.push(...trendingRecs);
 
@@ -134,7 +134,7 @@ export class RecommendationEngine {
     if (this.config.feature_flags.inventory_based_recommendations) {
       const inventoryRecs = await this.generateInventoryBasedRecommendations(
         allProducts,
-        cartItems
+        cartItems,
       );
       recommendations.push(...inventoryRecs);
     }
@@ -144,7 +144,7 @@ export class RecommendationEngine {
       const categoryRecs = await this.generateCategoryBasedRecommendations(
         currentProduct,
         cartItems,
-        allProducts
+        allProducts,
       );
       recommendations.push(...categoryRecs);
     }
@@ -153,7 +153,7 @@ export class RecommendationEngine {
     if (this.config.feature_flags.seasonal_recommendations) {
       const seasonalRecs = await this.generateSeasonalRecommendations(
         allProducts,
-        cartItems
+        cartItems,
       );
       recommendations.push(...seasonalRecs);
     }
@@ -163,13 +163,13 @@ export class RecommendationEngine {
       recommendations,
       context,
       limit,
-      cartItems
+      cartItems,
     );
   }
 
   private async generateCollaborativeRecommendations(
     customer: Customer,
-    allProducts: Product[]
+    allProducts: Product[],
   ): Promise<ProductRecommendation[]> {
     const recommendations: ProductRecommendation[] = [];
 
@@ -204,7 +204,7 @@ export class RecommendationEngine {
   private async generateContentBasedRecommendations(
     currentProduct: Product | undefined,
     cartItems: Item[],
-    allProducts: Product[]
+    allProducts: Product[],
   ): Promise<ProductRecommendation[]> {
     const recommendations: ProductRecommendation[] = [];
     const sourceProducts = currentProduct
@@ -220,13 +220,13 @@ export class RecommendationEngine {
           (product.category === sourceProduct.category ||
             (product.tags &&
               sourceProduct.tags &&
-              product.tags.some((tag) => sourceProduct.tags!.includes(tag))))
+              product.tags.some((tag) => sourceProduct.tags!.includes(tag)))),
       );
 
       for (const product of similarProducts.slice(0, 3)) {
         const similarity = this.calculateProductSimilarity(
           sourceProduct,
-          product
+          product,
         );
 
         recommendations.push({
@@ -248,7 +248,7 @@ export class RecommendationEngine {
 
   private async generateMarketBasketRecommendations(
     cartItems: Item[],
-    allProducts: Product[]
+    allProducts: Product[],
   ): Promise<ProductRecommendation[]> {
     const recommendations: ProductRecommendation[] = [];
     const cartProductIds = cartItems.map((item) => item.product._id);
@@ -264,7 +264,7 @@ export class RecommendationEngine {
       for (const affinity of affinities.docs) {
         if (!cartProductIds.includes(affinity.product_b_id)) {
           const product = allProducts.find(
-            (p) => p._id === affinity.product_b_id
+            (p) => p._id === affinity.product_b_id,
           );
           if (product && product.stock > 0) {
             recommendations.push({
@@ -288,7 +288,7 @@ export class RecommendationEngine {
 
   private async generateTrendingRecommendations(
     allProducts: Product[],
-    cartItems: Item[]
+    cartItems: Item[],
   ): Promise<ProductRecommendation[]> {
     const recommendations: ProductRecommendation[] = [];
     const cartProductIds = cartItems.map((item) => item.product._id);
@@ -340,7 +340,7 @@ export class RecommendationEngine {
 
   private async generateInventoryBasedRecommendations(
     allProducts: Product[],
-    cartItems: Item[]
+    cartItems: Item[],
   ): Promise<ProductRecommendation[]> {
     const recommendations: ProductRecommendation[] = [];
     const cartProductIds = cartItems.map((item) => item.product._id);
@@ -348,7 +348,8 @@ export class RecommendationEngine {
     // Recommend products with high stock (to move inventory)
     const highStockProducts = allProducts
       .filter(
-        (product) => product.stock > 50 && !cartProductIds.includes(product._id)
+        (product) =>
+          product.stock > 50 && !cartProductIds.includes(product._id),
       )
       .sort((a, b) => b.stock - a.stock)
       .slice(0, 4);
@@ -373,7 +374,7 @@ export class RecommendationEngine {
   private async generateCategoryBasedRecommendations(
     currentProduct: Product | undefined,
     cartItems: Item[],
-    allProducts: Product[]
+    allProducts: Product[],
   ): Promise<ProductRecommendation[]> {
     const recommendations: ProductRecommendation[] = [];
     const cartProductIds = cartItems.map((item) => item.product._id);
@@ -396,7 +397,7 @@ export class RecommendationEngine {
           (product) =>
             product.category === category &&
             !cartProductIds.includes(product._id) &&
-            product.stock > 0
+            product.stock > 0,
         )
         .sort((a, b) => b.price - a.price) // Sort by price as proxy for quality
         .slice(0, 3);
@@ -420,7 +421,7 @@ export class RecommendationEngine {
 
   private async generateSeasonalRecommendations(
     allProducts: Product[],
-    cartItems: Item[]
+    cartItems: Item[],
   ): Promise<ProductRecommendation[]> {
     const recommendations: ProductRecommendation[] = [];
     const cartProductIds = cartItems.map((item) => item.product._id);
@@ -435,7 +436,7 @@ export class RecommendationEngine {
           (product) =>
             product.category === category &&
             !cartProductIds.includes(product._id) &&
-            product.stock > 0
+            product.stock > 0,
         )
         .slice(0, 2);
 
@@ -478,7 +479,7 @@ export class RecommendationEngine {
 
   private calculateProductSimilarity(
     productA: Product,
-    productB: Product
+    productB: Product,
   ): number {
     let similarity = 0;
 
@@ -490,7 +491,7 @@ export class RecommendationEngine {
     // Tag similarity
     if (productA.tags && productB.tags) {
       const commonTags = productA.tags.filter((tag) =>
-        productB.tags!.includes(tag)
+        productB.tags!.includes(tag),
       );
       similarity +=
         (commonTags.length /
@@ -516,7 +517,7 @@ export class RecommendationEngine {
     recommendations: ProductRecommendation[],
     context: RecommendationContext,
     limit: number,
-    cartItems: Item[]
+    cartItems: Item[],
   ): ProductRecommendation[] {
     const cartProductIds = cartItems.map((item) => item.product._id);
 
@@ -524,7 +525,7 @@ export class RecommendationEngine {
     const filtered = recommendations.filter(
       (rec) =>
         !cartProductIds.includes(rec.product._id) &&
-        rec.confidence >= (this.config?.min_confidence_threshold || 0.3)
+        rec.confidence >= (this.config?.min_confidence_threshold || 0.3),
     );
 
     // Deduplicate by product ID
@@ -553,7 +554,7 @@ export class RecommendationEngine {
 
   private getContextScore(
     type: RecommendationType,
-    context: RecommendationContext
+    context: RecommendationContext,
   ): number {
     // Context-specific scoring for recommendation types
     const contextScores: Record<
@@ -671,7 +672,7 @@ export class RecommendationEngine {
 
   private async updateProductAffinityPair(
     productAId: string,
-    productBId: string
+    productBId: string,
   ): Promise<void> {
     const existingAffinity = await this.affinityDB.find({
       selector: {
@@ -725,7 +726,7 @@ export class RecommendationEngine {
 
   private async updateCustomerProductPreference(
     customerId: string,
-    item: Item
+    item: Item,
   ): Promise<void> {
     const existing = await this.preferencesDB.find({
       selector: {
@@ -744,7 +745,7 @@ export class RecommendationEngine {
       pref.total_spent += item.product.price * item.quantity;
       pref.preference_score = Math.min(
         pref.purchase_frequency * 0.1 + pref.total_spent * 0.0001,
-        1.0
+        1.0,
       );
       pref.last_updated = new Date().toISOString();
 

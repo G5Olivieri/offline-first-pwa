@@ -1,13 +1,13 @@
 import { computed, onMounted, onUnmounted, readonly, ref, type Ref } from "vue";
-import { useRecommendationStore } from "../stores/recommendation-store";
-import type { Customer } from "../types/customer";
-import type { Item } from "../types/order";
-import type { Product } from "../types/product";
-import type { ProductRecommendation } from "../types/recommendation";
+import { useRecommendationStore } from "@/stores/recommendation-store";
+import type { Customer } from "@/types/customer";
+import type { Item } from "@/types/order";
+import type { Product } from "@/types/product";
+import type { ProductRecommendation } from "@/types/recommendation";
 import {
   RecommendationContext,
   RecommendationType,
-} from "../types/recommendation";
+} from "@/types/recommendation";
 
 export interface UseRecommendationsOptions {
   context: RecommendationContext;
@@ -29,17 +29,17 @@ export interface UseRecommendationsReturn {
   refreshRecommendations: () => Promise<void>;
   clearRecommendations: () => void;
   getRecommendationsByType: (
-    type: RecommendationType
+    type: RecommendationType,
   ) => ProductRecommendation[];
   getHighConfidenceRecommendations: (
-    minConfidence?: number
+    minConfidence?: number,
   ) => ProductRecommendation[];
   getAffordableRecommendations: (maxPrice: number) => ProductRecommendation[];
   getInStockRecommendations: () => ProductRecommendation[];
 }
 
 export function useRecommendations(
-  options: UseRecommendationsOptions
+  options: UseRecommendationsOptions,
 ): UseRecommendationsReturn {
   const {
     context,
@@ -58,7 +58,7 @@ export function useRecommendations(
 
   // Computed
   const computedRecommendations = computed(() =>
-    recommendations.value.slice(0, maxRecommendations)
+    recommendations.value.slice(0, maxRecommendations),
   );
 
   // Methods
@@ -68,7 +68,7 @@ export function useRecommendations(
       cartItems?: Item[];
       currentProduct?: Product;
       forceRefresh?: boolean;
-    } = {}
+    } = {},
   ): Promise<ProductRecommendation[]> {
     isLoading.value = true;
     error.value = null;
@@ -79,7 +79,7 @@ export function useRecommendations(
         {
           ...loadOptions,
           limit: maxRecommendations,
-        }
+        },
       );
 
       recommendations.value = result;
@@ -105,21 +105,21 @@ export function useRecommendations(
   }
 
   function getRecommendationsByType(
-    type: RecommendationType
+    type: RecommendationType,
   ): ProductRecommendation[] {
     return recommendations.value.filter((rec) => rec.type === type);
   }
 
   function getHighConfidenceRecommendations(
-    minConfidence = 0.7
+    minConfidence = 0.7,
   ): ProductRecommendation[] {
     return recommendations.value.filter(
-      (rec) => rec.confidence >= minConfidence
+      (rec) => rec.confidence >= minConfidence,
     );
   }
 
   function getAffordableRecommendations(
-    maxPrice: number
+    maxPrice: number,
   ): ProductRecommendation[] {
     return recommendations.value.filter((rec) => rec.product.price <= maxPrice);
   }
@@ -173,7 +173,7 @@ export function useRecommendations(
 
 // Specialized composables for different contexts
 export function useCheckoutRecommendations(
-  options: Omit<UseRecommendationsOptions, "context"> = {}
+  options: Omit<UseRecommendationsOptions, "context"> = {},
 ) {
   return useRecommendations({
     ...options,
@@ -182,7 +182,7 @@ export function useCheckoutRecommendations(
 }
 
 export function useHomepageRecommendations(
-  options: Omit<UseRecommendationsOptions, "context"> = {}
+  options: Omit<UseRecommendationsOptions, "context"> = {},
 ) {
   return useRecommendations({
     ...options,
@@ -191,7 +191,7 @@ export function useHomepageRecommendations(
 }
 
 export function useProductDetailRecommendations(
-  options: Omit<UseRecommendationsOptions, "context"> = {}
+  options: Omit<UseRecommendationsOptions, "context"> = {},
 ) {
   return useRecommendations({
     ...options,
@@ -200,7 +200,7 @@ export function useProductDetailRecommendations(
 }
 
 export function useCustomerRecommendations(
-  options: Omit<UseRecommendationsOptions, "context"> = {}
+  options: Omit<UseRecommendationsOptions, "context"> = {},
 ) {
   return useRecommendations({
     ...options,
@@ -209,7 +209,7 @@ export function useCustomerRecommendations(
 }
 
 export function useCategoryRecommendations(
-  options: Omit<UseRecommendationsOptions, "context"> = {}
+  options: Omit<UseRecommendationsOptions, "context"> = {},
 ) {
   return useRecommendations({
     ...options,
@@ -218,7 +218,7 @@ export function useCategoryRecommendations(
 }
 
 export function useSearchRecommendations(
-  options: Omit<UseRecommendationsOptions, "context"> = {}
+  options: Omit<UseRecommendationsOptions, "context"> = {},
 ) {
   return useRecommendations({
     ...options,

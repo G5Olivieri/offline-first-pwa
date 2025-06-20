@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { SYNCING } from "../db";
+import { SYNCING } from "@/db";
 
 export const useOnlineStatusStore = defineStore("onlineStatus", () => {
   const isOnline = ref(navigator.onLine);

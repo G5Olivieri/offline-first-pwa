@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
-import { config } from "../config/env";
+import { config } from "@/config/env";
 
 export interface TerminalInfo {
   id: string;

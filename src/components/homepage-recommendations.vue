@@ -44,20 +44,26 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch, ref } from 'vue';
-import type { ProductRecommendation } from '../types/recommendation';
-import { RecommendationContext, RecommendationType } from '../types/recommendation';
-import type { Customer } from '../types/customer';
-import { useRecommendationStore } from '../stores/recommendation-store';
-import RecommendationList from './recommendation-list.vue';
+import { computed, onMounted, watch, ref } from "vue";
+import type { ProductRecommendation } from "@/types/recommendation";
+import {
+  RecommendationContext,
+  RecommendationType,
+} from "@/types/recommendation";
+import type { Customer } from "@/types/customer";
+import { useRecommendationStore } from "@/stores/recommendation-store";
+import RecommendationList from "./recommendation-list.vue";
 
 interface Props {
   customer?: Customer;
 }
 
 interface Emits {
-  (e: 'add-recommendation-to-cart', recommendation: ProductRecommendation): void;
-  (e: 'view-product', recommendation: ProductRecommendation): void;
+  (
+    e: "add-recommendation-to-cart",
+    recommendation: ProductRecommendation,
+  ): void;
+  (e: "view-product", recommendation: ProductRecommendation): void;
 }
 
 const props = defineProps<Props>();
@@ -71,53 +77,65 @@ const isLoading = computed(() => recommendationStore.isLoading);
 const error = computed(() => recommendationStore.error);
 
 const trendingRecommendations = computed(() =>
-  allRecommendations.value.filter(rec =>
-    rec.type === RecommendationType.TRENDING ||
-    rec.type === RecommendationType.SEASONAL
-  )
+  allRecommendations.value.filter(
+    (rec) =>
+      rec.type === RecommendationType.TRENDING ||
+      rec.type === RecommendationType.SEASONAL,
+  ),
 );
 
 const personalizedRecommendations = computed(() =>
-  allRecommendations.value.filter(rec =>
-    rec.type === RecommendationType.CUSTOMER_BASED ||
-    rec.type === RecommendationType.REORDER
-  )
+  allRecommendations.value.filter(
+    (rec) =>
+      rec.type === RecommendationType.CUSTOMER_BASED ||
+      rec.type === RecommendationType.REORDER,
+  ),
 );
 
 const inventoryRecommendations = computed(() =>
-  allRecommendations.value.filter(rec =>
-    rec.type === RecommendationType.INVENTORY_BASED
-  )
+  allRecommendations.value.filter(
+    (rec) => rec.type === RecommendationType.INVENTORY_BASED,
+  ),
 );
 
 // Methods
 async function loadRecommendations(): Promise<void> {
-  const recommendations = await recommendationStore.getRecommendationsForHomepage(props.customer);
+  const recommendations =
+    await recommendationStore.getRecommendationsForHomepage(props.customer);
   allRecommendations.value = recommendations;
 }
 
 async function loadPersonalizedRecommendations(): Promise<void> {
   if (props.customer) {
-    const personalizedRecs = await recommendationStore.getRecommendationsForCustomer(props.customer);
+    const personalizedRecs =
+      await recommendationStore.getRecommendationsForCustomer(props.customer);
     // Merge with existing recommendations, avoiding duplicates
-    const existingIds = new Set(allRecommendations.value.map(r => r.product._id));
-    const newRecs = personalizedRecs.filter(rec => !existingIds.has(rec.product._id));
+    const existingIds = new Set(
+      allRecommendations.value.map((r) => r.product._id),
+    );
+    const newRecs = personalizedRecs.filter(
+      (rec) => !existingIds.has(rec.product._id),
+    );
     allRecommendations.value = [...allRecommendations.value, ...newRecs];
   }
 }
 
 function handleAddToCart(recommendation: ProductRecommendation): void {
-  emit('add-recommendation-to-cart', recommendation);
+  emit("add-recommendation-to-cart", recommendation);
 }
 
-function handleClickRecommendation(recommendation: ProductRecommendation): void {
-  emit('view-product', recommendation);
+function handleClickRecommendation(
+  recommendation: ProductRecommendation,
+): void {
+  emit("view-product", recommendation);
 }
 
-function handleDismissRecommendation(recommendation: ProductRecommendation): void {
+function handleDismissRecommendation(
+  recommendation: ProductRecommendation,
+): void {
   // Remove the recommendation from the current list
   allRecommendations.value = allRecommendations.value.filter(
-    rec => rec.id !== recommendation.id
+    (rec) => rec.id !== recommendation.id,
   );
 }
 
@@ -138,11 +156,12 @@ watch(
     } else {
       // Remove personalized recommendations when customer is removed
       allRecommendations.value = allRecommendations.value.filter(
-        rec => rec.type !== RecommendationType.CUSTOMER_BASED &&
-               rec.type !== RecommendationType.REORDER
+        (rec) =>
+          rec.type !== RecommendationType.CUSTOMER_BASED &&
+          rec.type !== RecommendationType.REORDER,
       );
     }
-  }
+  },
 );
 </script>
 

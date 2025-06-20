@@ -7,15 +7,15 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
 import * as z from "zod";
-import { operatorService } from "../../services/operator-service";
-import { useOrderStore } from "../../stores/order-store";
+import { operatorService } from "@/services/operator-service";
+import { useOrderStore } from "@/stores/order-store";
 
 const router = useRouter();
 
 const validationSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, "Name is required"),
-  })
+  }),
 );
 
 const { handleSubmit, errors } = useForm({

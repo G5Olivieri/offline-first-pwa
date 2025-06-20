@@ -1,8 +1,8 @@
+import { getProductDB } from "@/db";
+import { searchService } from "@/services/search-service";
+import type { Product } from "@/types/product";
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { getProductDB } from "../db";
-import { searchService } from "../services/search-service";
-import type { Product } from "../types/product";
 
 export enum SetupStep {
   IDLE = "idle",

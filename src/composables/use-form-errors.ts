@@ -1,5 +1,5 @@
-import { ref, computed } from 'vue';
-import { useNotificationStore } from '@/stores/notification-store';
+import { ref, computed } from "vue";
+import { useNotificationStore } from "@/stores/notification-store";
 
 export interface FormError {
   field: string;
@@ -18,7 +18,7 @@ export function useFormErrors() {
   const state = ref<FormErrorState>({
     errors: {},
     hasErrors: false,
-    isSubmitting: false
+    isSubmitting: false,
   });
 
   const hasFieldError = (field: string) => {
@@ -26,7 +26,7 @@ export function useFormErrors() {
   };
 
   const getFieldError = (field: string) => {
-    return state.value.errors[field] || '';
+    return state.value.errors[field] || "";
   };
 
   const setFieldError = (field: string, message: string) => {
@@ -46,41 +46,49 @@ export function useFormErrors() {
 
   const setErrors = (errors: FormError[] | Record<string, string>) => {
     if (Array.isArray(errors)) {
-      state.value.errors = errors.reduce((acc, error) => {
-        acc[error.field] = error.message;
-        return acc;
-      }, {} as Record<string, string>);
+      state.value.errors = errors.reduce(
+        (acc, error) => {
+          acc[error.field] = error.message;
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
     } else {
       state.value.errors = { ...errors };
     }
     state.value.hasErrors = Object.keys(state.value.errors).length > 0;
   };
 
-  const handleSubmissionError = (error: Error & { details?: FormError[]; status?: number }) => {
-    if (error.name === 'ValidationError' && error.details) {
+  const handleSubmissionError = (
+    error: Error & { details?: FormError[]; status?: number },
+  ) => {
+    if (error.name === "ValidationError" && error.details) {
       // Handle validation errors
       setErrors(error.details);
       notificationStore.showWarning(
-        'Validation Error',
-        'Please check the highlighted fields and try again.'
+        "Validation Error",
+        "Please check the highlighted fields and try again.",
       );
-    } else if (error.message.includes('duplicate') || error.status === 409) {
+    } else if (error.message.includes("duplicate") || error.status === 409) {
       // Handle conflict errors
       notificationStore.showError(
-        'Duplicate Entry',
-        'A record with this information already exists.'
+        "Duplicate Entry",
+        "A record with this information already exists.",
       );
-    } else if (error.message.includes('network') || error.message.includes('fetch')) {
+    } else if (
+      error.message.includes("network") ||
+      error.message.includes("fetch")
+    ) {
       // Handle network errors
       notificationStore.showError(
-        'Connection Error',
-        'Unable to save changes. Please check your connection and try again.'
+        "Connection Error",
+        "Unable to save changes. Please check your connection and try again.",
       );
     } else {
       // Handle generic errors
       notificationStore.showError(
-        'Submission Error',
-        'Failed to save changes. Please try again.'
+        "Submission Error",
+        "Failed to save changes. Please try again.",
       );
     }
   };
@@ -90,7 +98,7 @@ export function useFormErrors() {
     options?: {
       successMessage?: string;
       showSuccessMessage?: boolean;
-    }
+    },
   ): Promise<T | null> => {
     try {
       state.value.isSubmitting = true;
@@ -100,21 +108,27 @@ export function useFormErrors() {
 
       if (options?.showSuccessMessage !== false) {
         notificationStore.showSuccess(
-          'Success',
-          options?.successMessage || 'Changes saved successfully.'
+          "Success",
+          options?.successMessage || "Changes saved successfully.",
         );
       }
 
       return result;
     } catch (error) {
-      handleSubmissionError(error as Error & { details?: FormError[]; status?: number });
+      handleSubmissionError(
+        error as Error & { details?: FormError[]; status?: number },
+      );
       return null;
     } finally {
       state.value.isSubmitting = false;
     }
   };
 
-  const validateField = (field: string, value: unknown, rules: ValidationRule[]): boolean => {
+  const validateField = (
+    field: string,
+    value: unknown,
+    rules: ValidationRule[],
+  ): boolean => {
     clearFieldError(field);
 
     for (const rule of rules) {
@@ -128,7 +142,10 @@ export function useFormErrors() {
     return true;
   };
 
-  const validateForm = (formData: Record<string, unknown>, validationRules: Record<string, ValidationRule[]>): boolean => {
+  const validateForm = (
+    formData: Record<string, unknown>,
+    validationRules: Record<string, ValidationRule[]>,
+  ): boolean => {
     clearAllErrors();
     let isValid = true;
 
@@ -158,7 +175,7 @@ export function useFormErrors() {
     handleSubmissionError,
     withSubmission,
     validateField,
-    validateForm
+    validateForm,
   };
 }
 
@@ -168,52 +185,54 @@ export interface ValidationRule {
 }
 
 export const ValidationRules = {
-  required: (message = 'This field is required'): ValidationRule => ({
+  required: (message = "This field is required"): ValidationRule => ({
     validate: (value: unknown) => ({
-      valid: value !== null && value !== undefined && value !== '',
-      message
-    })
+      valid: value !== null && value !== undefined && value !== "",
+      message,
+    }),
   }),
 
   minLength: (min: number, message?: string): ValidationRule => ({
     validate: (value: unknown) => ({
-      valid: !value || (typeof value === 'string' && value.length >= min),
-      message: message || `Must be at least ${min} characters long`
-    })
+      valid: !value || (typeof value === "string" && value.length >= min),
+      message: message || `Must be at least ${min} characters long`,
+    }),
   }),
 
   maxLength: (max: number, message?: string): ValidationRule => ({
     validate: (value: unknown) => ({
-      valid: !value || (typeof value === 'string' && value.length <= max),
-      message: message || `Must be no more than ${max} characters long`
-    })
+      valid: !value || (typeof value === "string" && value.length <= max),
+      message: message || `Must be no more than ${max} characters long`,
+    }),
   }),
 
-  email: (message = 'Please enter a valid email address'): ValidationRule => ({
+  email: (message = "Please enter a valid email address"): ValidationRule => ({
     validate: (value: unknown) => ({
-      valid: !value || (typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)),
-      message
-    })
+      valid:
+        !value ||
+        (typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)),
+      message,
+    }),
   }),
 
-  numeric: (message = 'Please enter a valid number'): ValidationRule => ({
+  numeric: (message = "Please enter a valid number"): ValidationRule => ({
     validate: (value: unknown) => ({
       valid: !value || !isNaN(Number(value)),
-      message
-    })
+      message,
+    }),
   }),
 
-  positiveNumber: (message = 'Must be a positive number'): ValidationRule => ({
+  positiveNumber: (message = "Must be a positive number"): ValidationRule => ({
     validate: (value: unknown) => ({
-      valid: !value || (Number(value) >= 0),
-      message
-    })
+      valid: !value || Number(value) >= 0,
+      message,
+    }),
   }),
 
-  barcode: (message = 'Please enter a valid barcode'): ValidationRule => ({
+  barcode: (message = "Please enter a valid barcode"): ValidationRule => ({
     validate: (value: unknown) => ({
-      valid: !value || (typeof value === 'string' && /^[0-9]{8,}$/.test(value)),
-      message
-    })
-  })
+      valid: !value || (typeof value === "string" && /^[0-9]{8,}$/.test(value)),
+      message,
+    }),
+  }),
 };

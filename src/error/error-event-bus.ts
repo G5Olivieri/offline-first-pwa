@@ -1,8 +1,8 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 
 export interface ErrorEvent {
-  type: 'network' | 'validation' | 'application' | 'system';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: "network" | "validation" | "application" | "system";
+  severity: "low" | "medium" | "high" | "critical";
   message: string;
   context?: Record<string, unknown>;
   timestamp: Date;
@@ -22,19 +22,19 @@ class ErrorEventBus extends EventEmitter {
   }
 
   emitError(error: ErrorEvent) {
-    this.emit('error', error);
+    this.emit("error", error);
   }
 
   subscribeToErrors(handler: (error: ErrorEvent) => void) {
-    this.on('error', handler);
+    this.on("error", handler);
   }
 
   unsubscribeFromErrors(handler: (error: ErrorEvent) => void) {
-    this.removeListener('error', handler);
+    this.removeListener("error", handler);
   }
 
   clearAllErrorListeners() {
-    this.removeAllListeners('error');
+    this.removeAllListeners("error");
   }
 }
 

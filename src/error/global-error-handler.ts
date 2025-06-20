@@ -1,5 +1,5 @@
-import type { App } from 'vue';
-import { errorBus, type ErrorEvent } from './error-event-bus';
+import type { App } from "vue";
+import { errorBus, type ErrorEvent } from "./error-event-bus";
 
 export interface GlobalErrorConfig {
   enableConsoleLogging: boolean;
@@ -10,7 +10,7 @@ export interface GlobalErrorConfig {
 }
 
 interface ErrorDetails {
-  type: 'vue-error' | 'javascript-error' | 'promise-rejection';
+  type: "vue-error" | "javascript-error" | "promise-rejection";
   message: string;
   stack?: string;
   componentName?: string;
@@ -32,7 +32,7 @@ export class GlobalErrorHandler {
   constructor(config: GlobalErrorConfig) {
     this.config = {
       maxErrorsPerMinute: 10,
-      ...config
+      ...config,
     };
   }
 
@@ -43,26 +43,30 @@ export class GlobalErrorHandler {
   }
 
   setupWindowErrorHandler() {
-    window.addEventListener('error', (event) => {
+    window.addEventListener("error", (event) => {
       this.handleWindowError(event.error, event as unknown as ErrorEvent);
     });
 
-    window.addEventListener('unhandledrejection', (event) => {
+    window.addEventListener("unhandledrejection", (event) => {
       this.handlePromiseRejection(event.reason, event);
     });
   }
 
-  private async handleVueError(error: unknown, instance: unknown, info: string) {
+  private async handleVueError(
+    error: unknown,
+    instance: unknown,
+    info: string,
+  ) {
     const errorObj = error as Error;
     const errorDetails: ErrorDetails = {
-      type: 'vue-error',
-      message: errorObj.message || 'Unknown Vue error',
+      type: "vue-error",
+      message: errorObj.message || "Unknown Vue error",
       stack: errorObj.stack,
       componentName: this.getComponentName(instance),
       errorInfo: info,
       timestamp: new Date().toISOString(),
       url: window.location.href,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     };
 
     await this.processError(errorDetails);
@@ -70,29 +74,33 @@ export class GlobalErrorHandler {
 
   private async handleWindowError(error: Error, event: ErrorEvent) {
     const errorDetails: ErrorDetails = {
-      type: 'javascript-error',
-      message: error.message || (event as unknown as { message: string }).message,
+      type: "javascript-error",
+      message:
+        error.message || (event as unknown as { message: string }).message,
       stack: error.stack,
       filename: (event as unknown as { filename: string }).filename,
       lineno: (event as unknown as { lineno: number }).lineno,
       colno: (event as unknown as { colno: number }).colno,
       timestamp: new Date().toISOString(),
       url: window.location.href,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     };
 
     await this.processError(errorDetails);
   }
 
-  private async handlePromiseRejection(reason: unknown, event: PromiseRejectionEvent) {
+  private async handlePromiseRejection(
+    reason: unknown,
+    event: PromiseRejectionEvent,
+  ) {
     const errorDetails: ErrorDetails = {
-      type: 'promise-rejection',
-      message: (reason as Error)?.message || 'Unhandled promise rejection',
+      type: "promise-rejection",
+      message: (reason as Error)?.message || "Unhandled promise rejection",
       stack: (reason as Error)?.stack,
       reason: JSON.stringify(reason),
       timestamp: new Date().toISOString(),
       url: window.location.href,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     };
 
     await this.processError(errorDetails);
@@ -109,7 +117,7 @@ export class GlobalErrorHandler {
 
     // Console logging
     if (this.config.enableConsoleLogging) {
-      console.error('Global Error:', errorDetails);
+      console.error("Global Error:", errorDetails);
     }
 
     // Emit to error bus for application-wide handling
@@ -122,21 +130,21 @@ export class GlobalErrorHandler {
       context: {
         errorDetails,
         url: errorDetails.url,
-        userAgent: errorDetails.userAgent
+        userAgent: errorDetails.userAgent,
       },
-      stack: errorDetails.stack
+      stack: errorDetails.stack,
     });
 
     // Remote logging
     if (this.config.enableRemoteLogging && this.config.logEndpoint) {
       try {
         await fetch(this.config.logEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(errorDetails)
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(errorDetails),
         });
       } catch (logError) {
-        console.error('Failed to send error log:', logError);
+        console.error("Failed to send error log:", logError);
       }
     }
   }
@@ -165,37 +173,51 @@ export class GlobalErrorHandler {
     return true;
   }
 
-  private classifyErrorType(errorDetails: ErrorDetails): ErrorEvent['type'] {
-    if (errorDetails.message.includes('fetch') ||
-        errorDetails.message.includes('network') ||
-        errorDetails.message.includes('Failed to fetch')) {
-      return 'network';
-    } else if (errorDetails.message.includes('validation') ||
-               errorDetails.message.includes('required') ||
-               errorDetails.message.includes('invalid')) {
-      return 'validation';
-    } else if (errorDetails.message.includes('quota') ||
-               errorDetails.message.includes('storage') ||
-               errorDetails.message.includes('memory')) {
-      return 'system';
+  private classifyErrorType(errorDetails: ErrorDetails): ErrorEvent["type"] {
+    if (
+      errorDetails.message.includes("fetch") ||
+      errorDetails.message.includes("network") ||
+      errorDetails.message.includes("Failed to fetch")
+    ) {
+      return "network";
+    } else if (
+      errorDetails.message.includes("validation") ||
+      errorDetails.message.includes("required") ||
+      errorDetails.message.includes("invalid")
+    ) {
+      return "validation";
+    } else if (
+      errorDetails.message.includes("quota") ||
+      errorDetails.message.includes("storage") ||
+      errorDetails.message.includes("memory")
+    ) {
+      return "system";
     }
-    return 'application';
+    return "application";
   }
 
-  private determineSeverity(errorDetails: ErrorDetails): ErrorEvent['severity'] {
-    if (errorDetails.message.includes('critical') ||
-        errorDetails.message.includes('fatal') ||
-        errorDetails.message.includes('quota')) {
-      return 'critical';
-    } else if (errorDetails.type === 'vue-error' ||
-               errorDetails.message.includes('TypeError') ||
-               errorDetails.message.includes('network')) {
-      return 'high';
-    } else if (errorDetails.message.includes('validation') ||
-               errorDetails.message.includes('warning')) {
-      return 'medium';
+  private determineSeverity(
+    errorDetails: ErrorDetails,
+  ): ErrorEvent["severity"] {
+    if (
+      errorDetails.message.includes("critical") ||
+      errorDetails.message.includes("fatal") ||
+      errorDetails.message.includes("quota")
+    ) {
+      return "critical";
+    } else if (
+      errorDetails.type === "vue-error" ||
+      errorDetails.message.includes("TypeError") ||
+      errorDetails.message.includes("network")
+    ) {
+      return "high";
+    } else if (
+      errorDetails.message.includes("validation") ||
+      errorDetails.message.includes("warning")
+    ) {
+      return "medium";
     }
-    return 'low';
+    return "low";
   }
 
   private getComponentName(instance: unknown): string {
@@ -206,24 +228,29 @@ export class GlobalErrorHandler {
         type?: { name?: string };
       };
 
-      return vueInstance?.$options?.name ||
-             vueInstance?.$options?.__name ||
-             vueInstance?.type?.name ||
-             'Unknown';
+      return (
+        vueInstance?.$options?.name ||
+        vueInstance?.$options?.__name ||
+        vueInstance?.type?.name ||
+        "Unknown"
+      );
     } catch {
-      return 'Unknown';
+      return "Unknown";
     }
   }
 }
 
 // Factory function to create and configure global error handler
-export function createGlobalErrorHandler(app: App, config?: Partial<GlobalErrorConfig>) {
+export function createGlobalErrorHandler(
+  app: App,
+  config?: Partial<GlobalErrorConfig>,
+) {
   const defaultConfig: GlobalErrorConfig = {
     enableConsoleLogging: import.meta.env.DEV,
     enableRemoteLogging: import.meta.env.PROD,
     enableUserNotification: true,
     logEndpoint: import.meta.env.VITE_ERROR_LOG_ENDPOINT,
-    maxErrorsPerMinute: 10
+    maxErrorsPerMinute: 10,
   };
 
   const errorHandler = new GlobalErrorHandler({ ...defaultConfig, ...config });

@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { defineStore } from "pinia";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 
 interface PerformanceMetrics {
   loadTime: number;
@@ -16,7 +16,7 @@ interface PerformanceMetrics {
   };
 }
 
-export const usePerformanceStore = defineStore('performance', () => {
+export const usePerformanceStore = defineStore("performance", () => {
   // State
   const metrics = ref<Partial<PerformanceMetrics>>({});
   const isSupported = ref(false);
@@ -28,7 +28,7 @@ export const usePerformanceStore = defineStore('performance', () => {
   // Getters (computed)
   const performanceGrade = computed(() => {
     const m = metrics.value;
-    if (!m.loadTime) return 'Unknown';
+    if (!m.loadTime) return "Unknown";
 
     let score = 100;
 
@@ -39,11 +39,14 @@ export const usePerformanceStore = defineStore('performance', () => {
 
     // FCP scoring (target: < 1.8s)
     if (m.firstContentfulPaint && m.firstContentfulPaint > 3000) score -= 20;
-    else if (m.firstContentfulPaint && m.firstContentfulPaint > 1800) score -= 10;
+    else if (m.firstContentfulPaint && m.firstContentfulPaint > 1800)
+      score -= 10;
 
     // LCP scoring (target: < 2.5s)
-    if (m.largestContentfulPaint && m.largestContentfulPaint > 4000) score -= 20;
-    else if (m.largestContentfulPaint && m.largestContentfulPaint > 2500) score -= 10;
+    if (m.largestContentfulPaint && m.largestContentfulPaint > 4000)
+      score -= 20;
+    else if (m.largestContentfulPaint && m.largestContentfulPaint > 2500)
+      score -= 10;
 
     // FID scoring (target: < 100ms)
     if (m.firstInputDelay && m.firstInputDelay > 300) score -= 15;
@@ -51,18 +54,19 @@ export const usePerformanceStore = defineStore('performance', () => {
 
     // CLS scoring (target: < 0.1)
     if (m.cumulativeLayoutShift && m.cumulativeLayoutShift > 0.25) score -= 15;
-    else if (m.cumulativeLayoutShift && m.cumulativeLayoutShift > 0.1) score -= 8;
+    else if (m.cumulativeLayoutShift && m.cumulativeLayoutShift > 0.1)
+      score -= 8;
 
-    if (score >= 90) return 'Excellent';
-    if (score >= 75) return 'Good';
-    if (score >= 60) return 'Fair';
-    return 'Poor';
+    if (score >= 90) return "Excellent";
+    if (score >= 75) return "Good";
+    if (score >= 60) return "Fair";
+    return "Poor";
   });
 
   const hasMemoryPressure = computed(() => {
     if (!metrics.value.memoryUsage) return false;
     const { used, limit } = metrics.value.memoryUsage;
-    return (used / limit) > 0.8; // 80% memory usage threshold
+    return used / limit > 0.8; // 80% memory usage threshold
   });
 
   const exportData = computed(() => ({
@@ -71,7 +75,7 @@ export const usePerformanceStore = defineStore('performance', () => {
     userAgent: navigator.userAgent,
     url: window.location.href,
     grade: performanceGrade.value,
-    memoryPressure: hasMemoryPressure.value
+    memoryPressure: hasMemoryPressure.value,
   }));
 
   // Actions
@@ -79,18 +83,22 @@ export const usePerformanceStore = defineStore('performance', () => {
     if (!window.performance) return;
 
     const timing = window.performance.timing;
-    const navigation = window.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    const navigation = window.performance.getEntriesByType(
+      "navigation",
+    )[0] as PerformanceNavigationTiming;
 
     metrics.value = {
       ...metrics.value,
       loadTime: timing.loadEventEnd - timing.navigationStart,
-      domContentLoaded: timing.domContentLoadedEventEnd - timing.navigationStart,
+      domContentLoaded:
+        timing.domContentLoadedEventEnd - timing.navigationStart,
     };
 
     // Modern metrics using Navigation Timing API Level 2
     if (navigation) {
       metrics.value.loadTime = navigation.loadEventEnd - navigation.fetchStart;
-      metrics.value.domContentLoaded = navigation.domContentLoadedEventEnd - navigation.fetchStart;
+      metrics.value.domContentLoaded =
+        navigation.domContentLoadedEventEnd - navigation.fetchStart;
     }
   };
 
@@ -100,19 +108,19 @@ export const usePerformanceStore = defineStore('performance', () => {
     const paintObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       for (const entry of entries) {
-        if (entry.name === 'first-paint') {
+        if (entry.name === "first-paint") {
           metrics.value.firstPaint = entry.startTime;
-        } else if (entry.name === 'first-contentful-paint') {
+        } else if (entry.name === "first-contentful-paint") {
           metrics.value.firstContentfulPaint = entry.startTime;
         }
       }
     });
 
     try {
-      paintObserver.observe({ entryTypes: ['paint'] });
+      paintObserver.observe({ entryTypes: ["paint"] });
       observers.value.push(paintObserver);
     } catch {
-      console.warn('Paint metrics not supported');
+      console.warn("Paint metrics not supported");
     }
   };
 
@@ -127,10 +135,10 @@ export const usePerformanceStore = defineStore('performance', () => {
     });
 
     try {
-      lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+      lcpObserver.observe({ entryTypes: ["largest-contentful-paint"] });
       observers.value.push(lcpObserver);
     } catch {
-      console.warn('LCP metrics not supported');
+      console.warn("LCP metrics not supported");
     }
 
     // First Input Delay
@@ -139,16 +147,17 @@ export const usePerformanceStore = defineStore('performance', () => {
       for (const entry of entries) {
         const fidEntry = entry as PerformanceEventTiming;
         if (fidEntry.processingStart && fidEntry.startTime) {
-          metrics.value.firstInputDelay = fidEntry.processingStart - fidEntry.startTime;
+          metrics.value.firstInputDelay =
+            fidEntry.processingStart - fidEntry.startTime;
         }
       }
     });
 
     try {
-      fidObserver.observe({ entryTypes: ['first-input'] });
+      fidObserver.observe({ entryTypes: ["first-input"] });
       observers.value.push(fidObserver);
     } catch {
-      console.warn('FID metrics not supported');
+      console.warn("FID metrics not supported");
     }
 
     // Cumulative Layout Shift
@@ -156,7 +165,10 @@ export const usePerformanceStore = defineStore('performance', () => {
     const clsObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       for (const entry of entries) {
-        const layoutShiftEntry = entry as PerformanceEntry & { hadRecentInput?: boolean; value?: number };
+        const layoutShiftEntry = entry as PerformanceEntry & {
+          hadRecentInput?: boolean;
+          value?: number;
+        };
         if (!layoutShiftEntry.hadRecentInput) {
           clsValue += layoutShiftEntry.value || 0;
           metrics.value.cumulativeLayoutShift = clsValue;
@@ -165,21 +177,29 @@ export const usePerformanceStore = defineStore('performance', () => {
     });
 
     try {
-      clsObserver.observe({ entryTypes: ['layout-shift'] });
+      clsObserver.observe({ entryTypes: ["layout-shift"] });
       observers.value.push(clsObserver);
     } catch {
-      console.warn('CLS metrics not supported');
+      console.warn("CLS metrics not supported");
     }
   };
 
   const collectMemoryMetrics = () => {
-    if ('memory' in performance) {
-      const memory = (performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
+    if ("memory" in performance) {
+      const memory = (
+        performance as Performance & {
+          memory?: {
+            usedJSHeapSize: number;
+            totalJSHeapSize: number;
+            jsHeapSizeLimit: number;
+          };
+        }
+      ).memory;
       if (memory) {
         metrics.value.memoryUsage = {
           used: Math.round(memory.usedJSHeapSize),
           total: Math.round(memory.totalJSHeapSize),
-          limit: Math.round(memory.jsHeapSizeLimit)
+          limit: Math.round(memory.jsHeapSizeLimit),
         };
       }
     }
@@ -187,7 +207,7 @@ export const usePerformanceStore = defineStore('performance', () => {
 
   const startMonitoring = () => {
     if (!window.performance) {
-      console.warn('Performance API not supported');
+      console.warn("Performance API not supported");
       return;
     }
 
@@ -217,8 +237,8 @@ export const usePerformanceStore = defineStore('performance', () => {
     isMonitoring.value = false;
 
     // Clean up all observers and intervals
-    observers.value.forEach(observer => {
-      if (typeof observer === 'object' && 'disconnect' in observer) {
+    observers.value.forEach((observer) => {
+      if (typeof observer === "object" && "disconnect" in observer) {
         observer.disconnect();
       } else {
         clearInterval(observer as NodeJS.Timeout);
@@ -232,7 +252,10 @@ export const usePerformanceStore = defineStore('performance', () => {
     metrics.value = {};
   };
 
-  const updateMetric = <K extends keyof PerformanceMetrics>(key: K, value: PerformanceMetrics[K]) => {
+  const updateMetric = <K extends keyof PerformanceMetrics>(
+    key: K,
+    value: PerformanceMetrics[K],
+  ) => {
     (metrics.value as PerformanceMetrics)[key] = value;
   };
 
@@ -258,7 +281,7 @@ export const usePerformanceStore = defineStore('performance', () => {
     resetMetrics,
     updateMetric,
     collectMemoryMetrics,
-    initialize
+    initialize,
   };
 });
 

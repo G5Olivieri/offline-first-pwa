@@ -186,8 +186,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { useNotificationStore } from "../stores/notification-store";
-import { useOrderStore } from "../stores/order-store";
+import { useNotificationStore } from "@/stores/notification-store";
+import { useOrderStore } from "@/stores/order-store";
 
 interface Props {
   isOpen: boolean;
@@ -210,7 +210,7 @@ const isProcessing = ref(false);
 
 // Computed properties
 const isCheckout = computed(
-  () => router.currentRoute.value.path === "/checkout"
+  () => router.currentRoute.value.path === "/checkout",
 );
 
 const orderItems = computed(() => {

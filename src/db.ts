@@ -146,7 +146,7 @@ export const getProductAffinityDB = (): PouchDB.Database<ProductAffinity> => {
           username: config.couchdbUsername,
           password: config.couchdbPassword,
         },
-      }
+      },
     );
 
     remoteAffinityDB.sync(_productAffinityDB, {
@@ -185,7 +185,7 @@ export const getCustomerPreferencesDB =
             username: config.couchdbUsername,
             password: config.couchdbPassword,
           },
-        }
+        },
       );
 
       remotePreferencesDB.sync(_customerPreferencesDB, {
@@ -215,7 +215,7 @@ export const getRecommendationConfigDB =
             username: config.couchdbUsername,
             password: config.couchdbPassword,
           },
-        }
+        },
       );
 
       remoteConfigDB.sync(_recommendationConfigDB, {

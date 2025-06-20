@@ -5,9 +5,9 @@ defineOptions({
 
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
-import { customerService } from "../../services/customer-service";
-import { useOrderStore } from "../../stores/order-store";
-import { type Customer } from "../../types/customer";
+import { customerService } from "@/services/customer-service";
+import { useOrderStore } from "@/stores/order-store";
+import { type Customer } from "@/types/customer";
 
 const searchDocument = ref("");
 const router = useRouter();

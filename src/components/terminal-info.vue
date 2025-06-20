@@ -15,16 +15,22 @@
     <div class="space-y-3">
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             Terminal ID
           </label>
-          <p class="text-sm font-mono bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded">
+          <p
+            class="text-sm font-mono bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded"
+          >
             {{ terminalId }}
           </p>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             Terminal Name
           </label>
           <input
@@ -37,7 +43,9 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           Location
         </label>
         <input
@@ -75,14 +83,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useTerminalStore } from '../stores/terminal-store';
-import { formatDate } from '../config/env';
+import { computed, ref } from "vue";
+import { useTerminalStore } from "@/stores/terminal-store";
+import { formatDate } from "@/config/env";
 
 const terminalStore = useTerminalStore();
 
 const editableName = ref(terminalStore.terminalName);
-const editableLocation = ref(terminalStore.terminalLocation || '');
+const editableLocation = ref(terminalStore.terminalLocation || "");
 
 const terminalId = computed(() => terminalStore.terminalId);
 const terminalStatus = computed(() => terminalStore.terminalStatus);
@@ -90,14 +98,14 @@ const terminalInfo = computed(() => terminalStore.terminalInfo);
 
 const statusClasses = computed(() => {
   switch (terminalStatus.value) {
-    case 'active':
-      return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100';
-    case 'inactive':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100';
-    case 'maintenance':
-      return 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100';
+    case "active":
+      return "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100";
+    case "inactive":
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100";
+    case "maintenance":
+      return "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100";
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
+      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100";
   }
 });
 
@@ -122,14 +130,18 @@ const copyTerminalId = async () => {
   try {
     await navigator.clipboard.writeText(terminalId.value);
     // You could add a toast notification here
-    console.log('Terminal ID copied to clipboard');
+    console.log("Terminal ID copied to clipboard");
   } catch (error) {
-    console.error('Failed to copy terminal ID:', error);
+    console.error("Failed to copy terminal ID:", error);
   }
 };
 
 const resetTerminal = () => {
-  if (confirm('Are you sure you want to reset the terminal? This will generate a new terminal ID and reload the page.')) {
+  if (
+    confirm(
+      "Are you sure you want to reset the terminal? This will generate a new terminal ID and reload the page.",
+    )
+  ) {
     terminalStore.resetTerminalId();
   }
 };

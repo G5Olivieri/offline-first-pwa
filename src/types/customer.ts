@@ -1,4 +1,3 @@
-
 export type Customer = {
   _id: string;
   _rev?: string;

@@ -130,10 +130,10 @@ defineOptions({
 
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { useNotificationStore } from "../stores/notification-store";
-import { useOrderStore } from "../stores/order-store";
-import { useRecommendationStore } from "../stores/recommendation-store";
-import type { Product } from "../types/product";
+import { useNotificationStore } from "@/stores/notification-store";
+import { useOrderStore } from "@/stores/order-store";
+import { useRecommendationStore } from "@/stores/recommendation-store";
+import type { Product } from "@/types/product";
 
 interface Props {
   currentProduct: Product;
@@ -170,7 +170,7 @@ async function loadRecommendations(): Promise<void> {
     // Get product recommendations based on the current product
     const productRecommendations =
       await recommendationStore.getRecommendationsForProduct(
-        props.currentProduct
+        props.currentProduct,
       );
 
     // Extract the actual products from the recommendations
@@ -186,7 +186,7 @@ async function loadRecommendations(): Promise<void> {
 function loadMore(): void {
   displayLimit.value = Math.min(
     displayLimit.value + props.maxRecommendations,
-    recommendations.value.length
+    recommendations.value.length,
   );
 }
 
@@ -195,12 +195,12 @@ async function addToOrder(product: Product): Promise<void> {
     await orderStore.addProduct(product);
     notificationStore.showSuccess(
       "Product Added",
-      `${product.name} has been added to the order.`
+      `${product.name} has been added to the order.`,
     );
   } catch (err) {
     notificationStore.showError(
       "Add to Order Error",
-      `Failed to add product to order. Please try again.: ${err}`
+      `Failed to add product to order. Please try again.: ${err}`,
     );
   }
 }

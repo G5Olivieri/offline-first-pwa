@@ -1,6 +1,6 @@
-import { ref, computed } from 'vue';
-import { useErrorHandler } from './use-error-handler';
-import { useNotificationStore } from '@/stores/notification-store';
+import { ref, computed } from "vue";
+import { useErrorHandler } from "./use-error-handler";
+import { useNotificationStore } from "@/stores/notification-store";
 
 export interface AsyncOperationState<T> {
   data: T | null;
@@ -22,7 +22,7 @@ export function useAsyncOperation<T>(options: AsyncOperationOptions = {}) {
   const errorHandler = useErrorHandler({
     enableRetry: options.enableRetry,
     retryAttempts: options.retryAttempts,
-    showNotification: options.showErrorMessage !== false
+    showNotification: options.showErrorMessage !== false,
   });
   const notificationStore = useNotificationStore();
 
@@ -30,12 +30,12 @@ export function useAsyncOperation<T>(options: AsyncOperationOptions = {}) {
     data: null,
     isLoading: false,
     error: null,
-    hasError: false
+    hasError: false,
   });
 
   const execute = async (
     operation: () => Promise<T>,
-    customOptions?: Partial<AsyncOperationOptions>
+    customOptions?: Partial<AsyncOperationOptions>,
   ): Promise<T | null> => {
     const mergedOptions = { ...options, ...customOptions };
 
@@ -43,22 +43,25 @@ export function useAsyncOperation<T>(options: AsyncOperationOptions = {}) {
     state.value.error = null;
     state.value.hasError = false;
 
-    const result = await errorHandler.execute(async () => {
-      const data = await operation();
-      state.value.data = data;
+    const result = await errorHandler.execute(
+      async () => {
+        const data = await operation();
+        state.value.data = data;
 
-      if (mergedOptions.showSuccessMessage) {
-        notificationStore.showSuccess(
-          'Success',
-          mergedOptions.successMessage || 'Operation completed successfully.'
-        );
-      }
+        if (mergedOptions.showSuccessMessage) {
+          notificationStore.showSuccess(
+            "Success",
+            mergedOptions.successMessage || "Operation completed successfully.",
+          );
+        }
 
-      return data;
-    }, {
-      customMessage: mergedOptions.errorMessage,
-      showNotification: mergedOptions.showErrorMessage !== false
-    });
+        return data;
+      },
+      {
+        customMessage: mergedOptions.errorMessage,
+        showNotification: mergedOptions.showErrorMessage !== false,
+      },
+    );
 
     if (result === null && errorHandler.hasError.value) {
       state.value.error = errorHandler.error.value;
@@ -92,14 +95,18 @@ export function useAsyncOperation<T>(options: AsyncOperationOptions = {}) {
   return {
     // State
     data: computed(() => state.value.data),
-    isLoading: computed(() => state.value.isLoading || errorHandler.isLoading.value),
+    isLoading: computed(
+      () => state.value.isLoading || errorHandler.isLoading.value,
+    ),
     error: computed(() => state.value.error || errorHandler.error.value),
-    hasError: computed(() => state.value.hasError || errorHandler.hasError.value),
+    hasError: computed(
+      () => state.value.hasError || errorHandler.hasError.value,
+    ),
     canRetry: computed(() => errorHandler.canRetryOperation.value),
 
     // Methods
     execute,
     retry,
-    reset
+    reset,
   };
 }

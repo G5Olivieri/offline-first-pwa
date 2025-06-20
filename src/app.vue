@@ -23,7 +23,7 @@ const clock = ref(
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-  })
+  }),
 );
 const barcodeInput = ref<HTMLInputElement | null>(null);
 const showHelpDialog = ref(false);
@@ -34,7 +34,7 @@ const notificationStore = useNotificationStore();
 const setupStore = useSetupStore();
 const isHome = computed(() => router.currentRoute.value.path === "/");
 const isCheckout = computed(
-  () => router.currentRoute.value.path === "/checkout"
+  () => router.currentRoute.value.path === "/checkout",
 );
 
 const getSyncStatus = (dbName: string) => {
@@ -99,13 +99,13 @@ const databaseStatus = computed(() => {
 
 const dbStatusSummary = computed(() => {
   const allReady = databaseStatus.value.every(
-    (db) => db.status.text === "Ready" || db.status.text === "Push Only"
+    (db) => db.status.text === "Ready" || db.status.text === "Push Only",
   );
   const hasOffline = databaseStatus.value.some(
-    (db) => db.status.text === "Offline"
+    (db) => db.status.text === "Offline",
   );
   const hasDisabled = databaseStatus.value.some(
-    (db) => db.status.text === "Disabled"
+    (db) => db.status.text === "Disabled",
   );
 
   if (hasOffline) {
@@ -153,7 +153,7 @@ const removeOperator = () => {
   orderStore.unselectOperator();
   notificationStore.showInfo(
     "Operator removed",
-    "Please select a new operator"
+    "Please select a new operator",
   );
 };
 
@@ -198,7 +198,7 @@ const completeOrder = async () => {
 
     notificationStore.showSuccess(
       "Order Completed",
-      "Thank you for your order!"
+      "Thank you for your order!",
     );
   } catch {
     notificationStore.showError("Error", "Failed to complete order");
@@ -210,7 +210,7 @@ const abandonOrder = async () => {
     const result = await notificationStore.showConfirm(
       "Abandon Order",
       "Are you sure you want to abandon this order? All items will be lost.",
-      { type: "warning" }
+      { type: "warning" },
     );
 
     if (result.confirmed) {
@@ -219,7 +219,7 @@ const abandonOrder = async () => {
 
         notificationStore.showInfo(
           "Order Abandoned",
-          "Order has been cancelled"
+          "Order has been cancelled",
         );
       } catch {
         notificationStore.showError("Error", "Failed to abandon order");
@@ -266,7 +266,7 @@ const addProduct = async () => {
 
   try {
     const fetchedProduct = await productService.findProductByBarcode(
-      barcode.value
+      barcode.value,
     );
 
     if (fetchedProduct) {
@@ -274,7 +274,7 @@ const addProduct = async () => {
 
       notificationStore.showSuccess(
         "Product Added",
-        `${fetchedProduct.name} added to order`
+        `${fetchedProduct.name} added to order`,
       );
       if (!isHome.value) {
         router.push("/");
@@ -282,13 +282,13 @@ const addProduct = async () => {
     } else {
       notificationStore.showWarning(
         "Product Not Found",
-        "No product found with this barcode"
+        "No product found with this barcode",
       );
     }
   } catch {
     notificationStore.showError(
       "Error",
-      "Failed to fetch product. Please try again."
+      "Failed to fetch product. Please try again.",
     );
   }
 
@@ -310,7 +310,7 @@ onMounted(() => {
   setupStore.initializeSystem().catch((error) => {
     notificationStore.showError(
       "Setup Error",
-      `Failed to initialize system setup. Please check your configuration. ${error}`
+      `Failed to initialize system setup. Please check your configuration. ${error}`,
     );
   });
 });

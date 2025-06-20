@@ -1,9 +1,22 @@
 <template>
-  <div v-if="hasError" class="error-boundary bg-red-50 border border-red-200 rounded-lg p-6">
+  <div
+    v-if="hasError"
+    class="error-boundary bg-red-50 border border-red-200 rounded-lg p-6"
+  >
     <div class="flex items-start">
       <div class="flex-shrink-0">
-        <svg class="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
+        <svg
+          class="h-6 w-6 text-red-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
+          />
         </svg>
       </div>
       <div class="ml-3 w-full">
@@ -20,7 +33,10 @@
             <summary class="cursor-pointer text-red-600 hover:text-red-800">
               Technical Details
             </summary>
-            <pre class="mt-2 text-gray-600 bg-gray-100 p-2 rounded overflow-auto">{{ errorDetails }}</pre>
+            <pre
+              class="mt-2 text-gray-600 bg-gray-100 p-2 rounded overflow-auto"
+              >{{ errorDetails }}</pre
+            >
           </details>
         </div>
 
@@ -57,8 +73,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onErrorCaptured, watch } from 'vue';
-import { errorBus } from '../error/error-event-bus';
+import { ref, computed, onErrorCaptured, watch } from "vue";
+import { errorBus } from "@/error/error-event-bus";
 
 interface Props {
   // Custom error message to show users
@@ -80,12 +96,12 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  fallbackMessage: 'Something went wrong. Please try again.',
+  fallbackMessage: "Something went wrong. Please try again.",
   showRetry: true,
   showReload: false,
   showReset: true,
   showDetails: import.meta.env.DEV,
-  title: 'Oops! Something went wrong'
+  title: "Oops! Something went wrong",
 });
 
 const emit = defineEmits<{
@@ -96,7 +112,7 @@ const emit = defineEmits<{
 
 const hasError = ref(false);
 const error = ref<Error | null>(null);
-const errorInfo = ref<string>('');
+const errorInfo = ref<string>("");
 const retryCount = ref(0);
 const maxRetries = ref(3);
 
@@ -110,19 +126,22 @@ const errorTitle = computed(() => {
 const errorMessage = computed(() => {
   if (error.value) {
     // Show user-friendly message for common errors
-    if (error.value.message.includes('network') || error.value.message.includes('fetch')) {
-      return 'Unable to connect to the server. Please check your internet connection.';
-    } else if (error.value.message.includes('validation')) {
-      return 'There was an issue with the data provided. Please check your input.';
-    } else if (error.value.message.includes('permission')) {
-      return 'You don\'t have permission to perform this action.';
+    if (
+      error.value.message.includes("network") ||
+      error.value.message.includes("fetch")
+    ) {
+      return "Unable to connect to the server. Please check your internet connection.";
+    } else if (error.value.message.includes("validation")) {
+      return "There was an issue with the data provided. Please check your input.";
+    } else if (error.value.message.includes("permission")) {
+      return "You don't have permission to perform this action.";
     }
   }
   return props.fallbackMessage;
 });
 
 const errorDetails = computed(() => {
-  if (!error.value) return '';
+  if (!error.value) return "";
 
   return {
     message: error.value.message,
@@ -130,7 +149,7 @@ const errorDetails = computed(() => {
     stack: error.value.stack,
     info: errorInfo.value,
     timestamp: new Date().toISOString(),
-    retryCount: retryCount.value
+    retryCount: retryCount.value,
   };
 });
 
@@ -146,29 +165,29 @@ onErrorCaptured((err, instance, info) => {
   }
 
   // Emit error event
-  emit('error', err, info);
+  emit("error", err, info);
 
   // Log to error tracking
-  console.error('Error Boundary caught error:', {
+  console.error("Error Boundary caught error:", {
     error: err,
     component: instance,
     info,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 
   // Emit to global error bus
   errorBus.emitError({
-    type: 'application',
-    severity: 'high',
+    type: "application",
+    severity: "high",
     message: err.message,
-    source: 'ErrorBoundary',
+    source: "ErrorBoundary",
     timestamp: new Date(),
     context: {
       component: instance,
       errorInfo: info,
-      retryCount: retryCount.value
+      retryCount: retryCount.value,
     },
-    stack: err.stack
+    stack: err.stack,
   });
 
   // Prevent error from propagating to global handler
@@ -179,12 +198,18 @@ onErrorCaptured((err, instance, info) => {
 watch(error, (newError) => {
   if (newError && retryCount.value < maxRetries.value) {
     // Auto-retry for network errors after a delay
-    if (newError.message.includes('network') || newError.message.includes('fetch')) {
-      setTimeout(() => {
-        if (hasError.value) {
-          handleRetry();
-        }
-      }, 2000 * (retryCount.value + 1)); // Exponential backoff
+    if (
+      newError.message.includes("network") ||
+      newError.message.includes("fetch")
+    ) {
+      setTimeout(
+        () => {
+          if (hasError.value) {
+            handleRetry();
+          }
+        },
+        2000 * (retryCount.value + 1),
+      ); // Exponential backoff
     }
   }
 });
@@ -194,14 +219,14 @@ const handleRetry = () => {
     retryCount.value++;
     hasError.value = false;
     error.value = null;
-    errorInfo.value = '';
+    errorInfo.value = "";
 
     // Call custom retry handler if provided
     if (props.onRetry) {
       props.onRetry();
     }
 
-    emit('retry');
+    emit("retry");
   }
 };
 
@@ -212,10 +237,10 @@ const handleReload = () => {
 const handleReset = () => {
   hasError.value = false;
   error.value = null;
-  errorInfo.value = '';
+  errorInfo.value = "";
   retryCount.value = 0;
 
-  emit('reset');
+  emit("reset");
 };
 
 // Expose methods for parent components
@@ -223,6 +248,6 @@ defineExpose({
   retry: handleRetry,
   reset: handleReset,
   hasError: computed(() => hasError.value),
-  error: computed(() => error.value)
+  error: computed(() => error.value),
 });
 </script>

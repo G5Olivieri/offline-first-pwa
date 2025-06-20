@@ -8,9 +8,9 @@ import { useField, useForm } from "vee-validate";
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import * as z from "zod";
-import { productService } from "../../services/product-service";
-import { useNotificationStore } from "../../stores/notification-store";
-import type { Product } from "../../types/product";
+import { productService } from "@/services/product-service";
+import { useNotificationStore } from "@/stores/notification-store";
+import type { Product } from "@/types/product";
 
 const route = useRoute();
 const router = useRouter();
@@ -38,7 +38,7 @@ const validationSchema = toTypedSchema(
       .optional(),
     contraindication: z.string().optional(),
     activeIngredient: z.string().optional(),
-  })
+  }),
 );
 
 const { handleSubmit, errors, setValues } = useForm({
@@ -68,7 +68,7 @@ const loadProduct = async () => {
     const productId = route.params.id as string;
 
     // Get the product from the database
-    const db = await import("../../db").then(m => m.getProductDB());
+    const db = await import("@/db").then((m) => m.getProductDB());
     const productDoc = await db.get(productId);
 
     product.value = productDoc;
@@ -93,7 +93,7 @@ const loadProduct = async () => {
   } catch (error) {
     notificationStore.showError(
       "Loading Error",
-      `Failed to load product. Please try again. ${error}`
+      `Failed to load product. Please try again. ${error}`,
     );
     router.push("/products");
   } finally {
@@ -139,14 +139,14 @@ const onSubmit = handleSubmit(async (values) => {
 
     notificationStore.showSuccess(
       "Product Updated",
-      `${updatedProduct.name} has been updated successfully.`
+      `${updatedProduct.name} has been updated successfully.`,
     );
 
     router.push("/products");
   } catch (error) {
     notificationStore.showError(
       "Update Error",
-      `Failed to update product. Please try again. ${error}`
+      `Failed to update product. Please try again. ${error}`,
     );
   } finally {
     isSaving.value = false;
@@ -209,7 +209,8 @@ onMounted(() => {
                 type="text"
                 :class="{
                   'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500': true,
-                  'border-red-300 focus:ring-red-500 focus:border-red-500': errors.name,
+                  'border-red-300 focus:ring-red-500 focus:border-red-500':
+                    errors.name,
                 }"
                 placeholder="Enter product name"
               />
@@ -219,7 +220,10 @@ onMounted(() => {
             </div>
 
             <div>
-              <label for="barcode" class="block text-sm font-medium text-gray-700">
+              <label
+                for="barcode"
+                class="block text-sm font-medium text-gray-700"
+              >
                 Barcode *
               </label>
               <input
@@ -228,7 +232,8 @@ onMounted(() => {
                 type="text"
                 :class="{
                   'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500': true,
-                  'border-red-300 focus:ring-red-500 focus:border-red-500': errors.barcode,
+                  'border-red-300 focus:ring-red-500 focus:border-red-500':
+                    errors.barcode,
                 }"
                 placeholder="Enter barcode"
               />
@@ -238,7 +243,10 @@ onMounted(() => {
             </div>
 
             <div>
-              <label for="price" class="block text-sm font-medium text-gray-700">
+              <label
+                for="price"
+                class="block text-sm font-medium text-gray-700"
+              >
                 Price *
               </label>
               <input
@@ -249,7 +257,8 @@ onMounted(() => {
                 step="0.01"
                 :class="{
                   'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500': true,
-                  'border-red-300 focus:ring-red-500 focus:border-red-500': errors.price,
+                  'border-red-300 focus:ring-red-500 focus:border-red-500':
+                    errors.price,
                 }"
                 placeholder="0.00"
               />
@@ -259,7 +268,10 @@ onMounted(() => {
             </div>
 
             <div>
-              <label for="stock" class="block text-sm font-medium text-gray-700">
+              <label
+                for="stock"
+                class="block text-sm font-medium text-gray-700"
+              >
                 Stock *
               </label>
               <input
@@ -269,7 +281,8 @@ onMounted(() => {
                 min="0"
                 :class="{
                   'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500': true,
-                  'border-red-300 focus:ring-red-500 focus:border-red-500': errors.stock,
+                  'border-red-300 focus:ring-red-500 focus:border-red-500':
+                    errors.stock,
                 }"
                 placeholder="0"
               />
@@ -281,10 +294,15 @@ onMounted(() => {
 
           <!-- Optional Information -->
           <div class="border-t border-gray-200 pt-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Optional Information</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">
+              Optional Information
+            </h3>
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
-                <label for="category" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="category"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Category
                 </label>
                 <input
@@ -297,7 +315,10 @@ onMounted(() => {
               </div>
 
               <div>
-                <label for="manufacturer" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="manufacturer"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Manufacturer
                 </label>
                 <input
@@ -310,7 +331,10 @@ onMounted(() => {
               </div>
 
               <div class="sm:col-span-2">
-                <label for="description" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="description"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Description
                 </label>
                 <textarea
@@ -326,10 +350,15 @@ onMounted(() => {
 
           <!-- Medical/Drug Information -->
           <div class="border-t border-gray-200 pt-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Medical Information</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">
+              Medical Information
+            </h3>
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
-                <label for="dosageForm" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="dosageForm"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Dosage Form
                 </label>
                 <input
@@ -342,7 +371,10 @@ onMounted(() => {
               </div>
 
               <div>
-                <label for="drugClass" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="drugClass"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Drug Class
                 </label>
                 <input
@@ -355,7 +387,10 @@ onMounted(() => {
               </div>
 
               <div>
-                <label for="prescriptionStatus" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="prescriptionStatus"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Prescription Status
                 </label>
                 <select
@@ -376,13 +411,19 @@ onMounted(() => {
                   type="checkbox"
                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label for="isProprietary" class="ml-2 block text-sm text-gray-900">
+                <label
+                  for="isProprietary"
+                  class="ml-2 block text-sm text-gray-900"
+                >
                   Is Proprietary
                 </label>
               </div>
 
               <div>
-                <label for="nonProprietaryName" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="nonProprietaryName"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Non-Proprietary Name
                 </label>
                 <input
@@ -395,7 +436,10 @@ onMounted(() => {
               </div>
 
               <div>
-                <label for="activeIngredient" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="activeIngredient"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Active Ingredient
                 </label>
                 <input
@@ -408,7 +452,10 @@ onMounted(() => {
               </div>
 
               <div class="sm:col-span-2">
-                <label for="contraindication" class="block text-sm font-medium text-gray-700">
+                <label
+                  for="contraindication"
+                  class="block text-sm font-medium text-gray-700"
+                >
                   Contraindication
                 </label>
                 <textarea

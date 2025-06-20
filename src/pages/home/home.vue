@@ -4,11 +4,11 @@ defineOptions({
 });
 
 import { computed, watch } from "vue";
-import ProductSuggestions from "../../components/product-suggestions.vue";
-import { useOrderStore } from "../../stores/order-store";
-import { useRecommendationStore } from "../../stores/recommendation-store";
-import { useTerminalStore } from "../../stores/terminal-store";
-import { RecommendationType } from "../../types/recommendation";
+import ProductSuggestions from "@/components/product-suggestions.vue";
+import { useOrderStore } from "@/stores/order-store";
+import { useRecommendationStore } from "@/stores/recommendation-store";
+import { useTerminalStore } from "@/stores/terminal-store";
+import { RecommendationType } from "@/types/recommendation";
 import ItemCard from "./item-card.vue";
 
 const orderStore = useOrderStore();
@@ -30,12 +30,12 @@ watch(
   () => {
     loadRecommendations();
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Get products already in cart for filtering
 const cartProductIds = computed(() =>
-  orderStore.items.map((item) => item.product._id)
+  orderStore.items.map((item) => item.product._id),
 );
 
 // Cross-sell suggestions from recommendation store
@@ -44,7 +44,7 @@ const crossSellSuggestions = computed(() => {
     .filter(
       (rec) =>
         rec.type === RecommendationType.CROSS_SELL ||
-        rec.type === RecommendationType.FREQUENTLY_BOUGHT_TOGETHER
+        rec.type === RecommendationType.FREQUENTLY_BOUGHT_TOGETHER,
     )
     .filter((rec) => !cartProductIds.value.includes(rec.product._id))
     .slice(0, 6);
@@ -58,7 +58,7 @@ const upsellSuggestions = computed(() => {
     .filter(
       (rec) =>
         rec.type === RecommendationType.UPSELL ||
-        rec.type === RecommendationType.CATEGORY_BASED
+        rec.type === RecommendationType.CATEGORY_BASED,
     )
     .filter((rec) => !cartProductIds.value.includes(rec.product._id))
     .slice(0, 4);
@@ -81,7 +81,7 @@ const popularProducts = computed(() => {
     // Combine trending and seasonal recommendations
     const combined = [...trending, ...seasonal];
     const uniqueProducts = Array.from(
-      new Map(combined.map((rec) => [rec.product._id, rec.product])).values()
+      new Map(combined.map((rec) => [rec.product._id, rec.product])).values(),
     );
 
     return uniqueProducts.slice(0, 8);

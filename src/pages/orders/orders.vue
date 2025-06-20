@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 defineOptions({
-  name: 'OrdersPage'
+  name: "OrdersPage",
 });
 
 import { onMounted, ref } from "vue";
-import { useOrderStore } from "../../stores/order-store";
-import type { Order } from "../../types/order";
+import { useOrderStore } from "@/stores/order-store";
+import type { Order } from "@/types/order";
 const orderStore = useOrderStore();
 const orders = ref<Order[]>([]);
 
@@ -20,7 +20,6 @@ const fetchOrders = async () => {
 onMounted(() => {
   fetchOrders();
 });
-
 </script>
 <template>
   <h1>Orders</h1>
@@ -28,7 +27,8 @@ onMounted(() => {
     <h2>Order List</h2>
     <ul>
       <li v-for="order in orders" :key="order._id">
-        Order ID: {{ order._id }} - {{ order.status }} - Total: {{ order.total }} - {{ order.updated_at }}
+        Order ID: {{ order._id }} - {{ order.status }} - Total:
+        {{ order.total }} - {{ order.updated_at }}
       </li>
     </ul>
   </div>

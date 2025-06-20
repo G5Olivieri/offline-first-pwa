@@ -51,7 +51,7 @@ interface AppConfig {
 function getEnvVar<T>(
   key: string,
   defaultValue: T,
-  converter?: (value: string) => T
+  converter?: (value: string) => T,
 ): T {
   const value = import.meta.env[key];
 

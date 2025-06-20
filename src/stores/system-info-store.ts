@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia';
-import { ref, computed, onMounted } from 'vue';
-import { config } from '../config/env';
+import { config } from "@/config/env";
+import { defineStore } from "pinia";
+import { computed, onMounted, ref } from "vue";
 
 // Extend navigator interface for non-standard properties
 interface ExtendedNavigator extends Navigator {
@@ -53,18 +53,23 @@ interface DeviceCapabilities {
   cores?: number;
 }
 
-export const useSystemInfoStore = defineStore('systemInfo', () => {
+export const useSystemInfoStore = defineStore("systemInfo", () => {
   // State
-  const buildTime = ref<string>('');
-  const userAgent = ref<string>('');
-  const screenInfo = ref<{ width: number; height: number }>({ width: 0, height: 0 });
-  const connectionInfo = ref<{ type: string; effectiveType?: string }>({ type: 'unknown' });
+  const buildTime = ref<string>("");
+  const userAgent = ref<string>("");
+  const screenInfo = ref<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
+  const connectionInfo = ref<{ type: string; effectiveType?: string }>({
+    type: "unknown",
+  });
   const deviceCapabilities = ref<DeviceCapabilities>({
     touchScreen: false,
-    orientation: 'unknown',
+    orientation: "unknown",
     cookiesEnabled: false,
-    language: 'en',
-    platform: 'unknown'
+    language: "en",
+    platform: "unknown",
   });
   const performanceInfo = ref<{
     memoryUsage?: number;
@@ -86,44 +91,44 @@ export const useSystemInfoStore = defineStore('systemInfo', () => {
     features: {
       offlineMode: config.enableOfflineMode,
       notifications: config.enableNotifications,
-      debugMode: config.enableDebugMode
+      debugMode: config.enableDebugMode,
     },
     database: {
       url: config.couchdbUrl,
-      syncEnabled: config.enableSync
-    }
+      syncEnabled: config.enableSync,
+    },
   }));
 
   const formattedBuildTime = computed(() => {
-    if (!buildTime.value) return 'Unknown';
+    if (!buildTime.value) return "Unknown";
     try {
       return new Date(buildTime.value).toLocaleString();
     } catch {
-      return 'Invalid Date';
+      return "Invalid Date";
     }
   });
 
   const browserInfo = computed(() => {
     const ua = userAgent.value;
-    if (!ua) return { name: 'Unknown Browser', version: 'Unknown' };
+    if (!ua) return { name: "Unknown Browser", version: "Unknown" };
 
-    let name = 'Unknown Browser';
-    let version = 'Unknown';
+    let name = "Unknown Browser";
+    let version = "Unknown";
 
-    if (ua.includes('Chrome')) {
-      name = 'Chrome';
+    if (ua.includes("Chrome")) {
+      name = "Chrome";
       const match = ua.match(/Chrome\/(\d+)/);
       if (match) version = match[1];
-    } else if (ua.includes('Firefox')) {
-      name = 'Firefox';
+    } else if (ua.includes("Firefox")) {
+      name = "Firefox";
       const match = ua.match(/Firefox\/(\d+)/);
       if (match) version = match[1];
-    } else if (ua.includes('Safari')) {
-      name = 'Safari';
+    } else if (ua.includes("Safari")) {
+      name = "Safari";
       const match = ua.match(/Version\/(\d+)/);
       if (match) version = match[1];
-    } else if (ua.includes('Edge')) {
-      name = 'Edge';
+    } else if (ua.includes("Edge")) {
+      name = "Edge";
       const match = ua.match(/Edge\/(\d+)/);
       if (match) version = match[1];
     }
@@ -133,19 +138,19 @@ export const useSystemInfoStore = defineStore('systemInfo', () => {
 
   const deviceInfo = computed(() => {
     const ua = userAgent.value;
-    if (!ua) return { type: 'Unknown Device', os: 'Unknown' };
+    if (!ua) return { type: "Unknown Device", os: "Unknown" };
 
-    let type = 'Desktop';
-    let os = 'Unknown';
+    let type = "Desktop";
+    let os = "Unknown";
 
-    if (ua.includes('Mobile')) type = 'Mobile Device';
-    if (ua.includes('Tablet')) type = 'Tablet';
+    if (ua.includes("Mobile")) type = "Mobile Device";
+    if (ua.includes("Tablet")) type = "Tablet";
 
-    if (ua.includes('Windows')) os = 'Windows';
-    else if (ua.includes('Mac')) os = 'macOS';
-    else if (ua.includes('Linux')) os = 'Linux';
-    else if (ua.includes('Android')) os = 'Android';
-    else if (ua.includes('iOS')) os = 'iOS';
+    if (ua.includes("Windows")) os = "Windows";
+    else if (ua.includes("Mac")) os = "macOS";
+    else if (ua.includes("Linux")) os = "Linux";
+    else if (ua.includes("Android")) os = "Android";
+    else if (ua.includes("iOS")) os = "iOS";
 
     return { type, os };
   });
@@ -157,18 +162,21 @@ export const useSystemInfoStore = defineStore('systemInfo', () => {
   });
 
   const supportedFeatures = computed(() => ({
-    serviceWorker: 'serviceWorker' in navigator,
-    pushNotifications: 'PushManager' in window,
-    backgroundSync: 'serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype,
-    indexedDB: 'indexedDB' in window,
-    webGL: !!document.createElement('canvas').getContext('webgl'),
-    webAssembly: 'WebAssembly' in window,
-    intersectionObserver: 'IntersectionObserver' in window,
-    resizeObserver: 'ResizeObserver' in window,
-    performanceObserver: 'PerformanceObserver' in window,
-    geolocation: 'geolocation' in navigator,
-    camera: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
-    vibration: 'vibrate' in navigator
+    serviceWorker: "serviceWorker" in navigator,
+    pushNotifications: "PushManager" in window,
+    backgroundSync:
+      "serviceWorker" in navigator &&
+      "sync" in window.ServiceWorkerRegistration.prototype,
+    indexedDB: "indexedDB" in window,
+    webGL: !!document.createElement("canvas").getContext("webgl"),
+    webAssembly: "WebAssembly" in window,
+    intersectionObserver: "IntersectionObserver" in window,
+    resizeObserver: "ResizeObserver" in window,
+    performanceObserver: "PerformanceObserver" in window,
+    geolocation: "geolocation" in navigator,
+    camera:
+      "mediaDevices" in navigator && "getUserMedia" in navigator.mediaDevices,
+    vibration: "vibrate" in navigator,
   }));
 
   // Actions
@@ -182,55 +190,59 @@ export const useSystemInfoStore = defineStore('systemInfo', () => {
     // Get screen info
     screenInfo.value = {
       width: window.screen.width,
-      height: window.screen.height
+      height: window.screen.height,
     };
 
     // Get connection info if available
-    if ('connection' in navigator) {
+    if ("connection" in navigator) {
       const conn = (navigator as ExtendedNavigator).connection;
       connectionInfo.value = {
-        type: conn?.type || 'unknown',
-        effectiveType: conn?.effectiveType
+        type: conn?.type || "unknown",
+        effectiveType: conn?.effectiveType,
       };
     }
 
     // Get device capabilities
     deviceCapabilities.value = {
-      touchScreen: 'ontouchstart' in window,
-      orientation: screen.orientation?.type || 'unknown',
+      touchScreen: "ontouchstart" in window,
+      orientation: screen.orientation?.type || "unknown",
       cookiesEnabled: navigator.cookieEnabled,
       language: navigator.language,
-      platform: navigator.platform
+      platform: navigator.platform,
     };
 
     // Get hardware info if available
-    if ('deviceMemory' in navigator) {
-      deviceCapabilities.value.memory = (navigator as ExtendedNavigator).deviceMemory;
+    if ("deviceMemory" in navigator) {
+      deviceCapabilities.value.memory = (
+        navigator as ExtendedNavigator
+      ).deviceMemory;
     }
-    if ('hardwareConcurrency' in navigator) {
+    if ("hardwareConcurrency" in navigator) {
       deviceCapabilities.value.cores = navigator.hardwareConcurrency;
     }
 
     // Get performance info
     if (window.performance && window.performance.getEntriesByType) {
-      const navigation = window.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+      const navigation = window.performance.getEntriesByType(
+        "navigation",
+      )[0] as PerformanceNavigationTiming;
       if (navigation) {
         performanceInfo.value.timing = navigation;
       }
     }
 
-    if ('memory' in performance) {
+    if ("memory" in performance) {
       const memory = (performance as ExtendedPerformance).memory;
       performanceInfo.value.memoryUsage = memory?.usedJSHeapSize;
     }
   };
 
   const updateConnectionInfo = () => {
-    if ('connection' in navigator) {
+    if ("connection" in navigator) {
       const conn = (navigator as ExtendedNavigator).connection;
       connectionInfo.value = {
-        type: conn?.type || 'unknown',
-        effectiveType: conn?.effectiveType
+        type: conn?.type || "unknown",
+        effectiveType: conn?.effectiveType,
       };
     }
   };
@@ -243,26 +255,31 @@ export const useSystemInfoStore = defineStore('systemInfo', () => {
     capabilities: deviceCapabilities.value,
     supportedFeatures: supportedFeatures.value,
     performance: performanceInfo.value,
-    isLowEndDevice: isLowEndDevice.value
+    isLowEndDevice: isLowEndDevice.value,
   });
 
   const checkCompatibility = () => {
-    const requiredFeatures = ['serviceWorker', 'indexedDB'];
-    const missing = requiredFeatures.filter(feature => !supportedFeatures.value[feature as keyof typeof supportedFeatures.value]);
+    const requiredFeatures = ["serviceWorker", "indexedDB"];
+    const missing = requiredFeatures.filter(
+      (feature) =>
+        !supportedFeatures.value[
+          feature as keyof typeof supportedFeatures.value
+        ],
+    );
 
     return {
       isCompatible: missing.length === 0,
       missingFeatures: missing,
-      recommendations: missing.map(feature => {
+      recommendations: missing.map((feature) => {
         switch (feature) {
-          case 'serviceWorker':
-            return 'Service Workers are required for offline functionality. Please use a modern browser.';
-          case 'indexedDB':
-            return 'IndexedDB is required for local data storage. Please enable it in your browser settings.';
+          case "serviceWorker":
+            return "Service Workers are required for offline functionality. Please use a modern browser.";
+          case "indexedDB":
+            return "IndexedDB is required for local data storage. Please enable it in your browser settings.";
           default:
             return `${feature} is not supported in your browser.`;
         }
-      })
+      }),
     };
   };
 
@@ -271,13 +288,17 @@ export const useSystemInfoStore = defineStore('systemInfo', () => {
     collectSystemInfo();
 
     // Listen for connection changes
-    if ('connection' in navigator) {
-      (navigator as ExtendedNavigator).connection?.addEventListener?.('change', updateConnectionInfo);
+    if ("connection" in navigator) {
+      (navigator as ExtendedNavigator).connection?.addEventListener?.(
+        "change",
+        updateConnectionInfo,
+      );
     }
 
     // Listen for orientation changes
-    window.addEventListener('orientationchange', () => {
-      deviceCapabilities.value.orientation = screen.orientation?.type || 'unknown';
+    window.addEventListener("orientationchange", () => {
+      deviceCapabilities.value.orientation =
+        screen.orientation?.type || "unknown";
     });
   };
 
@@ -303,7 +324,7 @@ export const useSystemInfoStore = defineStore('systemInfo', () => {
     updateConnectionInfo,
     exportSystemReport,
     checkCompatibility,
-    initialize
+    initialize,
   };
 });
 

@@ -205,8 +205,8 @@ defineOptions({
 
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { productService } from "../../services/product-service";
-import { useNotificationStore } from "../../stores/notification-store";
+import { productService } from "@/services/product-service";
+import { useNotificationStore } from "@/stores/notification-store";
 
 const notificationStore = useNotificationStore();
 
@@ -225,7 +225,7 @@ const importProducts = async () => {
   if (!file.value) {
     notificationStore.showError(
       "No File Selected",
-      "Please upload a JSONL file first."
+      "Please upload a JSONL file first.",
     );
     return;
   }
@@ -254,7 +254,7 @@ const importProducts = async () => {
   } catch (error) {
     notificationStore.showError(
       "Import Failed",
-      `Failed to import products. Please check your file format and try again. ${error}`
+      `Failed to import products. Please check your file format and try again. ${error}`,
     );
   } finally {
     isImporting.value = false;

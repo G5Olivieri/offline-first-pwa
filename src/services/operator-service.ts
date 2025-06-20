@@ -1,5 +1,5 @@
-import { getOperatorDB } from "../db";
-import type { Operator } from "../types/operator";
+import { getOperatorDB } from "@/db";
+import type { Operator } from "@/types/operator";
 
 export class OperatorService {
   constructor(private readonly db: PouchDB.Database<Operator>) {}

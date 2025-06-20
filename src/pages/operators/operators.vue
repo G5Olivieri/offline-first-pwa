@@ -5,10 +5,10 @@ defineOptions({
 
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { useNotificationStore } from "../../stores/notification-store";
-import { operatorService } from "../../services/operator-service";
-import { useOrderStore } from "../../stores/order-store";
-import type { Operator } from "../../types/operator";
+import { useNotificationStore } from "@/stores/notification-store";
+import { operatorService } from "@/services/operator-service";
+import { useOrderStore } from "@/stores/order-store";
+import type { Operator } from "@/types/operator";
 
 const router = useRouter();
 const operators = ref<Operator[]>([]);
@@ -22,7 +22,7 @@ const selectOperator = async (operator: Operator) => {
   } catch {
     notificationStore.showError(
       "Failed to select operator",
-      "Please try again later."
+      "Please try again later.",
     );
   }
 };

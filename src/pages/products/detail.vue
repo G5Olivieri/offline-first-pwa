@@ -667,12 +667,12 @@ defineOptions({
 
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import ProductDetailRecommendations from "../../components/product-detail-recommendations.vue";
-import { getProductDB } from "../../db";
-import { productService } from "../../services/product-service";
-import { useNotificationStore } from "../../stores/notification-store";
-import { useOrderStore } from "../../stores/order-store";
-import type { Product } from "../../types/product";
+import ProductDetailRecommendations from "@/components/product-detail-recommendations.vue";
+import { getProductDB } from "@/db";
+import { productService } from "@/services/product-service";
+import { useNotificationStore } from "@/stores/notification-store";
+import { useOrderStore } from "@/stores/order-store";
+import type { Product } from "@/types/product";
 
 const route = useRoute();
 const router = useRouter();
@@ -740,12 +740,12 @@ async function addToOrder(): Promise<void> {
     await orderStore.addProduct(product.value);
     notificationStore.showSuccess(
       "Product Added",
-      `${product.value.name} has been added to the order.`
+      `${product.value.name} has been added to the order.`,
     );
   } catch (error) {
     notificationStore.showError(
       "Add to Order Error",
-      `Failed to add product to order. Please try again. ${error}`
+      `Failed to add product to order. Please try again. ${error}`,
     );
   }
 }
@@ -756,7 +756,7 @@ async function deleteProduct(): Promise<void> {
   const result = await notificationStore.showConfirm(
     "Delete Product",
     `Are you sure you want to delete "${product.value.name}"? This action cannot be undone.`,
-    { type: "error" }
+    { type: "error" },
   );
 
   if (result.confirmed) {
@@ -764,13 +764,13 @@ async function deleteProduct(): Promise<void> {
       await productService.deleteProduct(product.value._id);
       notificationStore.showSuccess(
         "Product Deleted",
-        `${product.value.name} has been deleted successfully.`
+        `${product.value.name} has been deleted successfully.`,
       );
       router.push("/products");
     } catch (error) {
       notificationStore.showError(
         "Delete Error",
-        `Failed to delete product. Please try again. ${error}`
+        `Failed to delete product. Please try again. ${error}`,
       );
     }
   }
@@ -781,12 +781,12 @@ async function copyToClipboard(text: string): Promise<void> {
     await navigator.clipboard.writeText(text);
     notificationStore.showSuccess(
       "Copied to Clipboard",
-      `${text} has been copied to your clipboard.`
+      `${text} has been copied to your clipboard.`,
     );
   } catch (error) {
     notificationStore.showError(
       "Copy Error",
-      `Failed to copy to clipboard. Please try again. ${error}`
+      `Failed to copy to clipboard. Please try again. ${error}`,
     );
   }
 }

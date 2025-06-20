@@ -19,15 +19,27 @@
 
     <!-- Loading State -->
     <div v-if="isLoading" class="flex items-center justify-center py-8">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div
+        class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+      ></div>
       <span class="ml-2 text-gray-600">Loading recommendations...</span>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="text-center py-8">
       <div class="text-red-600 mb-2">
-        <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        <svg
+          class="w-8 h-8 mx-auto"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
         </svg>
       </div>
       <p class="text-gray-600">{{ error }}</p>
@@ -61,10 +73,7 @@
                 >
                   {{ recommendation.product.stock }} in stock
                 </span>
-                <span
-                  v-else
-                  class="ml-2 text-xs text-red-500"
-                >
+                <span v-else class="ml-2 text-xs text-red-500">
                   Out of stock
                 </span>
               </div>
@@ -82,7 +91,13 @@
           </div>
 
           <!-- Tags -->
-          <div v-if="recommendation.product.tags && recommendation.product.tags.length > 0" class="mt-2">
+          <div
+            v-if="
+              recommendation.product.tags &&
+              recommendation.product.tags.length > 0
+            "
+            class="mt-2"
+          >
             <div class="flex flex-wrap gap-1">
               <span
                 v-for="tag in recommendation.product.tags.slice(0, 3)"
@@ -96,7 +111,9 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="ml-4 flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div
+          class="ml-4 flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity"
+        >
           <button
             @click.stop="handleAddToCart(recommendation)"
             :disabled="recommendation.product.stock <= 0"
@@ -109,15 +126,28 @@
             class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
             title="Dismiss this recommendation"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
             </svg>
           </button>
         </div>
       </div>
 
       <!-- Show More Button -->
-      <div v-if="recommendations.length > maxVisible && !showAll" class="text-center pt-2">
+      <div
+        v-if="recommendations.length > maxVisible && !showAll"
+        class="text-center pt-2"
+      >
         <button
           @click="showAll = true"
           class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
@@ -127,7 +157,10 @@
       </div>
 
       <!-- Show Less Button -->
-      <div v-if="showAll && recommendations.length > maxVisible" class="text-center pt-2">
+      <div
+        v-if="showAll && recommendations.length > maxVisible"
+        class="text-center pt-2"
+      >
         <button
           @click="showAll = false"
           class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
@@ -140,9 +173,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import type { ProductRecommendation } from '../types/recommendation';
-import { RecommendationContext } from '../types/recommendation';
+import { computed, ref } from "vue";
+import type { ProductRecommendation } from "@/types/recommendation";
+import { RecommendationContext } from "@/types/recommendation";
 
 interface Props {
   recommendations: ProductRecommendation[];
@@ -155,10 +188,10 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'add-to-cart', recommendation: ProductRecommendation): void;
-  (e: 'click-recommendation', recommendation: ProductRecommendation): void;
-  (e: 'dismiss-recommendation', recommendation: ProductRecommendation): void;
-  (e: 'dismiss-all'): void;
+  (e: "add-to-cart", recommendation: ProductRecommendation): void;
+  (e: "click-recommendation", recommendation: ProductRecommendation): void;
+  (e: "dismiss-recommendation", recommendation: ProductRecommendation): void;
+  (e: "dismiss-all"): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -183,28 +216,34 @@ const displayedRecommendations = computed(() => {
 // Methods
 function getConfidenceBadgeClass(confidence: number): string {
   if (confidence >= 0.8) {
-    return 'bg-green-100 text-green-800';
+    return "bg-green-100 text-green-800";
   } else if (confidence >= 0.6) {
-    return 'bg-yellow-100 text-yellow-800';
+    return "bg-yellow-100 text-yellow-800";
   } else {
-    return 'bg-gray-100 text-gray-800';
+    return "bg-gray-100 text-gray-800";
   }
 }
 
-async function handleRecommendationClick(recommendation: ProductRecommendation): Promise<void> {
-  emit('click-recommendation', recommendation);
+async function handleRecommendationClick(
+  recommendation: ProductRecommendation,
+): Promise<void> {
+  emit("click-recommendation", recommendation);
 }
 
-async function handleAddToCart(recommendation: ProductRecommendation): Promise<void> {
-  emit('add-to-cart', recommendation);
+async function handleAddToCart(
+  recommendation: ProductRecommendation,
+): Promise<void> {
+  emit("add-to-cart", recommendation);
 }
 
-async function handleDismiss(recommendation: ProductRecommendation): Promise<void> {
-  emit('dismiss-recommendation', recommendation);
+async function handleDismiss(
+  recommendation: ProductRecommendation,
+): Promise<void> {
+  emit("dismiss-recommendation", recommendation);
 }
 
 function handleDismissAll(): void {
-  emit('dismiss-all');
+  emit("dismiss-all");
 }
 </script>
 

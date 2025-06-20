@@ -8,8 +8,8 @@ import { useField, useForm } from "vee-validate";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import * as z from "zod";
-import { customerService } from "../../services/customer-service";
-import { useOrderStore } from "../../stores/order-store";
+import { customerService } from "@/services/customer-service";
+import { useOrderStore } from "@/stores/order-store";
 
 const router = useRouter();
 const isSubmitting = ref(false);
@@ -26,7 +26,7 @@ const validationSchema = toTypedSchema(
       .string()
       .min(3, "Document must be at least 3 characters")
       .max(50, "Document must not exceed 50 characters"),
-  })
+  }),
 );
 
 const { handleSubmit, errors, resetForm } = useForm({

@@ -4,8 +4,8 @@ defineOptions({
 });
 
 import { onMounted, ref } from "vue";
-import { customerService } from "../../services/customer-service";
-import { type Customer } from "../../types/customer";
+import { customerService } from "@/services/customer-service";
+import { type Customer } from "@/types/customer";
 
 const customers = ref<Customer[]>([]);
 
@@ -14,7 +14,7 @@ const deleteCustomer = (id: string) => {
     .deleteCustomer(id)
     .then(() => {
       customers.value = customers.value.filter(
-        (customer) => customer._id !== id
+        (customer) => customer._id !== id,
       );
     })
     .catch((error) => {

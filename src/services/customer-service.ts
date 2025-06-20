@@ -1,5 +1,5 @@
-import { getCustomerDB } from "../db";
-import type { Customer } from "../types/customer";
+import { getCustomerDB } from "@/db";
+import type { Customer } from "@/types/customer";
 
 export class CustomerService {
   constructor(private readonly db: PouchDB.Database<Customer>) {}

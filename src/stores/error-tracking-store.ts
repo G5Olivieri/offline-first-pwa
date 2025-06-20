@@ -1,10 +1,10 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
 
 export interface ErrorLog {
   id: string;
-  type: 'network' | 'validation' | 'application' | 'system';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: "network" | "validation" | "application" | "system";
+  severity: "low" | "medium" | "high" | "critical";
   message: string;
   stack?: string;
   context: {
@@ -20,35 +20,41 @@ export interface ErrorLog {
   metadata?: Record<string, unknown>;
 }
 
-export const useErrorTrackingStore = defineStore('errorTracking', () => {
+export const useErrorTrackingStore = defineStore("errorTracking", () => {
   const errors = ref<ErrorLog[]>([]);
   const maxErrors = ref(100);
 
   const unresolvedErrors = computed(() =>
-    errors.value.filter(e => !e.resolved)
+    errors.value.filter((e) => !e.resolved),
   );
 
   const criticalErrors = computed(() =>
-    errors.value.filter(e => e.severity === 'critical' && !e.resolved)
+    errors.value.filter((e) => e.severity === "critical" && !e.resolved),
   );
 
   const errorsByType = computed(() => {
-    return errors.value.reduce((acc, error) => {
-      acc[error.type] = (acc[error.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    return errors.value.reduce(
+      (acc, error) => {
+        acc[error.type] = (acc[error.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
   });
 
   const errorsBySeverity = computed(() => {
-    return errors.value.reduce((acc, error) => {
-      acc[error.severity] = (acc[error.severity] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    return errors.value.reduce(
+      (acc, error) => {
+        acc[error.severity] = (acc[error.severity] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
   });
 
   const logError = (
     error: Error,
-    context: Partial<ErrorLog['context']> = {}
+    context: Partial<ErrorLog["context"]> = {},
   ): string => {
     const errorLog: ErrorLog = {
       id: crypto.randomUUID(),
@@ -60,10 +66,10 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
         timestamp: new Date(),
         url: window.location.href,
         userAgent: navigator.userAgent,
-        ...context
+        ...context,
       },
       resolved: false,
-      metadata: {}
+      metadata: {},
     };
 
     errors.value.unshift(errorLog);
@@ -74,9 +80,12 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
     }
 
     // Send to remote logging service if critical
-    if (errorLog.severity === 'critical') {
-      sendToRemoteLogging(errorLog).catch(logError => {
-        console.error('Failed to send critical error to remote logging:', logError);
+    if (errorLog.severity === "critical") {
+      sendToRemoteLogging(errorLog).catch((logError) => {
+        console.error(
+          "Failed to send critical error to remote logging:",
+          logError,
+        );
       });
     }
 
@@ -84,15 +93,15 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
   };
 
   const resolveError = (id: string) => {
-    const error = errors.value.find(e => e.id === id);
+    const error = errors.value.find((e) => e.id === id);
     if (error) {
       error.resolved = true;
       error.resolvedAt = new Date();
     }
   };
 
-  const resolveErrorsByType = (type: ErrorLog['type']) => {
-    errors.value.forEach(error => {
+  const resolveErrorsByType = (type: ErrorLog["type"]) => {
+    errors.value.forEach((error) => {
       if (error.type === type && !error.resolved) {
         error.resolved = true;
         error.resolvedAt = new Date();
@@ -101,7 +110,7 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
   };
 
   const clearResolvedErrors = () => {
-    errors.value = errors.value.filter(e => !e.resolved);
+    errors.value = errors.value.filter((e) => !e.resolved);
   };
 
   const clearAllErrors = () => {
@@ -109,42 +118,58 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
   };
 
   const getErrorById = (id: string): ErrorLog | undefined => {
-    return errors.value.find(e => e.id === id);
+    return errors.value.find((e) => e.id === id);
   };
 
   const getErrorsInTimeRange = (startTime: Date, endTime: Date): ErrorLog[] => {
-    return errors.value.filter(error => {
+    return errors.value.filter((error) => {
       const errorTime = error.context.timestamp;
       return errorTime >= startTime && errorTime <= endTime;
     });
   };
 
-  const classifyError = (error: Error): ErrorLog['type'] => {
+  const classifyError = (error: Error): ErrorLog["type"] => {
     const message = error.message.toLowerCase();
     const name = error.name.toLowerCase();
 
-    if (message.includes('fetch') || message.includes('network') || message.includes('connection')) {
-      return 'network';
-    } else if (name === 'validationerror' || message.includes('validation')) {
-      return 'validation';
-    } else if (message.includes('quota') || message.includes('storage') || message.includes('memory')) {
-      return 'system';
+    if (
+      message.includes("fetch") ||
+      message.includes("network") ||
+      message.includes("connection")
+    ) {
+      return "network";
+    } else if (name === "validationerror" || message.includes("validation")) {
+      return "validation";
+    } else if (
+      message.includes("quota") ||
+      message.includes("storage") ||
+      message.includes("memory")
+    ) {
+      return "system";
     }
-    return 'application';
+    return "application";
   };
 
-  const getSeverity = (error: Error): ErrorLog['severity'] => {
+  const getSeverity = (error: Error): ErrorLog["severity"] => {
     const message = error.message.toLowerCase();
     const name = error.name.toLowerCase();
 
-    if (message.includes('critical') || name === 'securityerror' || message.includes('security')) {
-      return 'critical';
-    } else if (message.includes('network') || name === 'typeerror' || message.includes('failed to fetch')) {
-      return 'high';
-    } else if (name === 'validationerror' || message.includes('validation')) {
-      return 'medium';
+    if (
+      message.includes("critical") ||
+      name === "securityerror" ||
+      message.includes("security")
+    ) {
+      return "critical";
+    } else if (
+      message.includes("network") ||
+      name === "typeerror" ||
+      message.includes("failed to fetch")
+    ) {
+      return "high";
+    } else if (name === "validationerror" || message.includes("validation")) {
+      return "medium";
     }
-    return 'low';
+    return "low";
   };
 
   const sendToRemoteLogging = async (errorLog: ErrorLog): Promise<void> => {
@@ -156,38 +181,45 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
       }
 
       await fetch(logEndpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-Error-Source': 'pos-frontend'
+          "Content-Type": "application/json",
+          "X-Error-Source": "pos-frontend",
         },
         body: JSON.stringify({
           ...errorLog,
           // Sanitize sensitive data
           context: {
             ...errorLog.context,
-            userAgent: undefined // Remove user agent for privacy
-          }
-        })
+            userAgent: undefined, // Remove user agent for privacy
+          },
+        }),
       });
     } catch (logError) {
-      console.error('Failed to send error log to remote service:', logError);
+      console.error("Failed to send error log to remote service:", logError);
     }
   };
 
-  const exportErrors = (format: 'json' | 'csv' = 'json'): string => {
-    if (format === 'csv') {
-      const headers = ['ID', 'Type', 'Severity', 'Message', 'Timestamp', 'Resolved'];
-      const rows = errors.value.map(error => [
+  const exportErrors = (format: "json" | "csv" = "json"): string => {
+    if (format === "csv") {
+      const headers = [
+        "ID",
+        "Type",
+        "Severity",
+        "Message",
+        "Timestamp",
+        "Resolved",
+      ];
+      const rows = errors.value.map((error) => [
         error.id,
         error.type,
         error.severity,
-        error.message.replace(/,/g, ';'), // Escape commas
+        error.message.replace(/,/g, ";"), // Escape commas
         error.context.timestamp.toISOString(),
-        error.resolved.toString()
+        error.resolved.toString(),
       ]);
 
-      return [headers, ...rows].map(row => row.join(',')).join('\n');
+      return [headers, ...rows].map((row) => row.join(",")).join("\n");
     }
 
     return JSON.stringify(errors.value, null, 2);
@@ -200,9 +232,10 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
     byType: errorsByType.value,
     bySeverity: errorsBySeverity.value,
     recentErrors: errors.value.slice(0, 5),
-    oldestUnresolved: unresolvedErrors.value.length > 0
-      ? unresolvedErrors.value[unresolvedErrors.value.length - 1]
-      : null
+    oldestUnresolved:
+      unresolvedErrors.value.length > 0
+        ? unresolvedErrors.value[unresolvedErrors.value.length - 1]
+        : null,
   });
 
   return {
@@ -222,6 +255,6 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
     getErrorById,
     getErrorsInTimeRange,
     exportErrors,
-    getStatistics
+    getStatistics,
   };
 });

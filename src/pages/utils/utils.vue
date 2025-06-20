@@ -1,15 +1,10 @@
 <script setup lang="ts">
 defineOptions({
-  name: 'UtilsPage'
+  name: "UtilsPage",
 });
 
-import {
-  getCustomerDB,
-  getOperatorDB,
-  getOrderDB,
-  getProductDB,
-} from "../../db";
-import { searchService } from "../../services/search-service";
+import { getCustomerDB, getOperatorDB, getOrderDB, getProductDB } from "@/db";
+import { searchService } from "@/services/search-service";
 
 const cleanDbs = async () => {
   const orderDB = await getOrderDB();

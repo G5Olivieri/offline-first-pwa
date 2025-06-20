@@ -1,5 +1,5 @@
 import Fuse, { type FuseResult, type IFuseOptions } from "fuse.js";
-import { config } from "../config/env";
+import { config } from "@/config/env";
 
 const DB_NAME = config.search.dbName;
 const DB_VERSION = config.search.dbVersion;
@@ -59,17 +59,17 @@ export class SearchService {
 
           if (cachedIndex) {
             this.docs = new Map(
-              cachedIndex.dataset.map((item) => [item.id, item])
+              cachedIndex.dataset.map((item) => [item.id, item]),
             );
 
             const fuseIndex = Fuse.parseIndex(
-              JSON.parse(cachedIndex.fuseIndex)
+              JSON.parse(cachedIndex.fuseIndex),
             );
 
             this.fuse = new Fuse(
               cachedIndex.dataset,
               this.fuseOptions,
-              fuseIndex
+              fuseIndex,
             );
           } else {
             this.fuse = new Fuse([], this.fuseOptions);
@@ -93,7 +93,6 @@ export class SearchService {
 
   private async saveIndexToCache(): Promise<void> {
     if (!this.fuse) {
-
       return;
     }
     if (!this.db) return;
@@ -132,14 +131,13 @@ export class SearchService {
   // Main search method - searches both name and barcode, returns only product IDs
   search(
     query: string,
-    options: { limit?: number; skip?: number } = {}
+    options: { limit?: number; skip?: number } = {},
   ): {
     count: number;
     productIds: string[];
     matches?: FuseResult<IndexableProduct>[];
   } {
     if (!this.fuse) {
-
       return { count: 0, productIds: [] };
     }
 
@@ -174,7 +172,6 @@ export class SearchService {
 
   public async add(product: IndexableProduct): Promise<void> {
     if (!this.fuse) {
-
       return;
     }
 
@@ -186,7 +183,6 @@ export class SearchService {
 
   public async bulkAdd(products: IndexableProduct[]): Promise<void> {
     if (!this.fuse) {
-
       return;
     }
     products.forEach((product) => {
@@ -198,7 +194,6 @@ export class SearchService {
 
   public async remove(productId: string): Promise<void> {
     if (!this.fuse) {
-
       return;
     }
 
@@ -210,7 +205,6 @@ export class SearchService {
 
   public async bulkRemove(productIds: string[]): Promise<void> {
     if (!this.fuse) {
-
       return;
     }
 

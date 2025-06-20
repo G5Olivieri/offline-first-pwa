@@ -4,6 +4,7 @@ import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { getOrderDB } from "../db";
 import { customerService } from "../services/customer-service";
+import { operatorService } from "../services/operator-service";
 import { productService } from "../services/product-service";
 import { recommendationEngine } from "../services/recommendation-engine";
 import type { Customer } from "../types/customer";
@@ -11,7 +12,6 @@ import type { Operator } from "../types/operator";
 import type { Item, Order, PaymentMethod } from "../types/order";
 import { OrderStatus } from "../types/order";
 import type { Product } from "../types/product";
-import { operatorService } from "../services/operator-service";
 import { useTerminalStore } from "./terminal-store";
 
 export const useOrderStore = defineStore("orderStore", () => {
@@ -78,12 +78,13 @@ export const useOrderStore = defineStore("orderStore", () => {
       if (existingItem) {
         if (!product.stock || existingItem.quantity < product.stock) {
           existingItem.quantity++;
+          existingItem.total = calculateTotal(existingItem);
         } else {
           alert("Cannot increase quantity beyond stock limit.");
         }
       }
     } else {
-      itemsMap.set(product._id, { quantity: 1, product });
+      itemsMap.set(product._id, { quantity: 1, product, total: product.price });
     }
     putOrder(mapOrderToDocument(OrderStatus.PENDING));
   };
@@ -91,6 +92,7 @@ export const useOrderStore = defineStore("orderStore", () => {
   const increase = (item: Item) => {
     if (!item.product.stock || item.quantity < item.product.stock) {
       item.quantity++;
+      item.total = calculateTotal(item);
     } else {
       alert("Cannot increase quantity beyond stock limit.");
     }
@@ -100,6 +102,7 @@ export const useOrderStore = defineStore("orderStore", () => {
   const decrease = async (item: Item) => {
     if (item.quantity > 1) {
       item.quantity--;
+      item.total = calculateTotal(item);
     } else {
       itemsMap.delete(item.product._id);
     }

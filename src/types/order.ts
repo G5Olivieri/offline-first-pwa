@@ -7,7 +7,7 @@ export enum OrderStatus {
 }
 export type PaymentMethod = "cash" | "card";
 
-export type Item = { quantity: number; product: Product };
+export type Item = { quantity: number; product: Product; total: number };
 export type Order = {
   _id: string;
   _rev?: string;

@@ -16,20 +16,25 @@ import { useTerminalStore } from "./terminal-store";
 
 export const useOrderStore = defineStore("orderStore", () => {
   const orderDB = getOrderDB();
-  const currentOrderId = useLocalStorage("currentOrderId", "");
-  const currentOrderRev = useLocalStorage("currentOrderRev", "");
+
+  // order
+  const id = useLocalStorage("currentOrderId", "");
+  const rev = useLocalStorage("currentOrderRev", "");
   const createdAt = useLocalStorage("orderCreatedAt", "");
-  const operator = ref<Operator | null>(null);
-  const operatorId = useLocalStorage("operatorId", "");
-
-  const customer = ref<Customer | null>(null);
-  const customerId = useLocalStorage("customerId", "");
-
-  const terminalStore = useTerminalStore();
   const amount = ref("");
   const amountError = ref<string | null>(null);
   const paymentMethod = ref<PaymentMethod>("card");
   const change = ref<number | null>(null);
+
+  // operator
+  const operator = ref<Operator | null>(null);
+  const operatorId = useLocalStorage("operatorId", "");
+
+  // customer
+  const customer = ref<Customer | null>(null);
+  const customerId = useLocalStorage("customerId", "");
+
+  const terminalStore = useTerminalStore();
 
   const itemsMap = reactive<Map<string, Item>>(new Map());
   const items = computed(() => Array.from(itemsMap.values()));
@@ -43,8 +48,8 @@ export const useOrderStore = defineStore("orderStore", () => {
   const mapOrderToDocument = (
     status: OrderStatus = OrderStatus.PENDING
   ): Order => {
-    if (currentOrderId.value === "") {
-      currentOrderId.value = crypto.randomUUID();
+    if (id.value === "") {
+      id.value = crypto.randomUUID();
     }
 
     if (createdAt.value === "") {
@@ -52,8 +57,8 @@ export const useOrderStore = defineStore("orderStore", () => {
     }
 
     return {
-      _id: currentOrderId.value,
-      _rev: currentOrderRev.value || undefined,
+      _id: id.value,
+      _rev: rev.value || undefined,
       items: Array.from(itemsMap.values()),
       total: total.value,
       status,
@@ -69,7 +74,7 @@ export const useOrderStore = defineStore("orderStore", () => {
 
   const putOrder = throttle(async (order: Order) => {
     const result = await orderDB.put(order);
-    currentOrderRev.value = result.rev;
+    rev.value = result.rev;
   }, 1000);
 
   const addProduct = (product: Product) => {
@@ -110,7 +115,7 @@ export const useOrderStore = defineStore("orderStore", () => {
   };
 
   const abandon = async () => {
-    if (!currentOrderId.value) {
+    if (!id.value) {
       return;
     }
     if (itemsMap.size === 0) {
@@ -124,8 +129,8 @@ export const useOrderStore = defineStore("orderStore", () => {
 
   const createNewOrder = async () => {
     itemsMap.clear();
-    currentOrderId.value = "";
-    currentOrderRev.value = "";
+    id.value = "";
+    rev.value = "";
     createdAt.value = "";
     unselectCustomer();
     putOrder(mapOrderToDocument(OrderStatus.PENDING));
@@ -136,7 +141,7 @@ export const useOrderStore = defineStore("orderStore", () => {
   };
 
   const complete = async () => {
-    if (!currentOrderId.value) {
+    if (!id.value) {
       return;
     }
     if (itemsMap.size === 0) {
@@ -173,24 +178,24 @@ export const useOrderStore = defineStore("orderStore", () => {
   };
 
   const loadOrder = async () => {
-    if (currentOrderId.value === "") {
+    if (id.value === "") {
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
       return;
     }
-    const doc = await orderDB.get(currentOrderId.value);
+    const doc = await orderDB.get(id.value);
     if (
       !doc ||
       doc.status === OrderStatus.COMPLETED ||
       doc.status === OrderStatus.CANCELLED
     ) {
-      currentOrderId.value = "";
-      currentOrderRev.value = "";
+      id.value = "";
+      rev.value = "";
       unselectCustomer();
       createdAt.value = "";
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
       return;
     }
-    currentOrderRev.value = doc._rev;
+    rev.value = doc._rev;
     itemsMap.clear();
     doc.items.forEach((item: Item) => {
       itemsMap.set(item.product._id, item);
@@ -269,7 +274,7 @@ export const useOrderStore = defineStore("orderStore", () => {
   );
 
   return {
-    id: currentOrderId,
+    id,
     increase,
     decrease,
     abandon,

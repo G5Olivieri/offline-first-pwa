@@ -1,15 +1,13 @@
 <script lang="ts" setup>
 defineOptions({
-  name: 'CheckoutPage'
+  name: "CheckoutPage",
 });
 
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
-import { useCustomerStore } from "../../stores/customer-store";
 import { useOrderStore } from "../../stores/order-store";
 import { formatCurrency } from "../../config/env";
 
-const customerStore = useCustomerStore();
 const orderStore = useOrderStore();
 const router = useRouter();
 const isProcessing = ref(false);
@@ -158,7 +156,7 @@ const goBack = () => {
             </div>
 
             <div
-              v-if="customerStore.customer"
+              v-if="orderStore.customer"
               class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-4"
             >
               <div class="flex items-center space-x-4">
@@ -181,10 +179,10 @@ const goBack = () => {
                 </div>
                 <div class="flex-1">
                   <h3 class="font-bold text-zinc-700">
-                    {{ customerStore.customer.name }}
+                    {{ orderStore.customer.name }}
                   </h3>
                   <p class="text-zinc-700 text-sm">
-                    Document: {{ customerStore.customer.document }}
+                    Document: {{ orderStore.customer.document }}
                   </p>
                 </div>
                 <div class="flex items-center text-green-600">

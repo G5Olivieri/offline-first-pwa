@@ -3,12 +3,13 @@ import throttle from "lodash.throttle";
 import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { getOrderDB } from "../db";
+import { customerService } from "../services/customer-service";
 import { productService } from "../services/product-service";
 import { recommendationEngine } from "../services/recommendation-engine";
+import type { Customer } from "../types/customer";
 import type { Item, Order, PaymentMethod } from "../types/order";
 import { OrderStatus } from "../types/order";
 import type { Product } from "../types/product";
-import { useCustomerStore } from "./customer-store";
 import { useOperatorStore } from "./operator-store";
 import { useTerminalStore } from "./terminal-store";
 
@@ -18,7 +19,8 @@ export const useOrderStore = defineStore("orderStore", () => {
   const currentOrderRev = useLocalStorage("currentOrderRev", "");
   const createdAt = useLocalStorage("orderCreatedAt", "");
   const operatorStore = useOperatorStore();
-  const customerStore = useCustomerStore();
+  const customer = ref<Customer | null>(null);
+  const customerId = useLocalStorage("customerId", "");
   const terminalStore = useTerminalStore();
   const amount = ref("");
   const amountError = ref<string | null>(null);
@@ -55,7 +57,7 @@ export const useOrderStore = defineStore("orderStore", () => {
       payment_method: paymentMethod.value,
       amount: paymentMethod.value === "cash" ? parseFloat(amount.value) : null,
       operator_id: operatorStore.operatorId || undefined,
-      customer_id: customerStore.customerId || undefined,
+      customer_id: customerId.value || undefined,
       created_at: createdAt.value,
       updated_at: new Date().toISOString(),
     };
@@ -118,7 +120,7 @@ export const useOrderStore = defineStore("orderStore", () => {
     currentOrderId.value = "";
     currentOrderRev.value = "";
     createdAt.value = "";
-    await customerStore.clearCustomer();
+    unselectCustomer();
     putOrder(mapOrderToDocument(OrderStatus.PENDING));
   };
 
@@ -176,7 +178,7 @@ export const useOrderStore = defineStore("orderStore", () => {
     ) {
       currentOrderId.value = "";
       currentOrderRev.value = "";
-      customerStore.clearCustomer();
+      unselectCustomer();
       createdAt.value = "";
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
       return;
@@ -187,8 +189,9 @@ export const useOrderStore = defineStore("orderStore", () => {
       itemsMap.set(item.product._id, item);
     });
 
-    if (doc.customer_id && !customerStore.customerId) {
-      await customerStore.setCustomer(doc.customer_id);
+    if (doc.customer_id && !customerId.value) {
+      customerId.value = doc.customer_id;
+      customer.value = await customerService.getCustomerByID(doc.customer_id);
     }
 
     if (doc.operator_id && !operatorStore.operatorId) {
@@ -196,11 +199,23 @@ export const useOrderStore = defineStore("orderStore", () => {
     }
 
     if (
-      doc.customer_id !== customerStore.customerId ||
+      doc.customer_id !== customerId.value ||
       operatorStore.operatorId !== doc.operator_id
     ) {
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
     }
+  };
+
+  const unselectCustomer = () => {
+    customerId.value = null;
+    customer.value = null;
+    putOrder(mapOrderToDocument(OrderStatus.PENDING));
+  };
+
+  const selectCustomer = (selected: Customer) => {
+    customer.value = selected;
+    customerId.value = selected._id;
+    putOrder(mapOrderToDocument(OrderStatus.PENDING));
   };
 
   onMounted(() => {
@@ -209,13 +224,6 @@ export const useOrderStore = defineStore("orderStore", () => {
 
   watch(
     () => operatorStore.operatorId,
-    () => {
-      putOrder(mapOrderToDocument(OrderStatus.PENDING));
-    }
-  );
-
-  watch(
-    () => customerStore.customerId,
     () => {
       putOrder(mapOrderToDocument(OrderStatus.PENDING));
     }
@@ -251,5 +259,8 @@ export const useOrderStore = defineStore("orderStore", () => {
     paymentMethod,
     amountError,
     change,
+    customer,
+    unselectCustomer,
+    selectCustomer,
   };
 });

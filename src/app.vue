@@ -11,7 +11,6 @@ import {
   useKeyboardShortcuts,
 } from "./composables/use-keyboard-shortcuts";
 import { productService } from "./services/product-service";
-import { useCustomerStore } from "./stores/customer-store";
 import { useNotificationStore } from "./stores/notification-store";
 import { useOnlineStatusStore } from "./stores/online-status-store";
 import { useOperatorStore } from "./stores/operator-store";
@@ -33,7 +32,6 @@ const showOrderDialog = ref(false);
 const orderStore = useOrderStore();
 const onlineStatusStore = useOnlineStatusStore();
 const operatorStore = useOperatorStore();
-const customerStore = useCustomerStore();
 const notificationStore = useNotificationStore();
 const setupStore = useSetupStore();
 const isHome = computed(() => router.currentRoute.value.path === "/");
@@ -151,32 +149,30 @@ const dbStatusSummary = computed(() => {
   };
 });
 
-// Notification system - removed unused modal variable
-
 const focusBarcode = () => {
   if (barcodeInput.value) {
     barcodeInput.value.focus();
   }
 };
 
-const clearOperator = () => {
+const removeOperator = () => {
   operatorStore.clearOperator();
   notificationStore.showInfo(
-    "Operator cleared",
+    "Operator removed",
     "Please select a new operator"
   );
 };
 
-const selectOperator = () => {
+const gotoOperatorSelection = () => {
   router.push("/operators");
 };
 
-const clearCustomer = () => {
-  customerStore.clearCustomer();
-  notificationStore.showInfo("Customer cleared");
+const removeCustomer = () => {
+  orderStore.unselectCustomer();
+  notificationStore.showInfo("Customer removed");
 };
 
-const selectCustomer = () => {
+const gotoCustomerSelection = () => {
   router.push("/customers");
 };
 
@@ -257,10 +253,10 @@ const showHelp = () => {
 // Keyboard shortcuts
 const posShortcuts = createPOSShortcuts({
   focusBarcode,
-  clearOperator,
-  selectOperator,
-  clearCustomer,
-  selectCustomer,
+  removeOperator,
+  gotoOperatorSelection,
+  removeCustomer,
+  gotoCustomerSelection,
   completeOrder,
   abandonOrder,
   openProducts,
@@ -459,16 +455,14 @@ onUnmounted(() => {
               />
             </svg>
             <span class="text-sm font-medium text-gray-800 truncate">
-              {{
-                customerStore.customer ? customerStore.customer.name : "Walk-in"
-              }}
+              {{ orderStore.customer ? orderStore.customer.name : "Walk-in" }}
             </span>
             <div class="flex gap-1 flex-shrink-0">
               <button
-                v-if="customerStore.customer"
-                @click="customerStore.clearCustomer"
+                v-if="orderStore.customer"
+                @click="removeCustomer"
                 class="bg-orange-500 hover:bg-orange-600 text-white text-xs px-2 py-1 rounded transition-colors"
-                title="Clear Customer (F4)"
+                title="Remove Customer (F4)"
               >
                 <svg
                   class="w-3 h-3"
@@ -487,7 +481,7 @@ onUnmounted(() => {
               <RouterLink
                 to="/customers"
                 class="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded transition-colors flex items-center"
-                title="Select Customer (F5)"
+                title="Customer Selection (F5)"
               >
                 <svg
                   class="w-3 h-3"
@@ -534,7 +528,7 @@ onUnmounted(() => {
               <div class="flex gap-1 flex-shrink-0">
                 <button
                   v-if="operatorStore.operator"
-                  @click="operatorStore.clearOperator"
+                  @click="removeOperator"
                   class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded transition-colors"
                   title="Logout (F2)"
                 >
@@ -555,7 +549,7 @@ onUnmounted(() => {
                 <RouterLink
                   to="/operators"
                   class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors flex items-center"
-                  title="Change Operator (F3)"
+                  title="Operator Selection (F3)"
                 >
                   <svg
                     class="w-3 h-3"

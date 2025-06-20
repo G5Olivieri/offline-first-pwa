@@ -78,7 +78,7 @@
                 <div>
                   <p class="text-sm text-gray-600">Customer</p>
                   <p class="text-sm font-medium">
-                    {{ customerStore.customer?.name || "Walk-in Customer" }}
+                    {{ orderStore.customer?.name || "Walk-in Customer" }}
                   </p>
                 </div>
                 <div>
@@ -186,7 +186,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { useCustomerStore } from "../stores/customer-store";
 import { useNotificationStore } from "../stores/notification-store";
 import { useOperatorStore } from "../stores/operator-store";
 import { useOrderStore } from "../stores/order-store";
@@ -206,7 +205,6 @@ const emit = defineEmits<Emits>();
 
 const router = useRouter();
 const orderStore = useOrderStore();
-const customerStore = useCustomerStore();
 const operatorStore = useOperatorStore();
 const notificationStore = useNotificationStore();
 

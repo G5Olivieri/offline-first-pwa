@@ -1,17 +1,16 @@
 <script setup lang="ts">
 defineOptions({
-  name: 'AllCustomers'
+  name: "AllCustomers",
 });
 
 import { onMounted, ref } from "vue";
-import { useCustomerStore } from "../../stores/customer-store";
+import { customerService } from "../../services/customer-service";
 import { type Customer } from "../../types/customer";
 
-const customerStore = useCustomerStore();
 const customers = ref<Customer[]>([]);
 
 const deleteCustomer = (id: string) => {
-  customerStore
+  customerService
     .deleteCustomer(id)
     .then(() => {
       customers.value = customers.value.filter(
@@ -26,7 +25,7 @@ const deleteCustomer = (id: string) => {
 
 const fetchAll = async () => {
   try {
-    customers.value = await customerStore.fetchAllCustomers();
+    customers.value = await customerService.listCustomers();
   } catch (error) {
     console.error("Error fetching customers:", error);
     alert("Failed to fetch customers. Please try again.");

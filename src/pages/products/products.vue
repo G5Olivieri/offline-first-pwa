@@ -4,13 +4,12 @@ defineOptions({
 });
 
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { productService } from "../../services/product-service";
 import { searchService } from "../../services/search-service";
 import { useNotificationStore } from "../../stores/notification-store";
 import { useOrderStore } from "../../stores/order-store";
-import { useProductService } from "../../services/product-service";
 import type { Product } from "../../types/product";
 
-const productStore = useProductService();
 const notificationStore = useNotificationStore();
 const orderStore = useOrderStore();
 
@@ -91,8 +90,7 @@ const loadProducts = async () => {
   isLoading.value = true;
   try {
     if (searchQuery.value.trim()) {
-      // Use search function when there's a query
-      products.value = await productStore.searchProducts(
+      products.value = await productService.searchProducts(
         searchQuery.value.trim(),
         {
           limit: limit.value,
@@ -101,7 +99,7 @@ const loadProducts = async () => {
       );
     } else {
       // Use regular list when no search query
-      products.value = await productStore.listProducts({
+      products.value = await productService.listProducts({
         limit: limit.value,
         skip: skip.value,
       });
@@ -128,7 +126,7 @@ const deleteProduct = async (product: Product) => {
 
   if (result.confirmed) {
     try {
-      await productStore.deleteProduct(product._id);
+      await productService.deleteProduct(product._id);
       notificationStore.showSuccess(
         "Product Deleted",
         `${product.name} has been deleted successfully.`

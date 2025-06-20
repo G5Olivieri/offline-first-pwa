@@ -1,24 +1,31 @@
 <script setup lang="ts">
 defineOptions({
-  name: 'NewCustomer'
+  name: "NewCustomer",
 });
 
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { ref } from "vue";
-import * as z from "zod";
-import { useCustomerStore } from "../../stores/customer-store";
 import { useRouter } from "vue-router";
+import * as z from "zod";
+import { customerService } from "../../services/customer-service";
+import { useOrderStore } from "../../stores/order-store";
 
-const customerStore = useCustomerStore();
 const router = useRouter();
 const isSubmitting = ref(false);
 const submitError = ref<string>("");
+const orderStore = useOrderStore();
 
 const validationSchema = toTypedSchema(
   z.object({
-    name: z.string().min(2, "Name must be at least 2 characters").max(100, "Name must not exceed 100 characters"),
-    document: z.string().min(3, "Document must be at least 3 characters").max(50, "Document must not exceed 50 characters"),
+    name: z
+      .string()
+      .min(2, "Name must be at least 2 characters")
+      .max(100, "Name must not exceed 100 characters"),
+    document: z
+      .string()
+      .min(3, "Document must be at least 3 characters")
+      .max(50, "Document must not exceed 50 characters"),
   })
 );
 
@@ -37,7 +44,8 @@ const onSubmit = handleSubmit(async (values) => {
 
   try {
     const { name, document } = values;
-    await customerStore.createAndSelectCustomer({ name, document });
+    const customer = await customerService.createCustomer({ name, document });
+    orderStore.selectCustomer(customer);
     router.push({ name: "home" });
   } catch (error) {
     console.error("Error creating customer:", error);
@@ -58,16 +66,32 @@ const goBack = () => {
 };
 </script>
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+  <div
+    class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100"
+  >
     <div class="max-w-2xl mx-auto px-4 py-8">
       <!-- Header Section -->
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl mb-4">
-          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        <div
+          class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl mb-4"
+        >
+          <svg
+            class="w-8 h-8 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+            />
           </svg>
         </div>
-        <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+        <h1
+          class="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2"
+        >
           Add New Customer
         </h1>
         <p class="text-gray-600 max-w-lg mx-auto">
@@ -81,25 +105,54 @@ const goBack = () => {
           @click="goBack"
           class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           Back to Customer Selection
         </button>
       </div>
 
       <!-- Form Section -->
-      <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
+      <div
+        class="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20"
+      >
         <!-- Error Alert -->
-        <div v-if="submitError" class="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4">
+        <div
+          v-if="submitError"
+          class="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4"
+        >
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            <div
+              class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0"
+            >
+              <svg
+                class="w-4 h-4 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
             </div>
             <div>
-              <h3 class="font-semibold text-red-800">Error Creating Customer</h3>
+              <h3 class="font-semibold text-red-800">
+                Error Creating Customer
+              </h3>
               <p class="text-red-700 text-sm">{{ submitError }}</p>
             </div>
           </div>
@@ -108,10 +161,23 @@ const goBack = () => {
         <form @submit.prevent="onSubmit" class="space-y-6">
           <!-- Customer Name Field -->
           <div class="form-group">
-            <label for="name" class="block text-sm font-semibold text-gray-700 mb-3">
+            <label
+              for="name"
+              class="block text-sm font-semibold text-gray-700 mb-3"
+            >
               <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <svg
+                  class="w-4 h-4 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
                 </svg>
                 Customer Name
               </div>
@@ -125,9 +191,22 @@ const goBack = () => {
               :class="{ 'border-red-500 bg-red-50': errors.name }"
               :disabled="isSubmitting"
             />
-            <p v-if="errors.name" class="text-red-600 text-sm mt-2 flex items-center gap-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            <p
+              v-if="errors.name"
+              class="text-red-600 text-sm mt-2 flex items-center gap-1"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
               {{ errors.name }}
             </p>
@@ -135,10 +214,23 @@ const goBack = () => {
 
           <!-- Document Field -->
           <div class="form-group">
-            <label for="document" class="block text-sm font-semibold text-gray-700 mb-3">
+            <label
+              for="document"
+              class="block text-sm font-semibold text-gray-700 mb-3"
+            >
               <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  class="w-4 h-4 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
                 Document ID
               </div>
@@ -152,9 +244,22 @@ const goBack = () => {
               :class="{ 'border-red-500 bg-red-50': errors.document }"
               :disabled="isSubmitting"
             />
-            <p v-if="errors.document" class="text-red-600 text-sm mt-2 flex items-center gap-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            <p
+              v-if="errors.document"
+              class="text-red-600 text-sm mt-2 flex items-center gap-1"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
               {{ errors.document }}
             </p>
@@ -170,14 +275,41 @@ const goBack = () => {
               :disabled="isSubmitting"
               class="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
             >
-              <svg v-if="isSubmitting" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                v-if="isSubmitting"
+                class="animate-spin w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
-              <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <svg
+                v-else
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
               </svg>
-              {{ isSubmitting ? 'Creating Customer...' : 'Create Customer' }}
+              {{ isSubmitting ? "Creating Customer..." : "Create Customer" }}
             </button>
 
             <button
@@ -186,8 +318,18 @@ const goBack = () => {
               :disabled="isSubmitting"
               class="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
               </svg>
               Clear Form
             </button>
@@ -195,20 +337,45 @@ const goBack = () => {
         </form>
 
         <!-- Help Text -->
-        <div class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
+        <div
+          class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200"
+        >
           <div class="flex items-start gap-3">
-            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div
+              class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0"
+            >
+              <svg
+                class="w-4 h-4 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <div>
-              <h3 class="font-semibold text-blue-800 mb-2">Customer Information</h3>
+              <h3 class="font-semibold text-blue-800 mb-2">
+                Customer Information
+              </h3>
               <ul class="text-blue-700 text-sm space-y-1">
                 <li>• Customer name should be their full legal name</li>
-                <li>• Document ID can be any form of identification (ID card, CPF, passport, etc.)</li>
-                <li>• This information will be stored securely and used for future transactions</li>
-                <li>• Once created, the customer will be automatically selected for the current order</li>
+                <li>
+                  • Document ID can be any form of identification (ID card, CPF,
+                  passport, etc.)
+                </li>
+                <li>
+                  • This information will be stored securely and used for future
+                  transactions
+                </li>
+                <li>
+                  • Once created, the customer will be automatically selected
+                  for the current order
+                </li>
               </ul>
             </div>
           </div>
@@ -261,13 +428,21 @@ const goBack = () => {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -382,13 +557,18 @@ button[type="submit"]:hover:not(:disabled) {
 }
 
 .loading-button::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
   animation: shimmer 2s infinite;
 }
 
@@ -411,9 +591,15 @@ button[type="submit"]:hover:not(:disabled) {
 }
 
 @keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* Navigation button hover */

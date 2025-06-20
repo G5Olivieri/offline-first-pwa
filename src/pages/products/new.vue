@@ -7,9 +7,7 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
 import * as z from "zod";
-import { useProductService } from "../../services/product-service";
-
-const productStore = useProductService();
+import { productService } from "../../services/product-service";
 const router = useRouter();
 
 const validationSchema = toTypedSchema(
@@ -82,7 +80,7 @@ const onSubmit = handleSubmit((values) => {
     }),
   };
 
-  productStore
+  productService
     .createProduct(productData)
     .then(() => {
       router.push("/products");
@@ -320,7 +318,9 @@ const onSubmit = handleSubmit((values) => {
                 >
                   <option value="">Select status</option>
                   <option value="OTC">Over-the-Counter (OTC)</option>
-                  <option value="PrescriptionOnly">Prescription Required</option>
+                  <option value="PrescriptionOnly">
+                    Prescription Required
+                  </option>
                   <option value="Controlled">Controlled Substance</option>
                 </select>
               </div>

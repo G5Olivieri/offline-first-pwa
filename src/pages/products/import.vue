@@ -11,7 +11,7 @@
           Import Products
         </h1>
         <p class="text-gray-600 mt-2">
-          Upload a JSONL file to bulk import products into your inventory.
+          Upload a JSONL file to bulk import products.
         </p>
       </div>
 
@@ -140,13 +140,17 @@
             <code class="bg-gray-100 px-1 rounded">category</code>,
             <code class="bg-gray-100 px-1 rounded">description</code>,
             <code class="bg-gray-100 px-1 rounded">tags</code>
+            <code class="bg-gray-100 px-1 rounded">activeIngredient</code>
+            <code class="bg-gray-100 px-1 rounded">prescriptionStatus</code>
+            <code class="bg-gray-100 px-1 rounded">nonProprietaryName</code>
+            <code class="bg-gray-100 px-1 rounded">isProprietary</code>
           </p>
         </div>
         <div class="mt-4">
           <p class="text-sm font-medium text-gray-700 mb-2">Example format:</p>
           <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
-{"name": "Product 1", "barcode": "1234567890", "price": "10.99", "category": "Electronics"}
-{"name": "Product 2", "barcode": "0987654321", "price": "5.50", "category": "Books"}</pre
+{"name":"20 Bi","url":"https://consultaremedios.com.br/20-bi/p","description":"O Lactobacillus acidophilus NCFM®, Lactobacillus paracasei Lpc-37™, Bifidobacterium lactis Bi-04™, Bifidobacterium lactis Bi-07™, Bifidobacterium bifidum Bb-02™ (probióticos) contribuem para o equilíbrio da flora intestinal.Seu consumo deve estar associado a uma alimentação equilibrada e hábitos de vida saudáveis.","dosageForm":"Cápsula","prescriptionStatus":"OTC","isProprietary":true,"isAvailableGenerically":false,"nonProprietaryName":"Lactobacillus acidophilus + Lactobacillus paracasei + Bifidobacterium lactis + Bifidobacterium bifidum","indication":"O Lactobacillus acidophilus NCFM®, Lactobacillus paracasei Lpc-37™, Bifidobacterium lactis Bi-04™, Bifidobacterium lactis Bi-07™, Bifidobacterium bifidum Bb-02™ (probióticos) contribuem para o equilíbrio da flora intestinal.Seu consumo deve estar associado a uma alimentação equilibrada e hábitos de vida saudáveis.","contraindication":"Hipersensibilidade aos componentes da fórmula.","drugClass":null,"category":"Remédios para o Aparelho Digestivo &gt; Remédios Restauradores da Flora Intestinal","manufacturer":"Momenta Farma","reviewedBy":{"@id":"https://consultaremedios.com.br/editorial/equipe/karime-halmenschlager-sleiman","@type":"Person","name":"Karime Halmenschlager Sleiman (CRF-PR 39421)","description":"Farmacêutica generalista graduada pela Faculdade Paranaense e responsável técnica da Consulta Remédios, Farmácia Online.","jobTitle":"Farmacêutica Responsável","affiliation":{"@type":"Organization","name":"Faculdade Paranaense"},"lastReviewed":"2025-03-27T10:49:59"},"barcode":"7891317129941","price":87.02,"stock":"10","_id":"968122df-dc73-4131-9b44-8b015784d5c5","activeIngredient":"Lactobacillus acidophilus + Lactobacillus paracasei + Bifidobacterium lactis + Bifidobacterium bifidum"}
+{"name":"Hipomed","url":"https://consultaremedios.com.br/hipomed/p","description":"Hipomed é uma pomada para prevenir e tratar a pele que sofre com os sintomas da assaduras.","dosageForm":"Pomada dermatológica","prescriptionStatus":"OTC","isProprietary":true,"isAvailableGenerically":false,"nonProprietaryName":"Palmitato de Retinol + Colecalciferol + Óxido de Zinco","indication":"Hipomed é uma pomada para prevenir e tratar a pele que sofre com os sintomas da assaduras.","contraindication":"Hipersensibilidade aos componentes da fórmula.","adverseOutcome":"Caso apresente sintomas colaterais ao uso, avise um médico.","drugClass":null,"category":"Remédios para Tratamentos de Pele e Mucosa &gt; Remédios para Assaduras","manufacturer":"1Farma","reviewedBy":{"@id":"https://consultaremedios.com.br/editorial/equipe/karime-halmenschlager-sleiman","@type":"Person","name":"Karime Halmenschlager Sleiman (CRF-PR 39421)","description":"Farmacêutica generalista graduada pela Faculdade Paranaense e responsável técnica da Consulta Remédios, Farmácia Online.","jobTitle":"Farmacêutica Responsável","affiliation":{"@type":"Organization","name":"Faculdade Paranaense"},"lastReviewed":"2022-12-01T13:32:52"},"barcode":"7896523219189","price":0.01,"stock":"27","_id":"b8475b73-cf16-4eee-a606-97ccf4e15fe0","activeIngredient":"Palmitato de Retinol + Colecalciferol + Óxido de Zinco"}</pre
           >
         </div>
       </div>
@@ -157,59 +161,37 @@
       v-if="isImporting"
       class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
     >
-      <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
+      <div
+        class="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
+      >
         <div class="text-center">
-          <!-- Progress Circle -->
-          <div class="relative w-24 h-24 mx-auto mb-6">
-            <svg class="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
-              <circle
-                cx="50"
-                cy="50"
-                r="40"
-                stroke="currentColor"
-                stroke-width="4"
-                fill="transparent"
-                class="text-gray-200"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r="40"
-                stroke="currentColor"
-                stroke-width="4"
-                fill="transparent"
-                stroke-linecap="round"
-                class="text-blue-600 transition-all duration-500 ease-out"
-                :stroke-dasharray="`${importProgress * 2.51} 251`"
-              />
-            </svg>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="text-xl font-bold text-gray-800"
-                >{{ Math.round(importProgress) }}%</span
+          <div class="mb-6">
+            <div class="w-16 h-16 mx-auto">
+              <svg
+                class="w-full h-full animate-spin text-blue-600"
+                fill="none"
+                viewBox="0 0 24 24"
               >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
             </div>
           </div>
 
-          <!-- Status Text -->
           <h3 class="text-xl font-semibold text-gray-800 mb-2">
-            Importing Products
+            Importing Products...
           </h3>
-          <p class="text-gray-600 mb-4">{{ importStep }}</p>
-
-          <!-- Product Counter -->
-          <div v-if="totalProducts > 0" class="bg-gray-50 rounded-lg p-3">
-            <p class="text-sm text-gray-600">
-              Processing: {{ processedProducts }} / {{ totalProducts }} products
-            </p>
-          </div>
-
-          <!-- Progress Bar -->
-          <div class="w-full bg-gray-200 rounded-full h-2 mt-4">
-            <div
-              class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
-              :style="{ width: `${importProgress}%` }"
-            ></div>
-          </div>
         </div>
       </div>
     </div>
@@ -218,22 +200,19 @@
 
 <script setup lang="ts">
 defineOptions({
-  name: 'ImportProducts'
+  name: "ImportProducts",
 });
 
 import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { productService } from "../../services/product-service";
 import { useNotificationStore } from "../../stores/notification-store";
-import { useProductService } from "../../services/product-service";
 
-const productStore = useProductService();
 const notificationStore = useNotificationStore();
 
 const file = ref<File | null>(null);
 const isImporting = ref(false);
-const importProgress = ref(0);
-const importStep = ref("");
-const totalProducts = ref(0);
-const processedProducts = ref(0);
+const router = useRouter();
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -252,82 +231,33 @@ const importProducts = async () => {
   }
 
   isImporting.value = true;
-  importProgress.value = 0;
-  processedProducts.value = 0;
 
   try {
-    // Step 1: Reading file
-    importStep.value = "Reading file...";
-    importProgress.value = 10;
-
     const text = await file.value.text();
-
-    // Step 2: Parsing data
-    importStep.value = "Parsing product data...";
-    importProgress.value = 30;
 
     const lines = text.split("\n");
     const rawProducts = lines
       .filter((line) => line.trim() !== "")
       .map((line) => JSON.parse(line));
 
-    totalProducts.value = rawProducts.length;
-
-    // Step 3: Processing products
-    importStep.value = `Processing ${totalProducts.value} products...`;
-    importProgress.value = 50;
-
-    const products = rawProducts.map((p, index) => {
-      processedProducts.value = index + 1;
+    const products = rawProducts.map((product) => {
       return {
-        ...p,
-        price: parseFloat(p.price),
+        ...product,
+        price: parseFloat(product.price),
         stock: Math.ceil(Math.random() * 30),
       };
     });
 
-    // Step 4: Importing to database
-    importStep.value = "Importing to database...";
-    importProgress.value = 70;
+    await productService.bulkInsertProducts(products);
 
-    await productStore.bulkInsertProducts(products);
-
-    // Step 5: Finalizing
-    importStep.value = "Finalizing import...";
-    importProgress.value = 90;
-
-    // Small delay to show completion
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    importProgress.value = 100;
-    importStep.value = "Import completed!";
-
-    notificationStore.showSuccess(
-      "Import Successful",
-      `Successfully imported ${products.length} products.`
-    );
-
-    // Reset form
-    file.value = null;
-    const fileInput = document.querySelector(
-      'input[type="file"]'
-    ) as HTMLInputElement;
-    if (fileInput) fileInput.value = "";
-  } catch (error) {
-    console.error("Error importing products:", error);
+    router.push({ name: "AllProducts" });
+  } catch {
     notificationStore.showError(
       "Import Failed",
       "Failed to import products. Please check your file format and try again."
     );
   } finally {
-    // Reset after a delay to show completion
-    setTimeout(() => {
-      isImporting.value = false;
-      importProgress.value = 0;
-      importStep.value = "";
-      totalProducts.value = 0;
-      processedProducts.value = 0;
-    }, 2000);
+    isImporting.value = false;
   }
 };
 </script>

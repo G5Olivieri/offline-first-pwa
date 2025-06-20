@@ -669,14 +669,13 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ProductDetailRecommendations from "../../components/product-detail-recommendations.vue";
 import { getProductDB } from "../../db";
+import { productService } from "../../services/product-service";
 import { useNotificationStore } from "../../stores/notification-store";
 import { useOrderStore } from "../../stores/order-store";
-import { useProductService } from "../../services/product-service";
 import type { Product } from "../../types/product";
 
 const route = useRoute();
 const router = useRouter();
-const productStore = useProductService();
 const orderStore = useOrderStore();
 const notificationStore = useNotificationStore();
 
@@ -762,7 +761,7 @@ async function deleteProduct(): Promise<void> {
 
   if (result.confirmed) {
     try {
-      await productStore.deleteProduct(product.value._id);
+      await productService.deleteProduct(product.value._id);
       notificationStore.showSuccess(
         "Product Deleted",
         `${product.value.name} has been deleted successfully.`

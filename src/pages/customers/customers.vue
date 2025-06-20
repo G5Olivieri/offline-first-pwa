@@ -1,16 +1,17 @@
 <script lang="ts" setup>
 defineOptions({
-  name: 'CustomersPage'
+  name: "CustomersPage",
 });
 
 import { computed, ref } from "vue";
-import { useCustomerStore } from "../../stores/customer-store";
-import { type Customer } from "../../types/customer";
 import { useRouter } from "vue-router";
+import { customerService } from "../../services/customer-service";
+import { useOrderStore } from "../../stores/order-store";
+import { type Customer } from "../../types/customer";
 
 const searchDocument = ref("");
-const customerStore = useCustomerStore();
 const router = useRouter();
+const orderStore = useOrderStore();
 const customerFound = ref<Customer | null>(null);
 const error = ref<string>("");
 const isLoading = ref(false);
@@ -26,7 +27,7 @@ const onSubmit = async () => {
   customerFound.value = null;
 
   try {
-    const customer = await customerStore.findByDocument(searchDocument.value);
+    const customer = await customerService.findByDocument(searchDocument.value);
     if (customer) {
       customerFound.value = customer;
     } else {
@@ -41,18 +42,9 @@ const onSubmit = async () => {
   }
 };
 
-const selectCustomer = async (customerId: string) => {
-  isLoading.value = true;
-  try {
-    await customerStore.selectCustomerFromSearch(customerId);
-    router.push({ name: "home" });
-  } catch (err) {
-    console.error("Error selecting customer:", err);
-    error.value = "Failed to select customer. Please try again.";
-    // Error is already tracked in the store
-  } finally {
-    isLoading.value = false;
-  }
+const selectCustomer = async (customer: Customer) => {
+  orderStore.selectCustomer(customer);
+  router.push({ name: "home" });
 };
 
 const clearSearch = () => {
@@ -268,7 +260,7 @@ const hasSearched = computed(() => searchDocument.value.trim() !== "");
           </div>
 
           <button
-            @click="selectCustomer(customerFound._id)"
+            @click="selectCustomer(customerFound)"
             :disabled="isLoading"
             class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-zinc-400 disabled:to-zinc-500 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
           >

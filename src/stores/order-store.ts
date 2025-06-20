@@ -11,7 +11,7 @@ import type { Operator } from "../types/operator";
 import type { Item, Order, PaymentMethod } from "../types/order";
 import { OrderStatus } from "../types/order";
 import type { Product } from "../types/product";
-import { operatorService } from "./operator-store";
+import { operatorService } from "../services/operator-service";
 import { useTerminalStore } from "./terminal-store";
 
 export const useOrderStore = defineStore("orderStore", () => {

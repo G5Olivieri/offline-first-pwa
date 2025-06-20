@@ -88,17 +88,10 @@ export const getOperatorDB = (): PouchDB.Database<Operator> => {
       },
     });
 
-    remoteOperatorsDB
-      .sync(_operatorDB, {
-        live: true,
-        retry: true,
-      })
-      .on("change", (info) => {
-        console.log("[operators] Sync change:", info);
-      })
-      .on("error", (err) => {
-        console.error("[operators] Sync error:", err);
-      });
+    remoteOperatorsDB.sync(_operatorDB, {
+      live: true,
+      retry: true,
+    });
   }
   return _operatorDB;
 };

@@ -6,7 +6,7 @@ defineOptions({
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useNotificationStore } from "../../stores/notification-store";
-import { operatorService } from "../../stores/operator-store";
+import { operatorService } from "../../services/operator-service";
 import { useOrderStore } from "../../stores/order-store";
 import type { Operator } from "../../types/operator";
 

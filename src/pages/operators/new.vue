@@ -7,7 +7,7 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
 import * as z from "zod";
-import { operatorService } from "../../stores/operator-store";
+import { operatorService } from "../../services/operator-service";
 import { useOrderStore } from "../../stores/order-store";
 
 const router = useRouter();

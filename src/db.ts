@@ -11,7 +11,6 @@ import type {
   RecommendationConfig,
 } from "./types/recommendation";
 
-// Initialize PouchDB with plugins
 PouchDB.plugin(PouchDBFind);
 
 export const SYNCING = config.enableSync;
@@ -122,7 +121,6 @@ export const getCustomerDB = (): PouchDB.Database<Customer> => {
   return _customerDB;
 };
 
-// Product Affinity Database
 let _productAffinityDB: PouchDB.Database<ProductAffinity> | null = null;
 export const getProductAffinityDB = (): PouchDB.Database<ProductAffinity> => {
   if (_productAffinityDB) {
@@ -160,7 +158,6 @@ export const getProductAffinityDB = (): PouchDB.Database<ProductAffinity> => {
   return _productAffinityDB;
 };
 
-// Customer Product Preferences Database
 let _customerPreferencesDB: PouchDB.Database<CustomerProductPreference> | null =
   null;
 export const getCustomerPreferencesDB =
@@ -200,7 +197,6 @@ export const getCustomerPreferencesDB =
     return _customerPreferencesDB;
   };
 
-// Recommendation Configuration Database
 let _recommendationConfigDB: PouchDB.Database<RecommendationConfig> | null =
   null;
 export const getRecommendationConfigDB =

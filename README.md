@@ -93,11 +93,7 @@ graph TB
 
 3. **Set up CouchDB**
    ```bash
-   # Using Docker
-   docker run -d --name couchdb -p 5984:5984 \
-     -e COUCHDB_USER=admin \
-     -e COUCHDB_PASSWORD=password \
-     couchdb:3.5
+   docker-compose up -d couchdb-store
    ```
 
 4. **Configure environment**
@@ -155,7 +151,63 @@ npm run preview
 - **Sync**: Automatic data synchronization when online
 - **Updates**: Automatic app updates with service worker
 
-## 🐳 Deployment
+## 🐳 Docker Compose
+
+### Quick Start with Docker Compose
+
+The easiest way to run the complete development environment:
+
+```bash
+# Start CouchDB
+docker-compose up -d
+
+# Check if CouchDB is running
+docker-compose ps
+
+# View logs
+docker-compose logs -f couchdb-store
+
+# Stop services
+docker-compose down
+```
+
+### Service Configuration
+
+The `docker-compose.yml` includes:
+
+- **CouchDB 3.5**: Database with persistent storage
+- **Health Checks**: Automatic service monitoring
+- **Persistent Volumes**: Data survives container restarts
+- **Custom Network**: Isolated container networking
+
+### CouchDB Access
+
+Once started, CouchDB will be available at:
+- **Web Interface**: http://localhost:5984/_utils
+- **API Endpoint**: http://localhost:5984
+- **Credentials**: admin/password
+
+### Useful Commands
+
+```bash
+# Start only CouchDB
+docker-compose up -d couchdb-store
+
+# Restart CouchDB
+docker-compose restart couchdb-store
+
+# View CouchDB logs
+docker-compose logs -f couchdb-store
+
+# Clean up (removes containers and volumes)
+docker-compose down -v
+
+# Update CouchDB image
+docker-compose pull couchdb-store
+docker-compose up -d couchdb-store
+```
+
+## 🚀 Deployment
 
 ### Docker Deployment
 

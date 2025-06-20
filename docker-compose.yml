@@ -1,0 +1,15 @@
+services:
+  couchdb-store:
+    image: couchdb:3.5
+    container_name: pos-couchdb-store
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+    ports:
+      - "5984:5984"
+    volumes:
+      - couchdb_store_data:/opt/couchdb/data
+
+volumes:
+  couchdb_store_data:
+    driver: local

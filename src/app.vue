@@ -37,7 +37,6 @@ const isCheckout = computed(
   () => router.currentRoute.value.path === "/checkout"
 );
 
-// Database status helper
 const getSyncStatus = (dbName: string) => {
   const isOnline = onlineStatusStore.isOnline;
   const isSyncEnabled = onlineStatusStore.isSyncEnabled;
@@ -60,7 +59,6 @@ const getSyncStatus = (dbName: string) => {
     };
   }
 
-  // Special case for orders - they use one-way sync (push only)
   if (dbName === "orders") {
     return {
       text: "Push Only",
@@ -78,7 +76,6 @@ const getSyncStatus = (dbName: string) => {
   };
 };
 
-// Database status computed property
 const databaseStatus = computed(() => {
   return [
     {
@@ -100,7 +97,6 @@ const databaseStatus = computed(() => {
   ];
 });
 
-// Database status summary for compact display
 const dbStatusSummary = computed(() => {
   const allReady = databaseStatus.value.every(
     (db) => db.status.text === "Ready" || db.status.text === "Push Only"
@@ -192,13 +188,11 @@ const completeOrder = async () => {
     return;
   }
 
-  // If not on checkout page, navigate to checkout first
   if (!isCheckout.value) {
     gotoCheckout();
     return;
   }
 
-  // If on checkout page, complete the order
   try {
     await orderStore.complete();
 
@@ -248,7 +242,6 @@ const showHelp = () => {
   showHelpDialog.value = true;
 };
 
-// Keyboard shortcuts
 const posShortcuts = createPOSShortcuts({
   focusBarcode,
   removeOperator,
@@ -329,7 +322,6 @@ onUnmounted(() => {
 });
 </script>
 <template>
-  <!-- Setup Loading Screen -->
   <SetupLoading v-if="setupStore.shouldBlockUI()" />
 
   <!-- Main App Content -->
@@ -337,13 +329,11 @@ onUnmounted(() => {
     v-else
     class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100"
   >
-    <!-- Compact One-Row Header -->
     <header
       class="bg-white/90 backdrop-blur-md border-b border-white/20 shadow-xl sticky top-0 z-50"
     >
       <div class="max-w-7xl mx-auto px-4 py-3">
         <div class="flex items-center justify-between gap-4">
-          <!-- Logo -->
           <RouterLink
             to="/"
             class="flex items-center space-x-2 group flex-shrink-0"
@@ -372,7 +362,6 @@ onUnmounted(() => {
             </h1>
           </RouterLink>
 
-          <!-- Barcode Scanner -->
           <form
             @submit.prevent="addProduct"
             class="flex flex-1 items-center gap-2 flex-shrink-0"
@@ -409,7 +398,6 @@ onUnmounted(() => {
             </div>
           </form>
 
-          <!-- Order Info Button -->
           <div class="flex flex-col items-center gap-2 flex-shrink-0">
             <button
               @click="showOrderInfo"
@@ -435,7 +423,6 @@ onUnmounted(() => {
             </button>
           </div>
 
-          <!-- Customer -->
           <div
             class="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-lg px-3 py-2 min-w-0"
           >
@@ -498,9 +485,7 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- User Info -->
           <div class="flex items-center gap-4 flex-1 min-w-0">
-            <!-- Operator -->
             <div
               class="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-lg px-3 py-2 min-w-0"
             >
@@ -566,9 +551,7 @@ onUnmounted(() => {
               </div>
             </div>
 
-            <!-- Status Indicators -->
             <div class="flex flex-col items-center gap-2 flex-shrink-0">
-              <!-- Clock -->
               <div
                 class="flex items-center gap-1 bg-white/60 backdrop-blur-sm rounded-lg px-2 py-1 text-xs"
               >

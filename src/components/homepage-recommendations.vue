@@ -50,7 +50,7 @@ import {
   RecommendationContext,
   RecommendationType,
 } from "@/types/recommendation";
-import type { Customer } from "@/types/customer";
+import type { Customer } from "@/customer/customer";
 import { useRecommendationStore } from "@/stores/recommendation-store";
 import RecommendationList from "./recommendation-list.vue";
 

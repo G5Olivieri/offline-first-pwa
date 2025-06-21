@@ -195,11 +195,14 @@ watch(error, (newError) => {
       newError.message.includes("network") ||
       newError.message.includes("fetch")
     ) {
-      setTimeout(() => {
-        if (hasError.value) {
-          handleRetry();
-        }
-      }, 2000 * (retryCount.value + 1)); // Exponential backoff
+      setTimeout(
+        () => {
+          if (hasError.value) {
+            handleRetry();
+          }
+        },
+        2000 * (retryCount.value + 1),
+      ); // Exponential backoff
     }
   }
 });

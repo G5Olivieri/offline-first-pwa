@@ -1,4 +1,4 @@
-import type { Customer } from "@/types/customer";
+import type { Customer } from "@/customer/customer";
 import type { Product } from "@/product/product";
 
 export enum RecommendationType {

@@ -4,7 +4,7 @@ defineOptions({
 });
 
 import { getCustomerDB, getOperatorDB, getOrderDB, getProductDB } from "@/db";
-import { searchService } from "@/product/product-search-service";
+import { searchService } from "@/product/singleton";
 
 const cleanDbs = async () => {
   const orderDB = await getOrderDB();

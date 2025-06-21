@@ -1,12 +1,12 @@
 import { getOrderDB } from "@/db";
 import { customerService } from "@/customer/singleton";
-import { operatorService } from "@/services/operator-service";
+import { operatorService } from "@/operator/singleton";
 import { orderEventEmitter } from "@/services/order-event-emitter";
 import { startOrderNotificationHandler } from "@/services/order-notification-handler";
 import { productService } from "@/product/singleton";
 import { recommendationEngine } from "@/services/recommendation-engine";
-import type { Customer } from "@/types/customer";
-import type { Operator } from "@/types/operator";
+import type { Customer } from "@/customer/customer";
+import type { Operator } from "@/operator/operator";
 import type { Item, Order, PaymentMethod } from "@/types/order";
 import { OrderStatus } from "@/types/order";
 import type { Product } from "@/product/product";
@@ -46,12 +46,12 @@ export const useOrderStore = defineStore("orderStore", () => {
   const total = computed(() =>
     items.value.reduce(
       (sum, item) => sum + item.product.price * item.quantity,
-      0
-    )
+      0,
+    ),
   );
 
   const mapOrderToDocument = (
-    status: OrderStatus = OrderStatus.PENDING
+    status: OrderStatus = OrderStatus.PENDING,
   ): Order => {
     if (id.value === "") {
       id.value = crypto.randomUUID();
@@ -247,7 +247,7 @@ export const useOrderStore = defineStore("orderStore", () => {
         amountError.value = "Amount paid is less than the total.";
         orderEventEmitter.emit("payment_validation_failed", {
           message: `Amount paid (${parseFloat(amount.value).toFixed(
-            2
+            2,
           )}) is less than the total (${total.value.toFixed(2)}).`,
         });
         return;
@@ -265,7 +265,7 @@ export const useOrderStore = defineStore("orderStore", () => {
       await recommendationEngine.updateCustomerPreferences(orderDocument);
 
       const productsToUpdate: [string, number][] = Array.from(
-        itemsMap.values()
+        itemsMap.values(),
       ).map((item) => [item.product._id, item.product.stock - item.quantity]);
 
       await productService.changeStock(new Map(productsToUpdate));
@@ -301,7 +301,7 @@ export const useOrderStore = defineStore("orderStore", () => {
         if (doc) {
           orderEventEmitter.emit("order_load_failed", {
             error: new Error(
-              `Order with ID ${id.value} is already completed or cancelled.`
+              `Order with ID ${id.value} is already completed or cancelled.`,
             ),
           });
         }
@@ -433,7 +433,7 @@ export const useOrderStore = defineStore("orderStore", () => {
           change.value = parseFloat(newValue) - total.value;
         }
       }
-    }
+    },
   );
 
   return {

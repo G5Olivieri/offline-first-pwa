@@ -234,7 +234,7 @@ export const useSystemInfoStore = defineStore("systemInfo", () => {
       (feature) =>
         !supportedFeatures.value[
           feature as keyof typeof supportedFeatures.value
-        ]
+        ],
     );
 
     return {
@@ -261,7 +261,7 @@ export const useSystemInfoStore = defineStore("systemInfo", () => {
     if ("connection" in navigator) {
       (navigator as ExtendedNavigator).connection?.addEventListener?.(
         "change",
-        updateConnectionInfo
+        updateConnectionInfo,
       );
     }
 

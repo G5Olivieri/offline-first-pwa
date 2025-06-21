@@ -11,18 +11,18 @@ export interface TypedEventEmitter<TEventMap extends Record<string, unknown>> {
   emit<T extends keyof TEventMap>(type: T, payload: TEventMap[T]): void;
   on<T extends keyof TEventMap>(
     type: T,
-    listener: EventListener<TypedEvent<T, TEventMap[T]>>
+    listener: EventListener<TypedEvent<T, TEventMap[T]>>,
   ): UnsubscribeFunction;
 
   off<T extends keyof TEventMap>(
     type: T,
-    listener?: EventListener<TypedEvent<T, TEventMap[T]>>
+    listener?: EventListener<TypedEvent<T, TEventMap[T]>>,
   ): void;
   clear(): void;
 }
 
 export abstract class AbstractTypedEventEmitter<
-  TEventMap extends Record<string, unknown>
+  TEventMap extends Record<string, unknown>,
 > implements TypedEventEmitter<TEventMap>
 {
   protected readonly listeners: Map<
@@ -49,7 +49,7 @@ export abstract class AbstractTypedEventEmitter<
 
   public on<T extends keyof TEventMap>(
     type: T,
-    listener: EventListener<TypedEvent<T, TEventMap[T]>>
+    listener: EventListener<TypedEvent<T, TEventMap[T]>>,
   ): UnsubscribeFunction {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, []);
@@ -60,7 +60,7 @@ export abstract class AbstractTypedEventEmitter<
       const eventListeners = this.listeners.get(type);
       if (eventListeners) {
         const index = eventListeners.indexOf(
-          listener as EventListener<unknown>
+          listener as EventListener<unknown>,
         );
         if (index > -1) {
           eventListeners.splice(index, 1);
@@ -71,7 +71,7 @@ export abstract class AbstractTypedEventEmitter<
 
   public off<T extends keyof TEventMap>(
     type: T,
-    listener?: EventListener<TypedEvent<T, TEventMap[T]>>
+    listener?: EventListener<TypedEvent<T, TEventMap[T]>>,
   ): void {
     if (!listener) {
       this.listeners.delete(type);
@@ -79,7 +79,7 @@ export abstract class AbstractTypedEventEmitter<
       const eventListeners = this.listeners.get(type);
       if (eventListeners) {
         const index = eventListeners.indexOf(
-          listener as EventListener<unknown>
+          listener as EventListener<unknown>,
         );
         if (index > -1) {
           eventListeners.splice(index, 1);
@@ -94,11 +94,11 @@ export abstract class AbstractTypedEventEmitter<
 
   protected abstract handleListenerError(
     error: unknown,
-    eventType: keyof TEventMap
+    eventType: keyof TEventMap,
   ): void;
 }
 
 export type ExtractEvent<
   T extends keyof TEventMap,
-  TEventMap extends Record<string, unknown>
+  TEventMap extends Record<string, unknown>,
 > = TypedEvent<T, TEventMap[T]>;

@@ -6,7 +6,7 @@ defineOptions({
 import { errorTrackingService } from "@/error/error-tracking-service";
 import { customerService } from "@/customer/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
-import { type Customer } from "@/types/customer";
+import { type Customer } from "@/customer/customer";
 import { onMounted, ref } from "vue";
 
 const customers = ref<Customer[]>([]);
@@ -17,7 +17,7 @@ const deleteCustomer = (id: string) => {
     .deleteCustomer(id)
     .then(() => {
       customers.value = customers.value.filter(
-        (customer) => customer._id !== id
+        (customer) => customer._id !== id,
       );
     })
     .catch((error) => {
@@ -29,7 +29,7 @@ const deleteCustomer = (id: string) => {
       });
       notificationStore.showError(
         "Delete Customer",
-        "Failed to delete customer. Please try again."
+        "Failed to delete customer. Please try again.",
       );
     });
 };
@@ -46,7 +46,7 @@ const fetchAll = async () => {
     });
     notificationStore.showError(
       "Fetch Customers",
-      "Failed to fetch customers. Please try again."
+      "Failed to fetch customers. Please try again.",
     );
   }
 };

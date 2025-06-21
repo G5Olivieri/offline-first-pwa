@@ -8,7 +8,7 @@ export class OrderNotificationHandler {
 
   constructor(
     private notification: NotificationService,
-    private errorTracking: ErrorTracking
+    private errorTracking: ErrorTracking,
   ) {
     this.setupEventListeners();
   }
@@ -18,56 +18,56 @@ export class OrderNotificationHandler {
     this.unsubscribeFunctions.push(
       orderEventEmitter.on(
         "stock_limit_reached",
-        this.handleStockLimitReached.bind(this)
-      )
+        this.handleStockLimitReached.bind(this),
+      ),
     );
     this.unsubscribeFunctions.push(
-      orderEventEmitter.on("out_of_stock", this.handleOutOfStock.bind(this))
+      orderEventEmitter.on("out_of_stock", this.handleOutOfStock.bind(this)),
     );
 
     // Order lifecycle events
     this.unsubscribeFunctions.push(
       orderEventEmitter.on(
         "order_completed",
-        this.handleOrderCompleted.bind(this)
-      )
+        this.handleOrderCompleted.bind(this),
+      ),
     );
     this.unsubscribeFunctions.push(
       orderEventEmitter.on(
         "order_abandoned",
-        this.handleOrderAbandoned.bind(this)
-      )
+        this.handleOrderAbandoned.bind(this),
+      ),
     );
 
     // Customer and operator events
     this.unsubscribeFunctions.push(
       orderEventEmitter.on(
         "customer_selected",
-        this.handleCustomerSelected.bind(this)
-      )
+        this.handleCustomerSelected.bind(this),
+      ),
     );
     this.unsubscribeFunctions.push(
       orderEventEmitter.on(
         "operator_selected",
-        this.handleOperatorSelected.bind(this)
-      )
+        this.handleOperatorSelected.bind(this),
+      ),
     );
 
     // Error events
     this.unsubscribeFunctions.push(
-      orderEventEmitter.on("order_error", this.handleOrderError.bind(this))
+      orderEventEmitter.on("order_error", this.handleOrderError.bind(this)),
     );
     this.unsubscribeFunctions.push(
       orderEventEmitter.on(
         "payment_validation_failed",
-        this.handlePaymentValidationFailed.bind(this)
-      )
+        this.handlePaymentValidationFailed.bind(this),
+      ),
     );
     this.unsubscribeFunctions.push(
       orderEventEmitter.on(
         "order_load_failed",
-        this.handleOrderLoadFailed.bind(this)
-      )
+        this.handleOrderLoadFailed.bind(this),
+      ),
     );
   }
 
@@ -82,7 +82,7 @@ export class OrderNotificationHandler {
       `Cannot add more ${payload.product.name}. Only ${
         payload.stockLimit || 0
       } items available in stock.`,
-      4000
+      4000,
     );
   }
 
@@ -90,7 +90,7 @@ export class OrderNotificationHandler {
     const payload = event.payload;
     this.notification.showError(
       "Out of Stock",
-      `${payload.product.name} is currently out of stock and cannot be added to the order.`
+      `${payload.product.name} is currently out of stock and cannot be added to the order.`,
     );
   }
 
@@ -98,7 +98,7 @@ export class OrderNotificationHandler {
     const payload = event.payload;
     this.notification.showSuccess(
       "Order Completed",
-      `Order #${payload.order._id.slice(-8)} has been successfully completed!`
+      `Order #${payload.order._id.slice(-8)} has been successfully completed!`,
     );
   }
 
@@ -110,7 +110,7 @@ export class OrderNotificationHandler {
     });
     this.notification.showSuccess(
       "Order Abandoned",
-      "The current order has been successfully abandoned."
+      "The current order has been successfully abandoned.",
     );
   }
 
@@ -118,7 +118,7 @@ export class OrderNotificationHandler {
     const payload = event.payload;
     this.notification.showSuccess(
       "Customer Selected",
-      `${payload.customer.name} has been added to the order.`
+      `${payload.customer.name} has been added to the order.`,
     );
   }
 
@@ -126,7 +126,7 @@ export class OrderNotificationHandler {
     const payload = event.payload;
     this.notification.showSuccess(
       "Operator Selected",
-      `${payload.operator.name} is now handling this order.`
+      `${payload.operator.name} is now handling this order.`,
     );
   }
 
@@ -135,7 +135,7 @@ export class OrderNotificationHandler {
     this.notification.showError(
       "Order Error",
       payload.error.message ||
-        "An unexpected error occurred while processing your order."
+        "An unexpected error occurred while processing your order.",
     );
 
     // Log the error for tracking
@@ -149,12 +149,12 @@ export class OrderNotificationHandler {
     this.notification.showError(
       "Order Error",
       payload.error.message ||
-        "An unexpected error occurred while processing your order."
+        "An unexpected error occurred while processing your order.",
     );
   }
 
   private handlePaymentValidationFailed(
-    event: OrderEvent<"payment_validation_failed">
+    event: OrderEvent<"payment_validation_failed">,
   ) {
     const payload = event.payload as {
       message: string;
@@ -174,7 +174,7 @@ export class OrderNotificationHandler {
 
     this.notification.showError(
       "Error Loading Order",
-      "An error occurred while loading the current order. Starting with a new order."
+      "An error occurred while loading the current order. Starting with a new order.",
     );
   }
 
@@ -189,12 +189,12 @@ let orderNotificationHandler: OrderNotificationHandler | null = null;
 
 export const startOrderNotificationHandler = (
   notificationService: NotificationService,
-  errorTracking: ErrorTracking
+  errorTracking: ErrorTracking,
 ): OrderNotificationHandler => {
   if (!orderNotificationHandler) {
     orderNotificationHandler = new OrderNotificationHandler(
       notificationService,
-      errorTracking
+      errorTracking,
     );
   }
   return orderNotificationHandler;

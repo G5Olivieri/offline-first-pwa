@@ -7,7 +7,7 @@ import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { customerService } from "@/customer/singleton";
 import { useOrderStore } from "@/stores/order-store";
-import { type Customer } from "@/types/customer";
+import { type Customer } from "@/customer/customer";
 
 const searchDocument = ref("");
 const router = useRouter();

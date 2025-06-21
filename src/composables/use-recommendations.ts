@@ -1,6 +1,6 @@
 import { computed, onMounted, onUnmounted, readonly, ref, type Ref } from "vue";
 import { useRecommendationStore } from "@/stores/recommendation-store";
-import type { Customer } from "@/types/customer";
+import type { Customer } from "@/customer/customer";
 import type { Item } from "@/types/order";
 import type { Product } from "@/product/product";
 import type { ProductRecommendation } from "@/types/recommendation";

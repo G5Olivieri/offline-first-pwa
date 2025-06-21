@@ -26,11 +26,11 @@ const searchInputRef = ref<HTMLInputElement | null>(null);
 
 // Computed properties
 const totalPages = computed(() =>
-  Math.ceil(products.value.count / limit.value)
+  Math.ceil(products.value.count / limit.value),
 );
 const currentPage = computed(() => Math.floor(skip.value / limit.value) + 1);
 const hasNextPage = computed(
-  () => skip.value + limit.value < products.value.count
+  () => skip.value + limit.value < products.value.count,
 );
 const hasPreviousPage = computed(() => skip.value > 0);
 
@@ -92,7 +92,7 @@ const loadProducts = async () => {
         {
           limit: limit.value,
           skip: skip.value,
-        }
+        },
       );
     } else {
       // Use regular list when no search query
@@ -107,7 +107,7 @@ const loadProducts = async () => {
   } catch (error) {
     notificationStore.showError(
       "Loading Error",
-      `Failed to load products. Please try again. ${error}`
+      `Failed to load products. Please try again. ${error}`,
     );
   } finally {
     isLoading.value = false;
@@ -118,7 +118,7 @@ const deleteProduct = async (product: Product) => {
   const result = await notificationStore.showConfirm(
     "Delete Product",
     `Are you sure you want to delete "${product.name}"? This action cannot be undone.`,
-    { type: "error" }
+    { type: "error" },
   );
 
   if (result.confirmed) {
@@ -126,13 +126,13 @@ const deleteProduct = async (product: Product) => {
       await productService.deleteProduct(product._id);
       notificationStore.showSuccess(
         "Product Deleted",
-        `${product.name} has been deleted successfully.`
+        `${product.name} has been deleted successfully.`,
       );
       await loadProducts();
     } catch (error) {
       notificationStore.showError(
         "Delete Error",
-        `Failed to delete product. Please try again. ${error}`
+        `Failed to delete product. Please try again. ${error}`,
       );
     }
   }
@@ -143,12 +143,12 @@ const addToOrder = async (product: Product) => {
     await orderStore.addProduct(product);
     notificationStore.showSuccess(
       "Product Added",
-      `${product.name} has been added to the order.`
+      `${product.name} has been added to the order.`,
     );
   } catch (error) {
     notificationStore.showError(
       "Add to Order Error",
-      `Failed to add product to order. Please try again. ${error}`
+      `Failed to add product to order. Please try again. ${error}`,
     );
   }
 };
@@ -189,7 +189,7 @@ const copyEAN = async (barcode: string) => {
     await navigator.clipboard.writeText(barcode);
     notificationStore.showSuccess(
       "EAN Copied",
-      `Barcode ${barcode} copied to clipboard`
+      `Barcode ${barcode} copied to clipboard`,
     );
   } catch {
     // Fallback for older browsers or when clipboard API is not available
@@ -202,7 +202,7 @@ const copyEAN = async (barcode: string) => {
 
     notificationStore.showSuccess(
       "EAN Copied",
-      `Barcode ${barcode} copied to clipboard`
+      `Barcode ${barcode} copied to clipboard`,
     );
   }
 };
@@ -224,7 +224,7 @@ const handleKeydown = (event: KeyboardEvent) => {
     searchInputRef.value?.focus();
     notificationStore.showInfo(
       "Search Focus",
-      "Search input focused. Use Alt+Shift+F to focus search anytime."
+      "Search input focused. Use Alt+Shift+F to focus search anytime.",
     );
   }
 };
@@ -348,8 +348,8 @@ onUnmounted(() => {
                   searchType === 'barcode'
                     ? 'Searching by barcode...'
                     : searchType === 'name'
-                    ? 'Searching by name...'
-                    : 'Search products by name or barcode...'
+                      ? 'Searching by name...'
+                      : 'Search products by name or barcode...'
                 "
                 class="block w-full pl-10 pr-12 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-200"
               />

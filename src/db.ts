@@ -1,8 +1,8 @@
 import PouchDB from "pouchdb-browser";
 import PouchDBFind from "pouchdb-find";
 import { config } from "@/config/env";
-import type { Customer } from "@/types/customer";
-import type { Operator } from "@/types/operator";
+import type { Customer } from "@/customer/customer";
+import type { Operator } from "@/operator/operator";
 import { type Order } from "@/types/order";
 import type { Product } from "@/product/product";
 import type {
@@ -80,6 +80,9 @@ export const getOperatorDB = (): PouchDB.Database<Operator> => {
     return _operatorDB;
   }
   _operatorDB = new PouchDB("operators");
+  _operatorDB.createIndex({
+    index: { fields: ["name"] },
+  });
 
   if (SYNCING) {
     const remoteOperatorsDB = new PouchDB(`${COUCHDB_URL}/operators`, {
@@ -148,7 +151,7 @@ export const getProductAffinityDB = (): PouchDB.Database<ProductAffinity> => {
           username: config.couchdbUsername,
           password: config.couchdbPassword,
         },
-      }
+      },
     );
 
     remoteAffinityDB.sync(_productAffinityDB, {
@@ -187,7 +190,7 @@ export const getCustomerPreferencesDB =
             username: config.couchdbUsername,
             password: config.couchdbPassword,
           },
-        }
+        },
       );
 
       remotePreferencesDB.sync(_customerPreferencesDB, {
@@ -217,7 +220,7 @@ export const getRecommendationConfigDB =
             username: config.couchdbUsername,
             password: config.couchdbPassword,
           },
-        }
+        },
       );
 
       remoteConfigDB.sync(_recommendationConfigDB, {

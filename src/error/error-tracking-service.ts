@@ -10,7 +10,7 @@ export interface ErrorLog {
 export class ErrorTrackingService {
   constructor(
     private readonly source: string,
-    private readonly context?: Record<string, unknown>
+    private readonly context?: Record<string, unknown>,
   ) {}
 
   public track(error: Error, context: Record<string, unknown> = {}) {
@@ -34,7 +34,7 @@ export class ErrorTrackingService {
       this.sendToRemoteLogging(errorLog).catch((logError) => {
         console.error(
           "Failed to send critical error to remote logging:",
-          logError
+          logError,
         );
       });
     }

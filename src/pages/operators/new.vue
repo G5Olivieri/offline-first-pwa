@@ -7,7 +7,7 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
 import * as z from "zod";
-import { operatorService } from "@/services/operator-service";
+import { operatorService } from "@/operator/singleton";
 import { useOrderStore } from "@/stores/order-store";
 
 const router = useRouter();
@@ -29,7 +29,7 @@ const onSubmit = handleSubmit(async (values) => {
   const { name } = values;
 
   try {
-    const operator = await operatorService.create({ name });
+    const operator = await operatorService.createOperator({ name });
     orderStore.selectOperator(operator);
     router.push({ name: "home" });
   } catch (error) {

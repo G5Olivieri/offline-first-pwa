@@ -1,6 +1,6 @@
 import type { ErrorContext } from "@/error/error-middleware";
 import type { ErrorTracking } from "@/error/error-tracking";
-import type { Customer } from "@/types/customer";
+import type { Customer } from "@/customer/customer";
 import type { CustomerService } from "./customer-service";
 
 export class CustomerServiceWithErrorHandlingDecorator
@@ -8,12 +8,12 @@ export class CustomerServiceWithErrorHandlingDecorator
 {
   constructor(
     private readonly customerService: CustomerService,
-    private readonly errorTracking: ErrorTracking
+    private readonly errorTracking: ErrorTracking,
   ) {}
 
   private async withErrorHandling<T>(
     operation: () => Promise<T>,
-    context: Partial<ErrorContext>
+    context: Partial<ErrorContext>,
   ): Promise<T> {
     try {
       return await operation();
@@ -24,14 +24,14 @@ export class CustomerServiceWithErrorHandlingDecorator
   }
 
   async createCustomer(
-    customer: Pick<Customer, "name" | "document">
+    customer: Pick<Customer, "name" | "document">,
   ): Promise<Customer> {
     return this.withErrorHandling(
       () => this.customerService.createCustomer(customer),
       {
         operation: "createCustomer",
         metadata: { customerName: customer.name, document: customer.document },
-      }
+      },
     );
   }
 
@@ -41,14 +41,14 @@ export class CustomerServiceWithErrorHandlingDecorator
       {
         operation: "getCustomerByID",
         metadata: { customerId: id },
-      }
+      },
     );
   }
 
   async findByDocument(document: string): Promise<Customer | null> {
     return this.withErrorHandling(
       () => this.customerService.findByDocument(document),
-      { operation: "findByDocument", metadata: { document } }
+      { operation: "findByDocument", metadata: { document } },
     );
   }
 
@@ -58,7 +58,7 @@ export class CustomerServiceWithErrorHandlingDecorator
   }> {
     return this.withErrorHandling(
       () => this.customerService.listCustomers(options),
-      { operation: "listCustomers", metadata: options }
+      { operation: "listCustomers", metadata: options },
     );
   }
 
@@ -68,7 +68,7 @@ export class CustomerServiceWithErrorHandlingDecorator
       {
         operation: "updateCustomer",
         metadata: { customerId: customer._id, customerName: customer.name },
-      }
+      },
     );
   }
 
@@ -78,7 +78,7 @@ export class CustomerServiceWithErrorHandlingDecorator
       {
         operation: "deleteCustomer",
         metadata: { customerId: id },
-      }
+      },
     );
   }
 }

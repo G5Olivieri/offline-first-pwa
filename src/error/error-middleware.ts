@@ -57,7 +57,7 @@ export class NetworkErrorHandler implements ErrorHandler {
   private showOfflineMessage() {
     // This will be handled by the notification store in the actual implementation
     console.warn(
-      "Network error: Operation will be retried when connection is restored"
+      "Network error: Operation will be retried when connection is restored",
     );
   }
 
@@ -165,7 +165,7 @@ export class SystemErrorHandler implements ErrorHandler {
       // Clear old cached data
       const keys = Object.keys(localStorage);
       const oldKeys = keys.filter(
-        (key) => key.startsWith("cache_") && this.isOldCacheKey(key)
+        (key) => key.startsWith("cache_") && this.isOldCacheKey(key),
       );
 
       oldKeys.forEach((key) => localStorage.removeItem(key));
@@ -237,7 +237,7 @@ errorMiddleware.addHandler(new SystemErrorHandler());
 export class ValidationError extends Error {
   constructor(
     message: string,
-    public details?: Array<{ field: string; message: string }>
+    public details?: Array<{ field: string; message: string }>,
   ) {
     super(message);
     this.name = "ValidationError";

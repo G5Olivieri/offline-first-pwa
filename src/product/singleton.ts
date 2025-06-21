@@ -7,5 +7,5 @@ import { ProductServiceWithErrorHandlingDecorator } from "./product-service-with
 export const searchService = new ProductSearchService();
 export const productService = new ProductServiceWithErrorHandlingDecorator(
   new ProductPouchDBService(getProductDB(), searchService),
-  new ErrorTrackingService("ProductService")
+  new ErrorTrackingService("ProductService"),
 );

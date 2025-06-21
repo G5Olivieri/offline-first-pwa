@@ -6,5 +6,5 @@ import { CustomerServiceWithErrorHandlingDecorator } from "./customer-service-wi
 const customerDB = getCustomerDB();
 export const customerService = new CustomerServiceWithErrorHandlingDecorator(
   new CustomerPouchDBService(customerDB),
-  new ErrorTrackingService("CustomerService")
+  new ErrorTrackingService("CustomerService"),
 );

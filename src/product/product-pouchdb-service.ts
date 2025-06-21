@@ -6,7 +6,7 @@ import type { ProductService } from "./product-service";
 export class ProductPouchDBService implements ProductService {
   public constructor(
     private readonly db: PouchDB.Database<Product>,
-    private readonly search: ProductSearchService
+    private readonly search: ProductSearchService,
   ) {}
 
   private validateProduct(product: Partial<Product>): void {
@@ -50,7 +50,7 @@ export class ProductPouchDBService implements ProductService {
         return result.results.map(
           (r) =>
             ((r.docs && r.docs[0] && "ok" in r.docs[0] && r.docs[0].ok) ||
-              null) as Product | null
+              null) as Product | null,
         );
       });
 
@@ -129,14 +129,14 @@ export class ProductPouchDBService implements ProductService {
         success.push((result.docs[0] as { ok: Product }).ok);
         return [success, errors];
       },
-      [[], []] as [Product[], Error[]]
+      [[], []] as [Product[], Error[]],
     );
 
     if (errors.length > 0) {
       throw new Error(
         `Errors occurred while fetching products: ${errors
           .map((e) => e.message)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -170,7 +170,7 @@ export class ProductPouchDBService implements ProductService {
     const existingProduct = await this.findProductByBarcode(product.barcode);
     if (existingProduct) {
       throw new ConflictError(
-        `Product with barcode '${product.barcode}' already exists`
+        `Product with barcode '${product.barcode}' already exists`,
       );
     }
 
@@ -199,11 +199,11 @@ export class ProductPouchDBService implements ProductService {
       // Check for barcode conflicts with other products
       if (existingProduct.barcode !== product.barcode) {
         const duplicateProduct = await this.findProductByBarcode(
-          product.barcode
+          product.barcode,
         );
         if (duplicateProduct && duplicateProduct._id !== product._id) {
           throw new ConflictError(
-            `Product with barcode '${product.barcode}' already exists`
+            `Product with barcode '${product.barcode}' already exists`,
           );
         }
       }
@@ -250,7 +250,7 @@ export class ProductPouchDBService implements ProductService {
         throw new ValidationError(
           `Validation failed for product at index ${index}: ${
             (error as Error).message
-          }`
+          }`,
         );
       }
     });

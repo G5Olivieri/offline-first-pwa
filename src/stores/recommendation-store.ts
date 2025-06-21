@@ -1,6 +1,6 @@
 import { productService } from "@/product/singleton";
 import { recommendationEngine } from "@/services/recommendation-engine";
-import type { Customer } from "@/types/customer";
+import type { Customer } from "@/customer/customer";
 import type { Item } from "@/types/order";
 import type { Product } from "@/product/product";
 import type {
@@ -32,19 +32,19 @@ export const useRecommendationStore = defineStore("recommendationStore", () => {
 
   // Computed
   const checkoutRecommendations = computed(
-    () => currentRecommendations.value[RecommendationContext.CHECKOUT]
+    () => currentRecommendations.value[RecommendationContext.CHECKOUT],
   );
 
   const homepageRecommendations = computed(
-    () => currentRecommendations.value[RecommendationContext.HOMEPAGE]
+    () => currentRecommendations.value[RecommendationContext.HOMEPAGE],
   );
 
   const productDetailRecommendations = computed(
-    () => currentRecommendations.value[RecommendationContext.PRODUCT_DETAIL]
+    () => currentRecommendations.value[RecommendationContext.PRODUCT_DETAIL],
   );
 
   const customerProfileRecommendations = computed(
-    () => currentRecommendations.value[RecommendationContext.CUSTOMER_PROFILE]
+    () => currentRecommendations.value[RecommendationContext.CUSTOMER_PROFILE],
   );
 
   // Actions
@@ -56,7 +56,7 @@ export const useRecommendationStore = defineStore("recommendationStore", () => {
       currentProduct?: Product;
       limit?: number;
       forceRefresh?: boolean;
-    } = {}
+    } = {},
   ): Promise<ProductRecommendation[]> {
     const cacheKey = generateCacheKey(context, options);
 
@@ -117,7 +117,7 @@ export const useRecommendationStore = defineStore("recommendationStore", () => {
 
   async function getRecommendationsForCheckout(
     cartItems: Item[],
-    customer?: Customer
+    customer?: Customer,
   ): Promise<ProductRecommendation[]> {
     return generateRecommendations(RecommendationContext.CHECKOUT, {
       cartItems,
@@ -127,7 +127,7 @@ export const useRecommendationStore = defineStore("recommendationStore", () => {
 
   async function getRecommendationsForProduct(
     product: Product,
-    customer?: Customer
+    customer?: Customer,
   ): Promise<ProductRecommendation[]> {
     return generateRecommendations(RecommendationContext.PRODUCT_DETAIL, {
       currentProduct: product,
@@ -136,7 +136,7 @@ export const useRecommendationStore = defineStore("recommendationStore", () => {
   }
 
   async function getRecommendationsForHomepage(
-    customer?: Customer
+    customer?: Customer,
   ): Promise<ProductRecommendation[]> {
     return generateRecommendations(RecommendationContext.HOMEPAGE, {
       customer,
@@ -144,7 +144,7 @@ export const useRecommendationStore = defineStore("recommendationStore", () => {
   }
 
   async function getRecommendationsForCustomer(
-    customer: Customer
+    customer: Customer,
   ): Promise<ProductRecommendation[]> {
     return generateRecommendations(RecommendationContext.CUSTOMER_PROFILE, {
       customer,
@@ -153,7 +153,7 @@ export const useRecommendationStore = defineStore("recommendationStore", () => {
 
   async function getRecommendationsForCategory(
     _category: string,
-    customer?: Customer
+    customer?: Customer,
   ): Promise<ProductRecommendation[]> {
     // This is a simplified approach - in a real implementation, you'd pass category info
     return generateRecommendations(RecommendationContext.CATEGORY_BROWSE, {
@@ -163,7 +163,7 @@ export const useRecommendationStore = defineStore("recommendationStore", () => {
 
   async function getRecommendationsForSearch(
     _searchQuery: string,
-    customer?: Customer
+    customer?: Customer,
   ): Promise<ProductRecommendation[]> {
     return generateRecommendations(RecommendationContext.SEARCH_RESULTS, {
       customer,
@@ -205,7 +205,7 @@ export const useRecommendationStore = defineStore("recommendationStore", () => {
       cartItems?: Item[];
       currentProduct?: Product;
       limit?: number;
-    }
+    },
   ): string {
     const keyParts = [
       context,

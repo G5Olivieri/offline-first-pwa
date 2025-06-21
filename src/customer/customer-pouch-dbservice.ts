@@ -1,5 +1,5 @@
 import { ValidationError, ConflictError } from "@/error/error-middleware";
-import type { Customer } from "@/types/customer";
+import type { Customer } from "@/customer/customer";
 import type { CustomerService } from "./customer-service";
 
 export class CustomerPouchDBService implements CustomerService {
@@ -34,7 +34,7 @@ export class CustomerPouchDBService implements CustomerService {
     const existingCustomer = await this.findByDocument(document);
     if (existingCustomer) {
       throw new ConflictError(
-        `Customer with document '${document}' already exists`
+        `Customer with document '${document}' already exists`,
       );
     }
 
@@ -107,7 +107,7 @@ export class CustomerPouchDBService implements CustomerService {
         const duplicateCustomer = await this.findByDocument(customer.document);
         if (duplicateCustomer && duplicateCustomer._id !== customer._id) {
           throw new ConflictError(
-            `Customer with document '${customer.document}' already exists`
+            `Customer with document '${customer.document}' already exists`,
           );
         }
       }

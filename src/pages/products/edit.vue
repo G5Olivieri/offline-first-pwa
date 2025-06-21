@@ -3,14 +3,14 @@ defineOptions({
   name: "EditProduct",
 });
 
+import type { Product } from "@/product/product";
+import { productService } from "@/product/singleton";
+import { useNotificationStore } from "@/stores/notification-store";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import * as z from "zod";
-import { productService } from "@/product/singleton";
-import { useNotificationStore } from "@/stores/notification-store";
-import type { Product } from "@/product/product";
 
 const route = useRoute();
 const router = useRouter();
@@ -67,9 +67,7 @@ const loadProduct = async () => {
     isLoading.value = true;
     const productId = route.params.id as string;
 
-    // Get the product from the database
-    const db = await import("@/db").then((m) => m.getProductDB());
-    const productDoc = await db.get(productId);
+    const productDoc = await productService.getProduct(productId);
 
     product.value = productDoc;
 

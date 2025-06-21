@@ -180,7 +180,7 @@ onMounted(() => {
 
   errorTrackingService.track(
     new Error(`Page not found: ${route.fullPath}`),
-    context
+    context,
   );
 });
 
@@ -189,7 +189,7 @@ const goHome = async () => {
     await router.push("/");
     notificationStore.showSuccess(
       "Navigation",
-      "Successfully returned to home page"
+      "Successfully returned to home page",
     );
   } catch (error) {
     errorTrackingService.track(new Error("Failed to navigate to home page"), {
@@ -203,7 +203,7 @@ const goHome = async () => {
     });
     notificationStore.showError(
       "Navigation Error",
-      "Failed to navigate to home page. Please try again."
+      "Failed to navigate to home page. Please try again.",
     );
   }
 };
@@ -219,7 +219,7 @@ const goBack = async () => {
     console.error("Navigation error:", error);
     notificationStore.showError(
       "Navigation Error",
-      "Unable to go back. Redirecting to home page."
+      "Unable to go back. Redirecting to home page.",
     );
     await goHome();
   }
@@ -238,14 +238,14 @@ const reportIssue = () => {
   // Track the user's report action
   errorTrackingService.track(
     new Error(`User reported 404 issue for path: ${route.fullPath}`),
-    context
+    context,
   );
 
   // Show confirmation notification
   notificationStore.showInfo(
     "Issue Reported",
     "Thank you for your feedback. Our team has been notified and will investigate this issue.",
-    5000
+    5000,
   );
 };
 </script>

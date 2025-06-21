@@ -3,7 +3,7 @@ import type { Product } from "@/product/product";
 export interface ProductService {
   searchProducts(
     query: string,
-    options?: { limit?: number; skip?: number }
+    options?: { limit?: number; skip?: number },
   ): Promise<{
     count: number;
     products: Product[];
@@ -12,7 +12,7 @@ export interface ProductService {
   getProduct(id: string): Promise<Product>;
   // TODO: uncouple this from PouchDB
   changeStock(
-    input: Map<string, number>
+    input: Map<string, number>,
   ): Promise<(PouchDB.Core.Error | PouchDB.Core.Response)[]>;
   listProducts(options?: { limit?: number; skip?: number }): Promise<{
     count: number;
@@ -23,6 +23,6 @@ export interface ProductService {
   deleteProduct(id: string): Promise<string>;
   // TODO: uncouple this from PouchDB
   bulkInsertProducts(
-    products: Product[]
+    products: Product[],
   ): Promise<Array<PouchDB.Core.Response | PouchDB.Core.Error>>;
 }

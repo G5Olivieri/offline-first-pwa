@@ -21,7 +21,7 @@ import { computed, onMounted, watch } from "vue";
 import type { ProductRecommendation } from "@/types/recommendation";
 import { RecommendationContext } from "@/types/recommendation";
 import type { Item } from "@/types/order";
-import type { Customer } from "@/types/customer";
+import type { Customer } from "@/customer/customer";
 import { useRecommendationStore } from "@/stores/recommendation-store";
 import RecommendationList from "./recommendation-list.vue";
 

@@ -665,14 +665,14 @@ defineOptions({
   name: "ProductDetailPage",
 });
 
-import { computed, onMounted, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
 import ProductDetailRecommendations from "@/components/product-detail-recommendations.vue";
 import { getProductDB } from "@/db";
-import { productService } from "@/services/product-service";
+import type { Product } from "@/product/product";
+import { productService } from "@/product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOrderStore } from "@/stores/order-store";
-import type { Product } from "@/types/product";
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
 const router = useRouter();

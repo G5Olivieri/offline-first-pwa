@@ -6,9 +6,9 @@ defineOptions({
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useNotificationStore } from "@/stores/notification-store";
-import { operatorService } from "@/services/operator-service";
+import { operatorService } from "@/operator/singleton";
 import { useOrderStore } from "@/stores/order-store";
-import type { Operator } from "@/types/operator";
+import type { Operator } from "@/operator/operator";
 
 const router = useRouter();
 const operators = ref<Operator[]>([]);
@@ -28,8 +28,8 @@ const selectOperator = async (operator: Operator) => {
 };
 
 onMounted(() => {
-  operatorService.listOperators().then((result: Operator[]) => {
-    operators.value = result;
+  operatorService.listOperators().then((result) => {
+    operators.value = result.operators;
   });
 });
 </script>

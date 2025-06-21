@@ -16,6 +16,7 @@ import { useSetupStore } from "@/stores/setup-store";
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { productService } from "./product/singleton";
+import { userTrackingService } from "./user-tracking/singleton";
 
 const barcode = ref("");
 const router = useRouter();
@@ -177,6 +178,9 @@ const gotoCheckout = () => {
 };
 
 const completeOrder = async () => {
+  userTrackingService.track("complete_order", {
+    orderId: orderStore.id,
+  });
   if (!orderStore.id) {
     notificationStore.showWarning("No Order", "No active order to complete");
     return;
@@ -192,6 +196,9 @@ const completeOrder = async () => {
 };
 
 const abandonOrder = async () => {
+  userTrackingService.track("abandon_order", {
+    orderId: orderStore.id,
+  });
   if (orderStore.id) {
     const result = await notificationStore.showConfirm(
       "Abandon Order",
@@ -249,6 +256,10 @@ const addProduct = async () => {
     notificationStore.showWarning("Invalid Input", "Please enter a barcode.");
     return;
   }
+
+  userTrackingService.track("add_product", {
+    barcode: barcode.value,
+  });
 
   try {
     const fetchedProduct = await productService.findProductByBarcode(

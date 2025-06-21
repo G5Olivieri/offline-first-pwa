@@ -14,6 +14,7 @@ import Products from "@/pages/products/products.vue";
 import Utils from "@/pages/utils/utils.vue";
 import type { RouteRecordRaw } from "vue-router";
 import { createRouter, createWebHistory } from "vue-router";
+import { userTrackingService } from "./user-tracking/singleton";
 
 const routes: RouteRecordRaw[] = [
   { path: "/", name: "home", component: Home },
@@ -44,4 +45,20 @@ const routes: RouteRecordRaw[] = [
 export const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+router.afterEach((to, from) => {
+  userTrackingService.track("navigation.after", {
+    from: from.name as string | null,
+    to: to.name as string | null,
+    url: to.fullPath,
+  });
+});
+
+router.beforeEach((to, from) => {
+  userTrackingService.track("navigation.before", {
+    from: from.name as string | null,
+    to: to.name as string | null,
+    url: to.fullPath,
+  });
 });

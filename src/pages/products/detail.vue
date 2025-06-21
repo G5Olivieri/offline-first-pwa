@@ -671,6 +671,7 @@ import type { Product } from "@/product/product";
 import { productService } from "@/product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOrderStore } from "@/stores/order-store";
+import { userTrackingService } from "@/user-tracking/singleton";
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -736,6 +737,9 @@ async function loadProduct(): Promise<void> {
 async function addToOrder(): Promise<void> {
   if (!product.value) return;
 
+  userTrackingService.track("add_product_to_order", {
+    id: product.value._id,
+  });
   try {
     await orderStore.addProduct(product.value);
     notificationStore.showSuccess(

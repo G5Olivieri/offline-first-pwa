@@ -7,6 +7,7 @@ import type { Operator } from "@/operator/operator";
 import { operatorService } from "@/operator/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOrderStore } from "@/stores/order-store";
+import { userTrackingService } from "@/user-tracking/singleton";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -16,6 +17,9 @@ const orderStore = useOrderStore();
 const notificationStore = useNotificationStore();
 
 const selectOperator = async (operator: Operator) => {
+  userTrackingService.track("select_operator", {
+    operatorId: operator._id,
+  });
   try {
     orderStore.selectOperator(operator);
     router.push({ name: "home" });

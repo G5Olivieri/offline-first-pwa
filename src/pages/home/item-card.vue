@@ -43,7 +43,7 @@
       <button
         type="button"
         class="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl transition-all duration-200 hover:scale-110 shadow-lg"
-        @click="emit('decrease', item)"
+        @click="decrease"
       >
         <svg
           class="w-4 h-4"
@@ -70,7 +70,7 @@
       <button
         type="button"
         class="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl transition-all duration-200 hover:scale-110 shadow-lg"
-        @click="emit('increase', item)"
+        @click="increase"
       >
         <svg
           class="w-4 h-4"
@@ -91,8 +91,9 @@
 </template>
 <script setup lang="ts">
 import type { Item } from "@/types/order";
+import { userTrackingService } from "@/user-tracking/singleton";
 
-defineProps<{
+const props = defineProps<{
   item: Item;
 }>();
 
@@ -100,4 +101,18 @@ const emit = defineEmits<{
   (e: "increase", item: Item): void;
   (e: "decrease", item: Item): void;
 }>();
+
+const increase = () => {
+  userTrackingService.track("increase_item_quantity", {
+    itemId: props.item.product._id,
+  });
+  emit("increase", props.item);
+};
+
+const decrease = () => {
+  userTrackingService.track("decrease_item_quantity", {
+    itemId: props.item.product._id,
+  });
+  emit("decrease", props.item);
+};
 </script>

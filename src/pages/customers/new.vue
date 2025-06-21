@@ -3,13 +3,14 @@ defineOptions({
   name: "NewCustomer",
 });
 
+import { customerService } from "@/customer/singleton";
+import { useOrderStore } from "@/stores/order-store";
+import { userTrackingService } from "@/user-tracking/singleton";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import * as z from "zod";
-import { customerService } from "@/customer/singleton";
-import { useOrderStore } from "@/stores/order-store";
 
 const router = useRouter();
 const isSubmitting = ref(false);
@@ -38,6 +39,8 @@ const { value: document } = useField("document");
 
 const onSubmit = handleSubmit(async (values) => {
   if (isSubmitting.value) return;
+
+  userTrackingService.track("create_customer", values);
 
   isSubmitting.value = true;
   submitError.value = "";

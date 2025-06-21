@@ -1,6 +1,6 @@
-import type { UserTracking } from "./user-tracking";
 import type { UserEvent } from "./user-event";
 import type { UserEventHandler } from "./user-event-handler";
+import type { UserTracking } from "./user-tracking";
 
 export class UserTrackingPubSub implements UserTracking {
   private handlers: UserEventHandler[] = [];
@@ -16,6 +16,7 @@ export class UserTrackingPubSub implements UserTracking {
       timestamp: new Date(),
       url: window.location.href,
       userAgent: navigator.userAgent,
+      terminalId: "TODO",
       context,
     };
 

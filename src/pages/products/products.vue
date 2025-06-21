@@ -7,6 +7,7 @@ import type { Product } from "@/product/product";
 import { productService, searchService } from "@/product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOrderStore } from "@/stores/order-store";
+import { userTrackingService } from "@/user-tracking/singleton";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -88,6 +89,10 @@ const loadProducts = async () => {
   isLoading.value = true;
   try {
     if (searchQuery.value.trim()) {
+      userTrackingService.track("products.search", {
+        query: searchQuery.value.trim(),
+        type: searchType.value,
+      });
       products.value = await productService.searchProducts(
         searchQuery.value.trim(),
         {
@@ -96,7 +101,6 @@ const loadProducts = async () => {
         },
       );
     } else {
-      // Use regular list when no search query
       products.value = await productService.listProducts({
         limit: limit.value,
         skip: skip.value,

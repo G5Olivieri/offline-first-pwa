@@ -4,5 +4,6 @@ export type UserEvent = {
   timestamp: Date;
   url: string;
   userAgent: string;
+  terminalId: string;
   context?: Record<string, unknown>;
 };

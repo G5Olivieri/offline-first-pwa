@@ -203,10 +203,11 @@ defineOptions({
   name: "ImportProducts",
 });
 
-import { ref } from "vue";
-import { useRouter } from "vue-router";
 import { productService } from "@/product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
+import { userTrackingService } from "@/user-tracking/singleton";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
 const notificationStore = useNotificationStore();
 
@@ -230,6 +231,9 @@ const importProducts = async () => {
     return;
   }
 
+  userTrackingService.track("import_products", {
+    fileName: file.value.name,
+  });
   isImporting.value = true;
 
   try {

@@ -16,7 +16,7 @@
             </p>
           </div>
 
-          <form @submit.prevent="handleSubmit" class="px-6 py-6 space-y-6">
+          <form @submit.prevent="onSubmit" class="px-6 py-6 space-y-6">
             <!-- Basic Information -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="space-y-2">
@@ -31,13 +31,14 @@
                   id="name"
                   name="name"
                   placeholder="Enter product name"
-                  v-model="form.name"
+                  v-model="name"
+                  v-bind="nameAttrs"
                   :disabled="isSubmitting"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  :class="{ 'border-red-500': hasFieldError('name') }"
+                  :class="{ 'border-red-500': errors.name }"
                 />
-                <span v-if="hasFieldError('name')" class="text-sm text-red-600">
-                  {{ getFieldError("name") }}
+                <span v-if="errors.name" class="text-sm text-red-600">
+                  {{ errors.name }}
                 </span>
               </div>
 
@@ -53,16 +54,14 @@
                   id="barcode"
                   name="barcode"
                   placeholder="Enter barcode"
-                  v-model="form.barcode"
+                  v-model="barcode"
+                  v-bind="barcodeAttrs"
                   :disabled="isSubmitting"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  :class="{ 'border-red-500': hasFieldError('barcode') }"
+                  :class="{ 'border-red-500': errors.barcode }"
                 />
-                <span
-                  v-if="hasFieldError('barcode')"
-                  class="text-sm text-red-600"
-                >
-                  {{ getFieldError("barcode") }}
+                <span v-if="errors.barcode" class="text-sm text-red-600">
+                  {{ errors.barcode }}
                 </span>
               </div>
 
@@ -80,16 +79,14 @@
                   placeholder="0.00"
                   step="0.01"
                   min="0"
-                  v-model.number="form.price"
+                  v-model.number="price"
+                  v-bind="priceAttrs"
                   :disabled="isSubmitting"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  :class="{ 'border-red-500': hasFieldError('price') }"
+                  :class="{ 'border-red-500': errors.price }"
                 />
-                <span
-                  v-if="hasFieldError('price')"
-                  class="text-sm text-red-600"
-                >
-                  {{ getFieldError("price") }}
+                <span v-if="errors.price" class="text-sm text-red-600">
+                  {{ errors.price }}
                 </span>
               </div>
 
@@ -106,16 +103,14 @@
                   name="stock"
                   placeholder="0"
                   min="0"
-                  v-model.number="form.stock"
+                  v-model.number="stock"
+                  v-bind="stockAttrs"
                   :disabled="isSubmitting"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  :class="{ 'border-red-500': hasFieldError('stock') }"
+                  :class="{ 'border-red-500': errors.stock }"
                 />
-                <span
-                  v-if="hasFieldError('stock')"
-                  class="text-sm text-red-600"
-                >
-                  {{ getFieldError("stock") }}
+                <span v-if="errors.stock" class="text-sm text-red-600">
+                  {{ errors.stock }}
                 </span>
               </div>
             </div>
@@ -134,7 +129,8 @@
                   id="category"
                   name="category"
                   placeholder="Enter category"
-                  v-model="form.category"
+                  v-model="category"
+                  v-bind="categoryAttrs"
                   :disabled="isSubmitting"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
@@ -152,7 +148,8 @@
                   id="manufacturer"
                   name="manufacturer"
                   placeholder="Enter manufacturer"
-                  v-model="form.manufacturer"
+                  v-model="manufacturer"
+                  v-bind="manufacturerAttrs"
                   :disabled="isSubmitting"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
@@ -172,7 +169,8 @@
                 name="description"
                 rows="3"
                 placeholder="Enter product description"
-                v-model="form.description"
+                v-model="description"
+                v-bind="descriptionAttrs"
                 :disabled="isSubmitting"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
               ></textarea>
@@ -192,7 +190,7 @@
               </button>
               <button
                 type="submit"
-                :disabled="isSubmitting || hasErrors"
+                :disabled="isSubmitting || !meta.valid"
                 class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span v-if="isSubmitting" class="flex items-center">
@@ -230,95 +228,97 @@
 
 <script setup lang="ts">
 import ErrorBoundary from "@/components/error-boundary.vue";
-import { useFormErrors } from "@/composables/use-form-errors.ts";
 import type { Product } from "@/product/product";
 import { productService } from "@/product/singleton";
-import { reactive } from "vue";
+import { userTrackingService } from "@/user-tracking/singleton";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/zod";
 import { useRouter } from "vue-router";
+import { ref } from "vue";
+import { z } from "zod";
 
 defineOptions({
   name: "NewProduct",
 });
 
 const router = useRouter();
+const isSubmitting = ref(false);
 
-// Form state
-const form = reactive({
-  name: "",
-  barcode: "",
-  price: 0,
-  stock: 0,
-  category: "",
-  manufacturer: "",
-  description: "",
+// Zod validation schema
+const productSchema = z.object({
+  name: z.string().min(1, "Product name is required").trim(),
+  barcode: z
+    .string()
+    .min(8, "Barcode must be at least 8 characters long")
+    .trim(),
+  price: z.number().min(0, "Price must be a positive number"),
+  stock: z
+    .number()
+    .min(0, "Stock cannot be negative")
+    .int("Stock must be a whole number"),
+  category: z.string().optional(),
+  manufacturer: z.string().optional(),
+  description: z.string().optional(),
 });
 
-// Error handling composables
-const {
-  hasErrors,
-  isSubmitting,
-  hasFieldError,
-  getFieldError,
-  setFieldError,
-  withSubmission,
-} = useFormErrors();
+type ProductFormData = z.infer<typeof productSchema>;
 
-// Form submission
-const handleSubmit = async () => {
-  // Client-side validation
-  if (!validateForm()) return;
+// VeeValidate form setup
+const { handleSubmit, errors, defineField, meta } = useForm<ProductFormData>({
+  validationSchema: toTypedSchema(productSchema),
+  initialValues: {
+    name: "",
+    barcode: "",
+    price: 0,
+    stock: 0,
+    category: "",
+    manufacturer: "",
+    description: "",
+  },
+});
 
-  const result = await withSubmission(async () => {
+// Define form fields with VeeValidate
+const [name, nameAttrs] = defineField("name");
+const [barcode, barcodeAttrs] = defineField("barcode");
+const [price, priceAttrs] = defineField("price");
+const [stock, stockAttrs] = defineField("stock");
+const [category, categoryAttrs] = defineField("category");
+const [manufacturer, manufacturerAttrs] = defineField("manufacturer");
+const [description, descriptionAttrs] = defineField("description");
+
+// Form submission with VeeValidate
+const onSubmit = handleSubmit(async (values) => {
+  isSubmitting.value = true;
+
+  try {
+    userTrackingService.track("create_product", values);
+
     const productData: Omit<Product, "_id" | "rev"> = {
-      name: form.name.trim(),
-      barcode: form.barcode.trim(),
-      price: form.price,
-      stock: form.stock,
-      ...(form.category && { category: form.category.trim() }),
-      ...(form.manufacturer && { manufacturer: form.manufacturer.trim() }),
-      ...(form.description && { description: form.description.trim() }),
+      name: values.name,
+      barcode: values.barcode,
+      price: values.price,
+      stock: values.stock,
+      ...(values.category &&
+        values.category.trim() && { category: values.category.trim() }),
+      ...(values.manufacturer &&
+        values.manufacturer.trim() && {
+          manufacturer: values.manufacturer.trim(),
+        }),
+      ...(values.description &&
+        values.description.trim() && {
+          description: values.description.trim(),
+        }),
     };
 
-    return await productService.createProduct(productData);
-  });
-
-  if (result) {
+    await productService.createProduct(productData);
     router.push("/products");
+  } catch (error) {
+    console.error("Failed to create product:", error);
+    // VeeValidate will handle the error display through the form's error handling
+  } finally {
+    isSubmitting.value = false;
   }
-};
-
-// Client-side validation
-const validateForm = (): boolean => {
-  const validationErrors: Record<string, string> = {};
-
-  if (!form.name.trim()) {
-    validationErrors.name = "Product name is required";
-  }
-
-  if (!form.barcode.trim()) {
-    validationErrors.barcode = "Barcode is required";
-  } else if (form.barcode.length < 8) {
-    validationErrors.barcode = "Barcode must be at least 8 characters long";
-  }
-
-  if (form.price < 0) {
-    validationErrors.price = "Price must be a positive number";
-  }
-
-  if (form.stock < 0) {
-    validationErrors.stock = "Stock cannot be negative";
-  }
-
-  if (Object.keys(validationErrors).length > 0) {
-    // Use the setErrors method from the composable
-    Object.entries(validationErrors).forEach(([field, message]) => {
-      setFieldError(field, message);
-    });
-    return false;
-  }
-
-  return true;
-};
+});
 
 // Navigation
 const handleCancel = () => {

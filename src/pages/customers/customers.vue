@@ -3,11 +3,12 @@ defineOptions({
   name: "CustomersPage",
 });
 
-import { computed, ref } from "vue";
-import { useRouter } from "vue-router";
+import { type Customer } from "@/customer/customer";
 import { customerService } from "@/customer/singleton";
 import { useOrderStore } from "@/stores/order-store";
-import { type Customer } from "@/customer/customer";
+import { userTrackingService } from "@/user-tracking/singleton";
+import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
 
 const searchDocument = ref("");
 const router = useRouter();
@@ -21,6 +22,10 @@ const onSubmit = async () => {
     error.value = "Please enter a document to search for a customer.";
     return;
   }
+
+  userTrackingService.track("customer_search", {
+    document: searchDocument.value,
+  });
 
   isLoading.value = true;
   error.value = "";
@@ -43,6 +48,9 @@ const onSubmit = async () => {
 };
 
 const selectCustomer = async (customer: Customer) => {
+  userTrackingService.track("customer_selected", {
+    document: customer.document,
+  });
   orderStore.selectCustomer(customer);
   router.push({ name: "home" });
 };

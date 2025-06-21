@@ -6,6 +6,7 @@ defineOptions({
 import type { Product } from "@/product/product";
 import { productService } from "@/product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
+import { userTrackingService } from "@/user-tracking/singleton";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { onMounted, ref } from "vue";
@@ -101,7 +102,10 @@ const loadProduct = async () => {
 
 const onSubmit = handleSubmit(async (values) => {
   if (!product.value) return;
-
+  userTrackingService.track("update_product", {
+    productId: product.value._id,
+    changes: values,
+  });
   try {
     isSaving.value = true;
 

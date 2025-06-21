@@ -1,5 +1,5 @@
 import { getOrderDB } from "@/db";
-import { customerService } from "@/services/customer-service";
+import { customerService } from "@/customer/singleton";
 import { operatorService } from "@/services/operator-service";
 import { orderEventEmitter } from "@/services/order-event-emitter";
 import { startOrderNotificationHandler } from "@/services/order-notification-handler";

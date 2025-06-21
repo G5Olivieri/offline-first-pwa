@@ -73,8 +73,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onErrorCaptured, watch } from "vue";
-import { errorBus } from "@/error/error-event-bus";
+import { errorTrackingService } from "@/error/error-tracking-service";
+import { computed, onErrorCaptured, ref, watch } from "vue";
 
 interface Props {
   // Custom error message to show users
@@ -118,7 +118,9 @@ const maxRetries = ref(3);
 
 const errorTitle = computed(() => {
   if (retryCount.value > 0) {
-    return `${props.title} (Attempt ${retryCount.value + 1}/${maxRetries.value})`;
+    return `${props.title} (Attempt ${retryCount.value + 1}/${
+      maxRetries.value
+    })`;
   }
   return props.title;
 });
@@ -175,19 +177,10 @@ onErrorCaptured((err, instance, info) => {
     timestamp: new Date().toISOString(),
   });
 
-  // Emit to global error bus
-  errorBus.emitError({
-    type: "application",
-    severity: "high",
-    message: err.message,
-    source: "ErrorBoundary",
-    timestamp: new Date(),
-    context: {
-      component: instance,
-      errorInfo: info,
-      retryCount: retryCount.value,
-    },
-    stack: err.stack,
+  errorTrackingService.track(err, {
+    component: instance,
+    errorInfo: info,
+    retryCount: retryCount.value,
   });
 
   // Prevent error from propagating to global handler
@@ -202,14 +195,11 @@ watch(error, (newError) => {
       newError.message.includes("network") ||
       newError.message.includes("fetch")
     ) {
-      setTimeout(
-        () => {
-          if (hasError.value) {
-            handleRetry();
-          }
-        },
-        2000 * (retryCount.value + 1),
-      ); // Exponential backoff
+      setTimeout(() => {
+        if (hasError.value) {
+          handleRetry();
+        }
+      }, 2000 * (retryCount.value + 1)); // Exponential backoff
     }
   }
 });

@@ -229,12 +229,12 @@
 </template>
 
 <script setup lang="ts">
+import ErrorBoundary from "@/components/error-boundary.vue";
+import { useFormErrors } from "@/composables/use-form-errors.ts";
+import type { Product } from "@/product/product";
+import { productService } from "@/product/singleton";
 import { reactive } from "vue";
 import { useRouter } from "vue-router";
-import { useFormErrors } from "@/composables/use-form-errors";
-import { productService } from "@/services/product-service";
-import ErrorBoundary from "@/components/error-boundary.vue";
-import type { Product } from "@/types/product";
 
 defineOptions({
   name: "NewProduct",

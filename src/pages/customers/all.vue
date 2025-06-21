@@ -4,7 +4,7 @@ defineOptions({
 });
 
 import { errorTrackingService } from "@/error/error-tracking-service";
-import { customerService } from "@/services/customer-service";
+import { customerService } from "@/customer/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { type Customer } from "@/types/customer";
 import { onMounted, ref } from "vue";
@@ -36,7 +36,8 @@ const deleteCustomer = (id: string) => {
 
 const fetchAll = async () => {
   try {
-    customers.value = await customerService.listCustomers();
+    const result = await customerService.listCustomers();
+    customers.value = result.customers;
   } catch (error) {
     errorTrackingService.track(error as Error, {
       component: "AllCustomers",

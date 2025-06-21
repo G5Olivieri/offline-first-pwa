@@ -8,7 +8,7 @@ import { useField, useForm } from "vee-validate";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import * as z from "zod";
-import { customerService } from "@/services/customer-service";
+import { customerService } from "@/customer/singleton";
 import { useOrderStore } from "@/stores/order-store";
 
 const router = useRouter();

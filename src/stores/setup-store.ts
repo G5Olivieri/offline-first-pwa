@@ -65,38 +65,86 @@ export const useSetupStore = defineStore("setupStore", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
       setupState.value.progress = 30;
 
-      // Step 2: Load products from CouchDB
+      // Step 2: Stream products from CouchDB in batches
       setupState.value.currentStep = SetupStep.LOADING_PRODUCTS;
       setupState.value.currentStepDescription =
         SETUP_STEP_DESCRIPTIONS[SetupStep.LOADING_PRODUCTS];
       setupState.value.progress = 40;
 
-      // TODO: stream products instead of loading 1000 at once
-      const allProducts = await productDB.allDocs({
-        include_docs: true,
-        limit: 10000,
-      });
+      // Get total count first for progress tracking
+      const totalCountResult = await productDB.info();
+      const totalDocCount = totalCountResult.doc_count;
+      setupState.value.totalProducts = totalDocCount;
 
-      const products = allProducts.rows.map((row) => row.doc as Product);
-      setupState.value.totalProducts = products.length;
-      setupState.value.progress = 60;
-
-      // Step 3: Add products to search index (if we have products)
-      if (products.length > 0) {
-        setupState.value.currentStep = SetupStep.BUILDING_SEARCH_INDEX;
-        setupState.value.currentStepDescription = `Building search index for ${products.length} products...`;
-        setupState.value.progress = 70;
-
-        // Convert products to IndexableProduct format
-        const indexableProducts = products.map((product) => ({
-          id: product._id,
-          name: product.name,
-          barcode: product.barcode,
-        }));
-
-        await searchService.bulkAdd(indexableProducts);
+      // Handle case where there are no products
+      if (totalDocCount === 0) {
         setupState.value.progress = 90;
+        setupState.value.currentStepDescription =
+          "No products found - system ready";
       } else {
+        const BATCH_SIZE = 1000;
+        let processedCount = 0;
+        let startkey: string | undefined = undefined;
+        let hasMoreData = true;
+
+        setupState.value.currentStep = SetupStep.BUILDING_SEARCH_INDEX;
+
+        while (hasMoreData) {
+          // Load a batch of products
+          const batchResult: PouchDB.Core.AllDocsResponse<Product> =
+            await productDB.allDocs({
+              include_docs: true,
+              limit: BATCH_SIZE,
+              startkey: startkey,
+              skip: startkey ? 1 : 0, // Skip the last doc from previous batch to avoid duplicates
+            });
+
+          if (batchResult.rows.length === 0) {
+            hasMoreData = false;
+            break; // No more products to process
+          }
+
+          // Extract products from the batch
+          const batchProducts = batchResult.rows
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .map((row: any) => row.doc as Product)
+            .filter(
+              (product: Product | null): product is Product => product !== null
+            );
+
+          // Update progress for loading
+          processedCount += batchProducts.length;
+          const loadingProgress = 40 + (processedCount / totalDocCount) * 30; // 40-70% for loading
+          setupState.value.progress = Math.min(loadingProgress, 70);
+          setupState.value.currentStepDescription = `Loading products... ${processedCount}/${totalDocCount}`;
+
+          // Convert to IndexableProduct format and add to search index
+          const indexableProducts = batchProducts.map((product: Product) => ({
+            id: product._id,
+            name: product.name,
+            nonProprietaryName: product.nonProprietaryName || undefined,
+            barcode: product.barcode,
+          }));
+
+          // Add batch to search index
+          await searchService.bulkAdd(indexableProducts);
+
+          // Update progress for indexing
+          const indexingProgress = 70 + (processedCount / totalDocCount) * 20; // 70-90% for indexing
+          setupState.value.progress = Math.min(indexingProgress, 90);
+          setupState.value.currentStepDescription = `Building search index... ${processedCount}/${totalDocCount} products indexed`;
+
+          // Set up for next batch
+          if (batchResult.rows.length === BATCH_SIZE) {
+            startkey = batchResult.rows[batchResult.rows.length - 1].id;
+          } else {
+            hasMoreData = false; // Last batch was smaller than BATCH_SIZE, we're done
+          }
+
+          // Small delay to prevent blocking the UI thread
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+
         setupState.value.progress = 90;
       }
 

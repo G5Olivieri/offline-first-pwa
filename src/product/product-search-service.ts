@@ -1,5 +1,5 @@
-import Fuse, { type FuseResult, type IFuseOptions } from "fuse.js";
 import { config } from "@/config/env";
+import Fuse, { type FuseResult, type IFuseOptions } from "fuse.js";
 
 const DB_NAME = config.search.dbName;
 const DB_VERSION = config.search.dbVersion;
@@ -17,6 +17,7 @@ interface SearchIndexData {
 export interface IndexableProduct {
   id: string;
   name: string;
+  nonProprietaryName?: string;
   barcode: string;
 }
 
@@ -30,6 +31,7 @@ export class ProductSearchService {
     keys: [
       { name: "name", weight: 0.7 },
       { name: "barcode", weight: 0.3 },
+      { name: "nonProprietaryName", weight: 0.7 },
     ],
     threshold: 0.3,
     distance: 100,
@@ -59,17 +61,17 @@ export class ProductSearchService {
 
           if (cachedIndex) {
             this.docs = new Map(
-              cachedIndex.dataset.map((item) => [item.id, item]),
+              cachedIndex.dataset.map((item) => [item.id, item])
             );
 
             const fuseIndex = Fuse.parseIndex(
-              JSON.parse(cachedIndex.fuseIndex),
+              JSON.parse(cachedIndex.fuseIndex)
             );
 
             this.fuse = new Fuse(
               cachedIndex.dataset,
               this.fuseOptions,
-              fuseIndex,
+              fuseIndex
             );
           } else {
             this.fuse = new Fuse([], this.fuseOptions);
@@ -131,7 +133,7 @@ export class ProductSearchService {
   // Main search method - searches both name and barcode, returns only product IDs
   search(
     query: string,
-    options: { limit?: number; skip?: number } = {},
+    options: { limit?: number; skip?: number } = {}
   ): {
     count: number;
     productIds: string[];

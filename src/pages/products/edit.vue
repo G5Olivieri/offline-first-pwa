@@ -8,9 +8,9 @@ import { useField, useForm } from "vee-validate";
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import * as z from "zod";
-import { productService } from "@/services/product-service";
+import { productService } from "@/product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
-import type { Product } from "@/types/product";
+import type { Product } from "@/product/product";
 
 const route = useRoute();
 const router = useRouter();

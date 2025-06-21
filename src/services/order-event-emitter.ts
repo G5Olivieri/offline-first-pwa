@@ -7,8 +7,8 @@ import {
 import type { Customer } from "@/types/customer";
 import type { Operator } from "@/types/operator";
 import type { Order } from "@/types/order";
-import type { Product } from "@/types/product";
-import { errorTrackingService } from "./error-tracking-service";
+import type { Product } from "@/product/product";
+import { errorTrackingService } from "../error/error-tracking-service";
 
 export type OrderEventTypeMap = {
   stock_limit_reached: {

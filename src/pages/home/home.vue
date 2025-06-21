@@ -9,7 +9,7 @@ import { useOrderStore } from "@/stores/order-store";
 import { useRecommendationStore } from "@/stores/recommendation-store";
 import { useTerminalStore } from "@/stores/terminal-store";
 import { RecommendationType } from "@/types/recommendation";
-import ItemCard from "./item-card.vue";
+import ItemCard from "@/pages/home/item-card.vue";
 
 const orderStore = useOrderStore();
 const recommendationStore = useRecommendationStore();

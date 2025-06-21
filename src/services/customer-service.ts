@@ -34,16 +34,12 @@ export class CustomerService {
   }
 
   async listCustomers({ limit = 100, skip = 0 } = {}): Promise<Customer[]> {
-    try {
-      const result = await this.db.allDocs({
-        include_docs: true,
-        limit,
-        skip,
-      });
-      return result.rows.map((row) => row.doc as Customer);
-    } catch {
-      return [];
-    }
+    const result = await this.db.allDocs({
+      include_docs: true,
+      limit,
+      skip,
+    });
+    return result.rows.map((row) => row.doc as Customer);
   }
 
   async deleteCustomer(id: string) {

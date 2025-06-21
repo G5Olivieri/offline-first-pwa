@@ -1,5 +1,5 @@
 import type { ErrorTracking } from "@/error/error-tracking";
-import type { Product } from "@/types/product";
+import type { Product } from "@/product/product";
 import type { NotificationService } from "./notification-service";
 import { orderEventEmitter, type OrderEvent } from "./order-event-emitter";
 

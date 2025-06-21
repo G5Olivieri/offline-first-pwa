@@ -133,7 +133,7 @@ import { useRouter } from "vue-router";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOrderStore } from "@/stores/order-store";
 import { useRecommendationStore } from "@/stores/recommendation-store";
-import type { Product } from "@/types/product";
+import type { Product } from "@/product/product";
 
 interface Props {
   currentProduct: Product;

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed } from "vue";
-import type { Product } from "@/types/product";
+import type { Product } from "@/product/product";
 import { useOrderStore } from "@/stores/order-store";
 import { config, formatCurrency } from "@/config/env";
 

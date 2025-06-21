@@ -4,20 +4,15 @@ export interface ErrorLog {
   severity: "low" | "medium" | "high" | "critical";
   message: string;
   stack?: string;
-  context: {
-    component?: string;
-    operation?: string;
-    userId?: string;
-    timestamp: Date;
-    url: string;
-    userAgent: string;
-  };
-  resolved: boolean;
-  resolvedAt?: Date;
-  metadata?: Record<string, unknown>;
+  context: Record<string, unknown>;
 }
 
 export class ErrorTrackingService {
+  constructor(
+    private readonly source: string,
+    private readonly context?: Record<string, unknown>
+  ) {}
+
   public track(error: Error, context: Record<string, unknown> = {}) {
     const errorLog: ErrorLog = {
       id: crypto.randomUUID(),
@@ -26,13 +21,13 @@ export class ErrorTrackingService {
       message: error.message,
       stack: error.stack,
       context: {
+        ...this.context,
+        source: this.source,
         timestamp: new Date(),
         url: window.location.href,
         userAgent: navigator.userAgent,
         ...context,
       },
-      resolved: false,
-      metadata: {},
     };
 
     if (errorLog.severity === "critical") {
@@ -120,4 +115,4 @@ export class ErrorTrackingService {
   }
 }
 
-export const errorTrackingService = new ErrorTrackingService();
+export const errorTrackingService = new ErrorTrackingService("global");

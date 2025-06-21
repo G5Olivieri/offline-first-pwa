@@ -4,11 +4,11 @@ defineOptions({
 });
 
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { productService } from "@/services/product-service";
-import { searchService } from "@/services/search-service";
+import { productService } from "@/product/singleton";
+import { searchService } from "@/product/product-search-service";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOrderStore } from "@/stores/order-store";
-import type { Product } from "@/types/product";
+import type { Product } from "@/product/product";
 
 const notificationStore = useNotificationStore();
 const orderStore = useOrderStore();

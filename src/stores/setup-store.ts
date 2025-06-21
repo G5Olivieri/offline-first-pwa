@@ -1,6 +1,6 @@
 import { getProductDB } from "@/db";
-import { searchService } from "@/services/search-service";
-import type { Product } from "@/types/product";
+import { searchService } from "@/product/product-search-service";
+import type { Product } from "@/product/product";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 

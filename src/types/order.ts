@@ -1,4 +1,4 @@
-import type { Product } from "@/types/product";
+import type { Product } from "@/product/product";
 
 export enum OrderStatus {
   PENDING = "pending",

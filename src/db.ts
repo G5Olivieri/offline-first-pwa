@@ -4,7 +4,7 @@ import { config } from "@/config/env";
 import type { Customer } from "@/types/customer";
 import type { Operator } from "@/types/operator";
 import { type Order } from "@/types/order";
-import type { Product } from "@/types/product";
+import type { Product } from "@/product/product";
 import type {
   CustomerProductPreference,
   ProductAffinity,

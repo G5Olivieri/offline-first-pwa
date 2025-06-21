@@ -9,7 +9,7 @@ import {
   createPOSShortcuts,
   useKeyboardShortcuts,
 } from "@/composables/use-keyboard-shortcuts";
-import { productService } from "@/services/product-service";
+import { productService } from "./product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOnlineStatusStore } from "@/stores/online-status-store";
 import { useOrderStore } from "@/stores/order-store";

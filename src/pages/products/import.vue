@@ -205,7 +205,7 @@ defineOptions({
 
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { productService } from "@/services/product-service";
+import { productService } from "@/product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 
 const notificationStore = useNotificationStore();

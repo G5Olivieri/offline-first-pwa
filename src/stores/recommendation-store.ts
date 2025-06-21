@@ -1,8 +1,8 @@
-import { productService } from "@/services/product-service";
+import { productService } from "@/product/singleton";
 import { recommendationEngine } from "@/services/recommendation-engine";
 import type { Customer } from "@/types/customer";
 import type { Item } from "@/types/order";
-import type { Product } from "@/types/product";
+import type { Product } from "@/product/product";
 import type {
   ProductRecommendation,
   RecommendationSet,

@@ -6,7 +6,7 @@ import {
 } from "@/db";
 import type { Customer } from "@/types/customer";
 import type { Item, Order } from "@/types/order";
-import type { Product } from "@/types/product";
+import type { Product } from "@/product/product";
 import type {
   CustomerProductPreference,
   ProductAffinity,

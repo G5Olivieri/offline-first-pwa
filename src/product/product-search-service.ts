@@ -20,7 +20,7 @@ export interface IndexableProduct {
   barcode: string;
 }
 
-export class SearchService {
+export class ProductSearchService {
   private fuse: Fuse<IndexableProduct> | null = null;
   private db: IDBDatabase | null = null;
   private docs = new Map<string, IndexableProduct>();
@@ -232,6 +232,3 @@ export class SearchService {
     });
   }
 }
-
-// Global search service instance
-export const searchService = new SearchService();

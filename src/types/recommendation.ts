@@ -1,5 +1,5 @@
 import type { Customer } from "@/types/customer";
-import type { Product } from "@/types/product";
+import type { Product } from "@/product/product";
 
 export enum RecommendationType {
   CROSS_SELL = "cross-sell",

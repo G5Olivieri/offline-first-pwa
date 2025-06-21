@@ -3,23 +3,34 @@ defineOptions({
   name: "AllCustomers",
 });
 
-import { onMounted, ref } from "vue";
+import { errorTrackingService } from "@/error/error-tracking-service";
 import { customerService } from "@/services/customer-service";
+import { useNotificationStore } from "@/stores/notification-store";
 import { type Customer } from "@/types/customer";
+import { onMounted, ref } from "vue";
 
 const customers = ref<Customer[]>([]);
+const notificationStore = useNotificationStore();
 
 const deleteCustomer = (id: string) => {
   customerService
     .deleteCustomer(id)
     .then(() => {
       customers.value = customers.value.filter(
-        (customer) => customer._id !== id,
+        (customer) => customer._id !== id
       );
     })
     .catch((error) => {
-      console.error("Error deleting customer:", error);
-      alert("Failed to delete customer. Please try again.");
+      errorTrackingService.track(error as Error, {
+        component: "AllCustomers",
+        operation: "deleteCustomer",
+        customerId: id,
+        timestamp: new Date(),
+      });
+      notificationStore.showError(
+        "Delete Customer",
+        "Failed to delete customer. Please try again."
+      );
     });
 };
 
@@ -27,8 +38,15 @@ const fetchAll = async () => {
   try {
     customers.value = await customerService.listCustomers();
   } catch (error) {
-    console.error("Error fetching customers:", error);
-    alert("Failed to fetch customers. Please try again.");
+    errorTrackingService.track(error as Error, {
+      component: "AllCustomers",
+      operation: "fetchAll",
+      timestamp: new Date(),
+    });
+    notificationStore.showError(
+      "Fetch Customers",
+      "Failed to fetch customers. Please try again."
+    );
   }
 };
 

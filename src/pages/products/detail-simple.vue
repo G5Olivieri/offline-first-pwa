@@ -594,8 +594,8 @@ import { useRoute, useRouter } from "vue-router";
 import { getProductDB } from "@/db";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOrderStore } from "@/stores/order-store";
-import type { Product } from "@/types/product";
-import { productService } from "@/services/product-service";
+import type { Product } from "@/product/product";
+import { productService } from "@/product/singleton";
 
 const route = useRoute();
 const router = useRouter();

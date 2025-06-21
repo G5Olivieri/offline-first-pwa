@@ -15,6 +15,7 @@ A modern, feature-rich Point of Sale (POS) system built as a Progressive Web App
 ## ✨ Features
 
 ### 🎯 Core POS Functionality
+
 - **Product Management**: Barcode scanning, inventory tracking, and product catalog
 - **Order Processing**: Cart management, pricing calculations, and transaction handling
 - **Customer Management**: Customer profiles, purchase history, and loyalty tracking
@@ -22,6 +23,7 @@ A modern, feature-rich Point of Sale (POS) system built as a Progressive Web App
 - **Real-time Inventory**: Live stock updates and low-inventory alerts
 
 ### 🚀 Modern Technology Stack
+
 - **Progressive Web App**: Offline-first architecture with service workers
 - **Real-time Sync**: CouchDB integration with PouchDB for seamless data synchronization
 - **Responsive Design**: Mobile-first UI with Tailwind CSS and glassmorphism effects
@@ -29,6 +31,7 @@ A modern, feature-rich Point of Sale (POS) system built as a Progressive Web App
 - **Modern Vue 3**: Composition API, `<script setup>`, and reactive state management
 
 ### 🎨 User Experience
+
 - **Modern UI/UX**: Beautiful, intuitive interface with smooth animations
 - **Keyboard Shortcuts**: Fast operation with F-key shortcuts for power users
 - **Touch-Friendly**: Optimized for tablets and touch-screen devices
@@ -36,6 +39,7 @@ A modern, feature-rich Point of Sale (POS) system built as a Progressive Web App
 - **Dark Mode**: Automatic theme switching based on user preferences
 
 ### 🔒 Enterprise Features
+
 - **Security**: Input validation, XSS protection, and secure headers
 - **Scalability**: Kubernetes-ready with auto-scaling capabilities
 - **Monitoring**: Health checks, logging, and performance metrics
@@ -57,17 +61,17 @@ graph TB
 
 ### Technology Stack
 
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Frontend** | Vue 3 + TypeScript | Reactive UI framework |
-| **Styling** | Tailwind CSS | Utility-first CSS framework |
-| **PWA** | Vite PWA Plugin | Service worker and manifest |
-| **Database** | CouchDB + PouchDB | Offline-first data storage |
-| **State Management** | Pinia | Reactive state management |
-| **Validation** | Vee-Validate + Zod | Form validation and schema |
-| **Build Tool** | Vite | Fast development and building |
-| **Deployment** | Kubernetes + Helm | Container orchestration |
-| **Web Server** | Nginx | Static file serving and routing |
+| Layer                | Technology         | Purpose                         |
+| -------------------- | ------------------ | ------------------------------- |
+| **Frontend**         | Vue 3 + TypeScript | Reactive UI framework           |
+| **Styling**          | Tailwind CSS       | Utility-first CSS framework     |
+| **PWA**              | Vite PWA Plugin    | Service worker and manifest     |
+| **Database**         | CouchDB + PouchDB  | Offline-first data storage      |
+| **State Management** | Pinia              | Reactive state management       |
+| **Validation**       | Vee-Validate + Zod | Form validation and schema      |
+| **Build Tool**       | Vite               | Fast development and building   |
+| **Deployment**       | Kubernetes + Helm  | Container orchestration         |
+| **Web Server**       | Nginx              | Static file serving and routing |
 
 ## 🚀 Quick Start
 
@@ -81,28 +85,33 @@ graph TB
 ### Development Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd vue-pwa
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up CouchDB**
+
    ```bash
    docker-compose up -d couchdb-store
    ```
 
 4. **Configure environment**
+
    ```bash
    # Update CouchDB URL in src/db.ts if needed
    # Default: http://localhost:5984
    ```
 
 5. **Start development server**
+
    ```bash
    npm run dev
    ```
@@ -126,15 +135,15 @@ npm run preview
 
 ### Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| `F1` | Focus barcode input |
+| Key  | Action                  |
+| ---- | ----------------------- |
+| `F1` | Focus barcode input     |
 | `F2` | Logout current operator |
-| `F3` | Change operator |
-| `F4` | Clear current customer |
-| `F5` | Select customer |
-| `F6` | Complete order |
-| `F7` | Abandon order |
+| `F3` | Change operator         |
+| `F4` | Clear current customer  |
+| `F5` | Select customer         |
+| `F6` | Complete order          |
+| `F7` | Abandon order           |
 
 ### Basic Workflow
 
@@ -183,7 +192,8 @@ The `docker-compose.yml` includes:
 ### CouchDB Access
 
 Once started, CouchDB will be available at:
-- **Web Interface**: http://localhost:5984/_utils
+
+- **Web Interface**: http://localhost:5984/\_utils
 - **API Endpoint**: http://localhost:5984
 - **Credentials**: admin/password
 
@@ -212,6 +222,7 @@ docker-compose up -d couchdb-store
 ### Docker Deployment
 
 1. **Build the Docker image**
+
    ```bash
    docker build -t pos-frontend:latest .
    ```
@@ -224,6 +235,7 @@ docker-compose up -d couchdb-store
 ### Kubernetes Deployment
 
 1. **Deploy using Helm**
+
    ```bash
    # Quick deployment
    ./deploy.sh
@@ -235,12 +247,14 @@ docker-compose up -d couchdb-store
    ```
 
 2. **Verify deployment**
+
    ```bash
    kubectl get pods -l app.kubernetes.io/name=pos-frontend
    helm test pos-frontend
    ```
 
 3. **Access the application**
+
    ```bash
    # Port forward for testing
    kubectl port-forward svc/pos-frontend 8080:80
@@ -252,6 +266,7 @@ docker-compose up -d couchdb-store
 ### Environment Configuration
 
 #### Development
+
 ```yaml
 # values-dev.yaml
 replicaCount: 1
@@ -267,6 +282,7 @@ resources:
 ```
 
 #### Production
+
 ```yaml
 # values-prod.yaml
 replicaCount: 3
@@ -287,21 +303,25 @@ resources:
 ## 🧪 Testing
 
 ### Unit Tests
+
 ```bash
 npm run test:unit
 ```
 
 ### E2E Tests
+
 ```bash
 npm run test:e2e
 ```
 
 ### Helm Tests
+
 ```bash
 helm test pos-frontend
 ```
 
 ### Performance Testing
+
 ```bash
 npm run lighthouse
 ```
@@ -310,15 +330,16 @@ npm run lighthouse
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `COUCHDB_URL` | CouchDB server URL | `http://localhost:5984` |
-| `NODE_ENV` | Environment mode | `development` |
-| `VITE_APP_TITLE` | Application title | `POS System` |
+| Variable         | Description        | Default                 |
+| ---------------- | ------------------ | ----------------------- |
+| `COUCHDB_URL`    | CouchDB server URL | `http://localhost:5984` |
+| `NODE_ENV`       | Environment mode   | `development`           |
+| `VITE_APP_TITLE` | Application title  | `POS System`            |
 
 ### CouchDB Setup
 
 1. **Create databases**
+
    ```bash
    curl -X PUT http://admin:password@localhost:5984/products
    curl -X PUT http://admin:password@localhost:5984/customers
@@ -337,11 +358,13 @@ npm run lighthouse
 ## 📊 Monitoring
 
 ### Health Checks
+
 - **Liveness**: `/health` endpoint
 - **Readiness**: Application startup check
 - **Metrics**: Prometheus integration available
 
 ### Logging
+
 - **Application logs**: Structured JSON logging
 - **Access logs**: Nginx access patterns
 - **Error tracking**: Centralized error collection
@@ -349,6 +372,7 @@ npm run lighthouse
 ## 🔐 Security
 
 ### Security Features
+
 - **Content Security Policy**: XSS protection
 - **HTTPS Enforcement**: SSL/TLS termination
 - **Input Validation**: Zod schema validation
@@ -357,6 +381,7 @@ npm run lighthouse
 - **Security Headers**: OWASP recommended headers
 
 ### Best Practices
+
 - Non-root container execution
 - Read-only root filesystem
 - Network policies for traffic control
@@ -374,6 +399,7 @@ We welcome contributions! Please follow these steps:
 5. **Open** a Pull Request
 
 ### Development Guidelines
+
 - Follow TypeScript strict mode
 - Use Composition API for new components
 - Write tests for new features
@@ -385,6 +411,7 @@ We welcome contributions! Please follow these steps:
 ### PouchDB/CouchDB Schema
 
 #### Products
+
 ```typescript
 interface Product {
   _id: string;
@@ -398,6 +425,7 @@ interface Product {
 ```
 
 #### Customers
+
 ```typescript
 interface Customer {
   _id: string;
@@ -410,6 +438,7 @@ interface Customer {
 ```
 
 #### Orders
+
 ```typescript
 interface Order {
   _id: string;
@@ -417,7 +446,7 @@ interface Order {
   operatorId: string;
   items: OrderItem[];
   total: number;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: "pending" | "completed" | "cancelled";
   createdAt: Date;
 }
 ```
@@ -427,6 +456,7 @@ interface Order {
 ### Common Issues
 
 #### Build Issues
+
 ```bash
 # Clear cache and reinstall
 rm -rf node_modules package-lock.json
@@ -437,12 +467,14 @@ npm run type-check
 ```
 
 #### PWA Issues
+
 ```bash
 # Clear service worker cache
 # Go to DevTools > Application > Storage > Clear storage
 ```
 
 #### Database Issues
+
 ```bash
 # Check CouchDB connection
 curl http://localhost:5984/_up
@@ -452,6 +484,7 @@ curl http://localhost:5984/_up
 ```
 
 #### Kubernetes Issues
+
 ```bash
 # Check pod logs
 kubectl logs -l app.kubernetes.io/name=pos-frontend
@@ -466,6 +499,7 @@ kubectl get ingress pos-frontend -o yaml
 ## 📈 Performance
 
 ### Optimization Features
+
 - **Code Splitting**: Lazy-loaded routes
 - **Tree Shaking**: Unused code elimination
 - **Asset Optimization**: Image compression and WebP support
@@ -473,6 +507,7 @@ kubectl get ingress pos-frontend -o yaml
 - **Bundle Analysis**: Webpack bundle analyzer
 
 ### Performance Metrics
+
 - **First Contentful Paint**: < 1.5s
 - **Largest Contentful Paint**: < 2.5s
 - **Cumulative Layout Shift**: < 0.1

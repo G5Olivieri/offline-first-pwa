@@ -26,17 +26,20 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
 ### Development Setup
 
 1. **Fork and clone the repository**
+
    ```bash
    git clone https://github.com/your-username/pos-system.git
    cd pos-system
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up the development environment**
+
    ```bash
    # Start CouchDB (using Docker)
    docker run -d --name couchdb -p 5984:5984 \
@@ -61,6 +64,7 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
 Before creating bug reports, please check existing issues to avoid duplicates.
 
 **Bug Report Template:**
+
 - **Description**: Clear description of the bug
 - **Steps to Reproduce**: Detailed steps to reproduce the issue
 - **Expected Behavior**: What you expected to happen
@@ -71,6 +75,7 @@ Before creating bug reports, please check existing issues to avoid duplicates.
 ### Suggesting Enhancements
 
 Enhancement suggestions are welcome! Please provide:
+
 - **Clear title** and description
 - **Use case** and rationale
 - **Proposed solution** or implementation approach
@@ -79,22 +84,26 @@ Enhancement suggestions are welcome! Please provide:
 ### Pull Requests
 
 1. **Create a feature branch**
+
    ```bash
    git checkout -b feature/amazing-feature
    ```
 
 2. **Make your changes**
+
    - Follow the coding standards
    - Add tests for new functionality
    - Update documentation
    - Ensure all tests pass
 
 3. **Commit your changes**
+
    ```bash
    git commit -m 'feat: add amazing feature'
    ```
 
    Use [Conventional Commits](https://conventionalcommits.org/) format:
+
    - `feat:` New features
    - `fix:` Bug fixes
    - `docs:` Documentation changes
@@ -104,6 +113,7 @@ Enhancement suggestions are welcome! Please provide:
    - `chore:` Maintenance tasks
 
 4. **Push to your fork**
+
    ```bash
    git push origin feature/amazing-feature
    ```
@@ -157,8 +167,8 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'select', item: Item): void;
-  (e: 'close'): void;
+  (e: "select", item: Item): void;
+  (e: "close"): void;
 }
 
 const props = defineProps<Props>();
@@ -181,8 +191,8 @@ const emit = defineEmits<Emits>();
 - Mock external dependencies
 
 ```typescript
-describe('useProductSearch', () => {
-  it('should filter products by name', () => {
+describe("useProductSearch", () => {
+  it("should filter products by name", () => {
     // Test implementation
   });
 });
@@ -246,20 +256,20 @@ src/
 ### Test Structure
 
 ```typescript
-describe('Component/Function Name', () => {
+describe("Component/Function Name", () => {
   beforeEach(() => {
     // Setup
   });
 
-  it('should handle normal case', () => {
+  it("should handle normal case", () => {
     // Test implementation
   });
 
-  it('should handle edge case', () => {
+  it("should handle edge case", () => {
     // Test implementation
   });
 
-  it('should handle error case', () => {
+  it("should handle error case", () => {
     // Test implementation
   });
 });
@@ -332,6 +342,7 @@ describe('Component/Function Name', () => {
 ## 🏆 Recognition
 
 Contributors will be recognized in:
+
 - README.md contributors section
 - Release notes
 - Annual contributor highlights

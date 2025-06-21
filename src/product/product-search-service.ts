@@ -61,17 +61,17 @@ export class ProductSearchService {
 
           if (cachedIndex) {
             this.docs = new Map(
-              cachedIndex.dataset.map((item) => [item.id, item])
+              cachedIndex.dataset.map((item) => [item.id, item]),
             );
 
             const fuseIndex = Fuse.parseIndex(
-              JSON.parse(cachedIndex.fuseIndex)
+              JSON.parse(cachedIndex.fuseIndex),
             );
 
             this.fuse = new Fuse(
               cachedIndex.dataset,
               this.fuseOptions,
-              fuseIndex
+              fuseIndex,
             );
           } else {
             this.fuse = new Fuse([], this.fuseOptions);
@@ -133,7 +133,7 @@ export class ProductSearchService {
   // Main search method - searches both name and barcode, returns only product IDs
   search(
     query: string,
-    options: { limit?: number; skip?: number } = {}
+    options: { limit?: number; skip?: number } = {},
   ): {
     count: number;
     productIds: string[];

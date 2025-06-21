@@ -48,5 +48,5 @@ export default defineConfig([
     files: ["**/*.vue"],
     languageOptions: { parserOptions: { parser: tseslint.parser } },
   },
-  eslintConfigPrettier,
+  eslintConfigPrettier.configs.recommended,
 ]);

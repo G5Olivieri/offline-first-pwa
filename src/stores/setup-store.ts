@@ -109,7 +109,7 @@ export const useSetupStore = defineStore("setupStore", () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .map((row: any) => row.doc as Product)
             .filter(
-              (product: Product | null): product is Product => product !== null
+              (product: Product | null): product is Product => product !== null,
             );
 
           // Update progress for loading

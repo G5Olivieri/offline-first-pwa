@@ -43,62 +43,62 @@ The following table lists the configurable parameters and their default values.
 
 ### Application Settings
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `replicaCount` | Number of replicas | `2` |
-| `image.repository` | Image repository | `pos-frontend` |
-| `image.tag` | Image tag | `"latest"` |
-| `image.pullPolicy` | Image pull policy | `IfNotPresent` |
-| `nameOverride` | Override the name | `""` |
-| `fullnameOverride` | Override the full name | `""` |
+| Parameter          | Description            | Default        |
+| ------------------ | ---------------------- | -------------- |
+| `replicaCount`     | Number of replicas     | `2`            |
+| `image.repository` | Image repository       | `pos-frontend` |
+| `image.tag`        | Image tag              | `"latest"`     |
+| `image.pullPolicy` | Image pull policy      | `IfNotPresent` |
+| `nameOverride`     | Override the name      | `""`           |
+| `fullnameOverride` | Override the full name | `""`           |
 
 ### Service Settings
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `service.type` | Service type | `ClusterIP` |
-| `service.port` | Service port | `80` |
-| `service.targetPort` | Container port | `8080` |
+| Parameter            | Description    | Default     |
+| -------------------- | -------------- | ----------- |
+| `service.type`       | Service type   | `ClusterIP` |
+| `service.port`       | Service port   | `80`        |
+| `service.targetPort` | Container port | `8080`      |
 
 ### Ingress Settings
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `ingress.enabled` | Enable ingress | `true` |
-| `ingress.className` | Ingress class name | `"nginx"` |
-| `ingress.hosts[0].host` | Hostname | `pos-frontend.local` |
-| `ingress.hosts[0].paths[0].path` | Path | `/` |
-| `ingress.hosts[0].paths[0].pathType` | Path type | `Prefix` |
-| `ingress.tls[0].secretName` | TLS secret name | `pos-frontend-tls` |
+| Parameter                            | Description        | Default              |
+| ------------------------------------ | ------------------ | -------------------- |
+| `ingress.enabled`                    | Enable ingress     | `true`               |
+| `ingress.className`                  | Ingress class name | `"nginx"`            |
+| `ingress.hosts[0].host`              | Hostname           | `pos-frontend.local` |
+| `ingress.hosts[0].paths[0].path`     | Path               | `/`                  |
+| `ingress.hosts[0].paths[0].pathType` | Path type          | `Prefix`             |
+| `ingress.tls[0].secretName`          | TLS secret name    | `pos-frontend-tls`   |
 
 ### Resource Management
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `resources.limits.cpu` | CPU limit | `500m` |
-| `resources.limits.memory` | Memory limit | `512Mi` |
-| `resources.requests.cpu` | CPU request | `250m` |
+| Parameter                   | Description    | Default |
+| --------------------------- | -------------- | ------- |
+| `resources.limits.cpu`      | CPU limit      | `500m`  |
+| `resources.limits.memory`   | Memory limit   | `512Mi` |
+| `resources.requests.cpu`    | CPU request    | `250m`  |
 | `resources.requests.memory` | Memory request | `256Mi` |
 
 ### Autoscaling
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `autoscaling.enabled` | Enable HPA | `true` |
-| `autoscaling.minReplicas` | Minimum replicas | `2` |
-| `autoscaling.maxReplicas` | Maximum replicas | `10` |
-| `autoscaling.targetCPUUtilizationPercentage` | CPU target | `80` |
-| `autoscaling.targetMemoryUtilizationPercentage` | Memory target | `80` |
+| Parameter                                       | Description      | Default |
+| ----------------------------------------------- | ---------------- | ------- |
+| `autoscaling.enabled`                           | Enable HPA       | `true`  |
+| `autoscaling.minReplicas`                       | Minimum replicas | `2`     |
+| `autoscaling.maxReplicas`                       | Maximum replicas | `10`    |
+| `autoscaling.targetCPUUtilizationPercentage`    | CPU target       | `80`    |
+| `autoscaling.targetMemoryUtilizationPercentage` | Memory target    | `80`    |
 
 ### Security Settings
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `podSecurityContext.fsGroup` | File system group | `101` |
-| `podSecurityContext.runAsNonRoot` | Run as non-root | `true` |
-| `podSecurityContext.runAsUser` | User ID | `101` |
+| Parameter                                  | Description                | Default |
+| ------------------------------------------ | -------------------------- | ------- |
+| `podSecurityContext.fsGroup`               | File system group          | `101`   |
+| `podSecurityContext.runAsNonRoot`          | Run as non-root            | `true`  |
+| `podSecurityContext.runAsUser`             | User ID                    | `101`   |
 | `securityContext.allowPrivilegeEscalation` | Allow privilege escalation | `false` |
-| `securityContext.readOnlyRootFilesystem` | Read-only root filesystem | `true` |
+| `securityContext.readOnlyRootFilesystem`   | Read-only root filesystem  | `true`  |
 
 ## Building and Pushing the Docker Image
 
@@ -141,6 +141,7 @@ helm install pos-frontend ./helm-chart \
 ## Monitoring and Health Checks
 
 The application includes:
+
 - **Liveness Probe**: Checks if the application is running
 - **Readiness Probe**: Checks if the application is ready to serve traffic
 - **Health Endpoint**: Available at `/health` for external monitoring
@@ -157,6 +158,7 @@ The application includes:
 ## PWA Features
 
 The application is configured as a Progressive Web App with:
+
 - Service worker support
 - Web app manifest
 - Offline capability

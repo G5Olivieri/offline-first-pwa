@@ -9,6 +9,7 @@ This document outlines comprehensive error handling strategies, patterns, and be
 ## Types of Errors in POS Context
 
 ### 1. **Database Errors**
+
 - PouchDB read/write failures
 - Document conflicts during sync operations
 - Missing or corrupted local data
@@ -16,6 +17,7 @@ This document outlines comprehensive error handling strategies, patterns, and be
 - Replication errors with remote CouchDB
 
 ### 2. **Network Errors**
+
 - Failed API requests to remote services
 - Sync failures when transitioning online/offline
 - Payment gateway connection issues
@@ -23,6 +25,7 @@ This document outlines comprehensive error handling strategies, patterns, and be
 - DNS resolution failures
 
 ### 3. **Validation Errors**
+
 - Invalid product barcodes or prices
 - Incomplete customer information
 - Missing required order fields
@@ -30,6 +33,7 @@ This document outlines comprehensive error handling strategies, patterns, and be
 - Data format mismatches (Zod schema violations)
 
 ### 4. **Business Logic Errors**
+
 - Insufficient inventory for sale
 - Invalid discount applications
 - Unauthorized operator actions
@@ -37,6 +41,7 @@ This document outlines comprehensive error handling strategies, patterns, and be
 - Duplicate order processing
 
 ### 5. **System Errors**
+
 - Service Worker registration failures
 - PWA installation issues
 - Browser storage quota exceeded
@@ -44,6 +49,7 @@ This document outlines comprehensive error handling strategies, patterns, and be
 - Unhandled promise rejections
 
 ### 6. **User Interface Errors**
+
 - Component rendering failures
 - Navigation routing errors
 - Form submission failures
@@ -51,6 +57,7 @@ This document outlines comprehensive error handling strategies, patterns, and be
 - Reactive data binding issues
 
 ### 7. **Configuration Errors**
+
 - Invalid environment variables
 - Missing required settings
 - Malformed configuration files
@@ -59,6 +66,7 @@ This document outlines comprehensive error handling strategies, patterns, and be
 ## Error Characteristics
 
 An error in this system is characterized by:
+
 - **Disruption**: Prevents normal application flow
 - **Impact**: Affects user experience or data integrity
 - **Recoverability**: May be recoverable through retry or fallback mechanisms
@@ -68,6 +76,7 @@ An error in this system is characterized by:
 ## Error Context Information
 
 Each error should capture:
+
 - **Timestamp**: When the error occurred
 - **Location**: Which component, store, or service
 - **User Context**: Current operator, customer, or order
@@ -78,6 +87,7 @@ Each error should capture:
 Error handling is the process of responding to and managing errors that occur during the execution of a program. In the context of a POS (Point of Sale) system, effective error handling is essential to ensure smooth operation, maintain data integrity, and provide a good user experience.
 
 Error handling is crucial for maintaining a robust and user-friendly POS system. Our approach focuses on:
+
 - Graceful degradation
 - User experience preservation
 - Data integrity protection
@@ -195,6 +205,7 @@ onUnmounted(() => {
 ```
 
 #### Pros
+
 - **Decoupled Architecture**: Components don't need to know about error handling implementation
 - **Flexible Strategies**: Different handlers can be registered for different error types
 - **Extensible**: Easy to add new error types and handlers
@@ -203,6 +214,7 @@ onUnmounted(() => {
 - **Testing Friendly**: Easy to mock and test error scenarios
 
 #### Cons
+
 - **Complexity**: Requires additional setup and event management
 - **Memory Leaks Risk**: Must properly unsubscribe event listeners
 - **Debugging Difficulty**: Error flow can be harder to trace
@@ -232,7 +244,7 @@ export interface ErrorHandler {
 // Network error handler
 export class NetworkErrorHandler implements ErrorHandler {
   canHandle(error: Error): boolean {
-    return error.name === 'TypeError' && error.message.includes('fetch');
+    return error.name === "TypeError" && error.message.includes("fetch");
   }
 
   async handle(error: Error, context: ErrorContext): Promise<void> {
@@ -262,7 +274,7 @@ export class NetworkErrorHandler implements ErrorHandler {
 // Validation error handler
 export class ValidationErrorHandler implements ErrorHandler {
   canHandle(error: Error): boolean {
-    return error.name === 'ValidationError';
+    return error.name === "ValidationError";
   }
 
   async handle(error: Error, context: ErrorContext): Promise<void> {
@@ -294,7 +306,7 @@ export class ErrorMiddleware {
   }
 
   async handleError(error: Error, context: ErrorContext): Promise<void> {
-    const handler = this.handlers.find(h => h.canHandle(error, context));
+    const handler = this.handlers.find((h) => h.canHandle(error, context));
 
     if (handler) {
       await handler.handle(error, context);
@@ -305,7 +317,7 @@ export class ErrorMiddleware {
   }
 
   private async defaultErrorHandler(error: Error, context: ErrorContext) {
-    console.error('Unhandled error:', error, context);
+    console.error("Unhandled error:", error, context);
     // Show generic error message
     // Log to monitoring
   }
@@ -323,10 +335,10 @@ export class OrderService {
       return await this.db.put(order);
     } catch (error) {
       await errorMiddleware.handleError(error as Error, {
-        operation: 'createOrder',
+        operation: "createOrder",
         userId: this.currentUserId,
         timestamp: new Date(),
-        metadata: { orderId: order.id }
+        metadata: { orderId: order.id },
       });
       throw error;
     }
@@ -335,6 +347,7 @@ export class OrderService {
 ```
 
 #### Pros
+
 - **Centralized Logic**: All error handling logic in one place
 - **Consistent Handling**: Uniform error processing across the application
 - **Type-Specific Handlers**: Different strategies for different error types
@@ -343,6 +356,7 @@ export class OrderService {
 - **Maintainable**: Changes to error handling don't affect business logic
 
 #### Cons
+
 - **Single Point of Failure**: If middleware fails, all error handling breaks
 - **Performance Bottleneck**: All errors go through the same processing pipeline
 - **Complexity**: Can become complex with many handler types
@@ -357,8 +371,8 @@ Application-wide error catching using Vue's global error handler and window erro
 
 ```typescript
 // global-error-handler.ts
-import type { App } from 'vue';
-import { useNotificationStore } from '@/stores/notification-store';
+import type { App } from "vue";
+import { useNotificationStore } from "@/stores/notification-store";
 
 export interface GlobalErrorConfig {
   enableConsoleLogging: boolean;
@@ -382,25 +396,25 @@ export class GlobalErrorHandler {
   }
 
   setupWindowErrorHandler() {
-    window.addEventListener('error', (event) => {
+    window.addEventListener("error", (event) => {
       this.handleWindowError(event.error, event);
     });
 
-    window.addEventListener('unhandledrejection', (event) => {
+    window.addEventListener("unhandledrejection", (event) => {
       this.handlePromiseRejection(event.reason, event);
     });
   }
 
   private async handleVueError(error: any, instance: any, info: string) {
     const errorDetails = {
-      type: 'vue-error',
-      message: error.message || 'Unknown Vue error',
+      type: "vue-error",
+      message: error.message || "Unknown Vue error",
       stack: error.stack,
-      componentName: instance?.$options.name || 'Unknown',
+      componentName: instance?.$options.name || "Unknown",
       errorInfo: info,
       timestamp: new Date().toISOString(),
       url: window.location.href,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     };
 
     await this.processError(errorDetails);
@@ -408,7 +422,7 @@ export class GlobalErrorHandler {
 
   private async handleWindowError(error: Error, event: ErrorEvent) {
     const errorDetails = {
-      type: 'javascript-error',
+      type: "javascript-error",
       message: error.message || event.message,
       stack: error.stack,
       filename: event.filename,
@@ -416,21 +430,24 @@ export class GlobalErrorHandler {
       colno: event.colno,
       timestamp: new Date().toISOString(),
       url: window.location.href,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     };
 
     await this.processError(errorDetails);
   }
 
-  private async handlePromiseRejection(reason: any, event: PromiseRejectionEvent) {
+  private async handlePromiseRejection(
+    reason: any,
+    event: PromiseRejectionEvent,
+  ) {
     const errorDetails = {
-      type: 'promise-rejection',
-      message: reason?.message || 'Unhandled promise rejection',
+      type: "promise-rejection",
+      message: reason?.message || "Unhandled promise rejection",
       stack: reason?.stack,
       reason: JSON.stringify(reason),
       timestamp: new Date().toISOString(),
       url: window.location.href,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     };
 
     await this.processError(errorDetails);
@@ -439,19 +456,19 @@ export class GlobalErrorHandler {
   private async processError(errorDetails: any) {
     // Console logging
     if (this.config.enableConsoleLogging) {
-      console.error('Global Error:', errorDetails);
+      console.error("Global Error:", errorDetails);
     }
 
     // Remote logging
     if (this.config.enableRemoteLogging && this.config.logEndpoint) {
       try {
         await fetch(this.config.logEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(errorDetails)
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(errorDetails),
         });
       } catch (logError) {
-        console.error('Failed to send error log:', logError);
+        console.error("Failed to send error log:", logError);
       }
     }
 
@@ -469,8 +486,8 @@ export class GlobalErrorHandler {
     // Don't overwhelm user with too many error notifications
     if (this.shouldShowNotification(errorDetails)) {
       this.notificationStore.showError(
-        'Application Error',
-        'An unexpected error occurred. Please try again.'
+        "Application Error",
+        "An unexpected error occurred. Please try again.",
       );
     }
   }
@@ -482,8 +499,8 @@ export class GlobalErrorHandler {
 }
 
 // Setup in main.ts
-import { createApp } from 'vue';
-import { GlobalErrorHandler } from './global-error-handler';
+import { createApp } from "vue";
+import { GlobalErrorHandler } from "./global-error-handler";
 
 const app = createApp(App);
 
@@ -491,7 +508,7 @@ const errorHandler = new GlobalErrorHandler({
   enableConsoleLogging: import.meta.env.DEV,
   enableRemoteLogging: import.meta.env.PROD,
   enableUserNotification: true,
-  logEndpoint: import.meta.env.VITE_ERROR_LOG_ENDPOINT
+  logEndpoint: import.meta.env.VITE_ERROR_LOG_ENDPOINT,
 });
 
 errorHandler.setupVueErrorHandler(app);
@@ -499,6 +516,7 @@ errorHandler.setupWindowErrorHandler();
 ```
 
 #### Pros
+
 - **Comprehensive Coverage**: Catches all unhandled errors in the application
 - **Easy Setup**: Minimal configuration required
 - **Automatic**: No need to wrap code in try-catch blocks
@@ -507,6 +525,7 @@ errorHandler.setupWindowErrorHandler();
 - **Development Aid**: Helpful for debugging in development
 
 #### Cons
+
 - **Generic Handling**: Cannot provide specific context-aware error handling
 - **Loss of Context**: May lose important error context
 - **Performance Impact**: All errors go through the same processing
@@ -522,19 +541,19 @@ Localized error handling with proper error boundaries and recovery mechanisms.
 
 ```typescript
 // error-boundary.tsx (for critical components)
-import { defineComponent, ref, onErrorCaptured } from 'vue';
+import { defineComponent, ref, onErrorCaptured } from "vue";
 
 export default defineComponent({
-  name: 'ErrorBoundary',
+  name: "ErrorBoundary",
   props: {
     fallback: {
       type: [String, Object],
-      default: 'Something went wrong'
+      default: "Something went wrong",
     },
     onError: {
       type: Function,
-      default: null
-    }
+      default: null,
+    },
   },
   setup(props, { slots }) {
     const hasError = ref(false);
@@ -550,7 +569,7 @@ export default defineComponent({
       }
 
       // Log error
-      console.error('Error Boundary caught error:', err, info);
+      console.error("Error Boundary caught error:", err, info);
 
       // Prevent error from propagating
       return false;
@@ -564,11 +583,11 @@ export default defineComponent({
     return () => {
       if (hasError.value) {
         // Render error fallback
-        if (typeof props.fallback === 'string') {
-          return h('div', { class: 'error-boundary' }, [
-            h('h3', 'Oops! Something went wrong'),
-            h('p', props.fallback),
-            h('button', { onClick: retry }, 'Try Again')
+        if (typeof props.fallback === "string") {
+          return h("div", { class: "error-boundary" }, [
+            h("h3", "Oops! Something went wrong"),
+            h("p", props.fallback),
+            h("button", { onClick: retry }, "Try Again"),
           ]);
         } else {
           return h(props.fallback, { error: error.value, retry });
@@ -578,7 +597,7 @@ export default defineComponent({
       // Render children normally
       return slots.default?.();
     };
-  }
+  },
 });
 
 // Service-level error handling with recovery
@@ -595,29 +614,29 @@ export class ProductService {
         if (error.status === 404) {
           throw new ProductNotFoundError(`Product ${id} not found`);
         } else if (error.status >= 500) {
-          throw new ServerError('Server error occurred');
+          throw new ServerError("Server error occurred");
         } else {
-          throw new ApplicationError('Failed to fetch product', error);
+          throw new ApplicationError("Failed to fetch product", error);
         }
       }
     });
   }
 
-  async createProduct(product: Omit<Product, '_id'>): Promise<Product> {
+  async createProduct(product: Omit<Product, "_id">): Promise<Product> {
     return this.withValidation(product, async (validatedProduct) => {
       try {
         const newProduct = {
           _id: crypto.randomUUID(),
-          ...validatedProduct
+          ...validatedProduct,
         };
 
         await this.db.put(newProduct);
         return newProduct;
       } catch (error) {
         if (error.status === 409) {
-          throw new ConflictError('Product with same barcode already exists');
+          throw new ConflictError("Product with same barcode already exists");
         } else {
-          throw new ApplicationError('Failed to create product', error);
+          throw new ApplicationError("Failed to create product", error);
         }
       }
     });
@@ -649,7 +668,7 @@ export class ProductService {
 
   private async withValidation<T, R>(
     data: T,
-    operation: (validatedData: T) => Promise<R>
+    operation: (validatedData: T) => Promise<R>,
   ): Promise<R> {
     try {
       // Validate data using Zod or similar
@@ -657,14 +676,14 @@ export class ProductService {
       return await operation(validatedData);
     } catch (error) {
       if (error instanceof ValidationError) {
-        throw new ValidationError('Invalid product data', error.details);
+        throw new ValidationError("Invalid product data", error.details);
       }
       throw error;
     }
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private validateProductData(product: any): any {
@@ -675,44 +694,49 @@ export class ProductService {
 
 // Custom error classes
 export class ApplicationError extends Error {
-  constructor(message: string, public originalError?: Error) {
+  constructor(
+    message: string,
+    public originalError?: Error,
+  ) {
     super(message);
-    this.name = 'ApplicationError';
+    this.name = "ApplicationError";
   }
 }
 
 export class ValidationError extends Error {
-  constructor(message: string, public details?: any[]) {
+  constructor(
+    message: string,
+    public details?: any[],
+  ) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 
 export class ProductNotFoundError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ProductNotFoundError';
+    this.name = "ProductNotFoundError";
   }
 }
 
 export class ConflictError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ConflictError';
+    this.name = "ConflictError";
   }
 }
 
 export class ServerError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ServerError';
+    this.name = "ServerError";
   }
 }
 ```
 
 ```vue
-// Usage in components
-// product-form.vue
+// Usage in components // product-form.vue
 <template>
   <ErrorBoundary :onError="handleFormError">
     <form @submit.prevent="submitForm">
@@ -722,9 +746,9 @@ export class ServerError extends Error {
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ProductService } from '@/services/product-service';
-import ErrorBoundary from '@/components/error-boundary';
+import { ref } from "vue";
+import { ProductService } from "@/services/product-service";
+import ErrorBoundary from "@/components/error-boundary";
 
 const productService = new ProductService();
 const isSubmitting = ref(false);
@@ -738,19 +762,19 @@ const submitForm = async () => {
     await productService.createProduct(formData.value);
 
     // Success handling
-    router.push('/products');
+    router.push("/products");
   } catch (error) {
     if (error instanceof ValidationError) {
       // Handle validation errors
-      error.details?.forEach(detail => {
+      error.details?.forEach((detail) => {
         errors.value[detail.field] = detail.message;
       });
     } else if (error instanceof ConflictError) {
       // Handle conflict errors
-      errors.value.barcode = 'Product with this barcode already exists';
+      errors.value.barcode = "Product with this barcode already exists";
     } else {
       // Handle other errors
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
       // Show generic error message
     }
   } finally {
@@ -759,13 +783,14 @@ const submitForm = async () => {
 };
 
 const handleFormError = (error: Error) => {
-  console.error('Form error boundary caught:', error);
+  console.error("Form error boundary caught:", error);
   // Additional error handling specific to form
 };
 </script>
 ```
 
 #### Pros
+
 - **Precise Control**: Exact control over error handling for specific operations
 - **Context Preservation**: Maintains full context of where error occurred
 - **Recovery Options**: Can implement specific recovery strategies
@@ -774,6 +799,7 @@ const handleFormError = (error: Error) => {
 - **Flexibility**: Different handling strategies for different operations
 
 #### Cons
+
 - **Code Duplication**: Similar error handling code may be repeated
 - **Maintenance Overhead**: Must remember to add error handling to new code
 - **Verbosity**: Can make code longer and harder to read
@@ -783,18 +809,18 @@ const handleFormError = (error: Error) => {
 
 ## Comprehensive Comparison
 
-| Aspect | Event Pub/Sub | Error Middleware | Global Handler | Try/Catch Blocks |
-|--------|---------------|------------------|----------------|------------------|
-| **Setup Complexity** | Medium | Medium | Low | Low |
-| **Runtime Performance** | Medium | Medium | Low | High |
-| **Error Context** | Good | Good | Poor | Excellent |
-| **Recovery Capability** | Good | Excellent | Poor | Excellent |
-| **Code Maintainability** | Good | Excellent | Good | Poor |
-| **Testing Ease** | Excellent | Excellent | Medium | Excellent |
-| **Debugging Difficulty** | Medium | Medium | High | Low |
-| **Memory Usage** | Medium | Low | Low | Low |
-| **Flexibility** | Excellent | Good | Poor | Excellent |
-| **Consistency** | Good | Excellent | Excellent | Poor |
+| Aspect                   | Event Pub/Sub | Error Middleware | Global Handler | Try/Catch Blocks |
+| ------------------------ | ------------- | ---------------- | -------------- | ---------------- |
+| **Setup Complexity**     | Medium        | Medium           | Low            | Low              |
+| **Runtime Performance**  | Medium        | Medium           | Low            | High             |
+| **Error Context**        | Good          | Good             | Poor           | Excellent        |
+| **Recovery Capability**  | Good          | Excellent        | Poor           | Excellent        |
+| **Code Maintainability** | Good          | Excellent        | Good           | Poor             |
+| **Testing Ease**         | Excellent     | Excellent        | Medium         | Excellent        |
+| **Debugging Difficulty** | Medium        | Medium           | High           | Low              |
+| **Memory Usage**         | Medium        | Low              | Low            | Low              |
+| **Flexibility**          | Excellent     | Good             | Poor           | Excellent        |
+| **Consistency**          | Good          | Excellent        | Excellent      | Poor             |
 
 ## Recommended Hybrid Approach
 
@@ -816,7 +842,7 @@ export class HybridErrorStrategy {
     this.globalHandler = new GlobalErrorHandler({
       enableConsoleLogging: import.meta.env.DEV,
       enableRemoteLogging: import.meta.env.PROD,
-      enableUserNotification: true
+      enableUserNotification: true,
     });
 
     // 2. Middleware for service-level errors
@@ -833,7 +859,7 @@ export class HybridErrorStrategy {
   private setupErrorBusHandlers() {
     this.errorBus.subscribeToErrors((error) => {
       // Route to appropriate handler
-      if (error.severity === 'critical') {
+      if (error.severity === "critical") {
         this.handleCriticalError(error);
       } else {
         this.handleNormalError(error);
@@ -844,7 +870,7 @@ export class HybridErrorStrategy {
   // Service method wrapper
   async executeWithErrorHandling<T>(
     operation: () => Promise<T>,
-    context: ErrorContext
+    context: ErrorContext,
   ): Promise<T> {
     try {
       return await operation();
@@ -859,21 +885,23 @@ export class HybridErrorStrategy {
         message: error.message,
         context,
         timestamp: new Date(),
-        source: context.operation
+        source: context.operation,
       });
 
       throw error; // Re-throw for local handling
     }
   }
 
-  private classifyError(error: any): 'network' | 'validation' | 'application' | 'system' {
+  private classifyError(
+    error: any,
+  ): "network" | "validation" | "application" | "system" {
     // Error classification logic
-    return 'application';
+    return "application";
   }
 
-  private getSeverity(error: any): 'low' | 'medium' | 'high' | 'critical' {
+  private getSeverity(error: any): "low" | "medium" | "high" | "critical" {
     // Severity assessment logic
-    return 'medium';
+    return "medium";
   }
 }
 ```
@@ -881,45 +909,48 @@ export class HybridErrorStrategy {
 ## Best Practices
 
 ### 1. Error Classification
+
 ```typescript
 export enum ErrorType {
-  VALIDATION = 'validation',
-  NETWORK = 'network',
-  PERMISSION = 'permission',
-  BUSINESS_LOGIC = 'business_logic',
-  SYSTEM = 'system'
+  VALIDATION = "validation",
+  NETWORK = "network",
+  PERMISSION = "permission",
+  BUSINESS_LOGIC = "business_logic",
+  SYSTEM = "system",
 }
 
 export enum ErrorSeverity {
-  LOW = 'low',           // Log only
-  MEDIUM = 'medium',     // Log + user notification
-  HIGH = 'high',         // Log + user notification + retry
-  CRITICAL = 'critical'  // Log + user notification + retry + alert admin
+  LOW = "low", // Log only
+  MEDIUM = "medium", // Log + user notification
+  HIGH = "high", // Log + user notification + retry
+  CRITICAL = "critical", // Log + user notification + retry + alert admin
 }
 ```
 
 ### 2. User-Friendly Messages
+
 ```typescript
 const ERROR_MESSAGES = {
   [ErrorType.NETWORK]: {
-    title: 'Connection Issue',
-    message: 'Please check your internet connection and try again.',
-    action: 'Retry'
+    title: "Connection Issue",
+    message: "Please check your internet connection and try again.",
+    action: "Retry",
   },
   [ErrorType.VALIDATION]: {
-    title: 'Invalid Information',
-    message: 'Please check the highlighted fields and try again.',
-    action: 'Fix'
+    title: "Invalid Information",
+    message: "Please check the highlighted fields and try again.",
+    action: "Fix",
   },
   [ErrorType.PERMISSION]: {
-    title: 'Access Denied',
-    message: 'You don\'t have permission to perform this action.',
-    action: 'Contact Support'
-  }
+    title: "Access Denied",
+    message: "You don't have permission to perform this action.",
+    action: "Contact Support",
+  },
 };
 ```
 
 ### 3. Error Recovery Strategies
+
 ```typescript
 export interface RecoveryStrategy {
   canRecover(error: Error): boolean;
@@ -928,7 +959,7 @@ export interface RecoveryStrategy {
 
 export class NetworkRecoveryStrategy implements RecoveryStrategy {
   canRecover(error: Error): boolean {
-    return error.name === 'NetworkError';
+    return error.name === "NetworkError";
   }
 
   async recover(error: Error, context: any): Promise<void> {
@@ -951,9 +982,9 @@ This section demonstrates how to integrate error handling seamlessly with Vue.js
 
 ```typescript
 // composables/use-error-handler.ts
-import { ref, computed } from 'vue';
-import { useNotificationStore } from '@/stores/notification-store';
-import { useOnlineStatus } from '@/composables/use-online-status';
+import { ref, computed } from "vue";
+import { useNotificationStore } from "@/stores/notification-store";
+import { useOnlineStatus } from "@/composables/use-online-status";
 
 export interface ErrorState {
   hasError: boolean;
@@ -979,32 +1010,34 @@ export function useErrorHandler(options: ErrorHandlerOptions = {}) {
     hasError: false,
     error: null,
     isLoading: false,
-    canRetry: false
+    canRetry: false,
   });
 
   const errorType = computed(() => {
     if (!state.value.error) return null;
 
-    if (state.value.error.message.includes('fetch')) {
-      return 'network';
-    } else if (state.value.error.name === 'ValidationError') {
-      return 'validation';
-    } else if (state.value.error.message.includes('permission')) {
-      return 'permission';
+    if (state.value.error.message.includes("fetch")) {
+      return "network";
+    } else if (state.value.error.name === "ValidationError") {
+      return "validation";
+    } else if (state.value.error.message.includes("permission")) {
+      return "permission";
     }
-    return 'application';
+    return "application";
   });
 
   const canRetryOperation = computed(() => {
-    return state.value.canRetry &&
-           errorType.value === 'network' &&
-           online.value &&
-           options.enableRetry !== false;
+    return (
+      state.value.canRetry &&
+      errorType.value === "network" &&
+      online.value &&
+      options.enableRetry !== false
+    );
   });
 
   const execute = async <T>(
     operation: () => Promise<T>,
-    customOptions?: Partial<ErrorHandlerOptions>
+    customOptions?: Partial<ErrorHandlerOptions>,
   ): Promise<T | null> => {
     const mergedOptions = { ...options, ...customOptions };
     let attempts = 0;
@@ -1032,7 +1065,10 @@ export function useErrorHandler(options: ErrorHandlerOptions = {}) {
 
         // Log error if enabled
         if (mergedOptions.logError !== false) {
-          console.error(`Operation failed (attempt ${attempts}/${maxAttempts}):`, error);
+          console.error(
+            `Operation failed (attempt ${attempts}/${maxAttempts}):`,
+            error,
+          );
         }
 
         // Show notification for final attempt or non-retryable errors
@@ -1068,40 +1104,44 @@ export function useErrorHandler(options: ErrorHandlerOptions = {}) {
     const type = errorType.value;
 
     switch (type) {
-      case 'network':
+      case "network":
         notificationStore.showError(
-          'Connection Error',
-          customMessage || 'Please check your internet connection and try again.'
+          "Connection Error",
+          customMessage ||
+            "Please check your internet connection and try again.",
         );
         break;
-      case 'validation':
+      case "validation":
         notificationStore.showWarning(
-          'Invalid Data',
-          customMessage || 'Please check your input and try again.'
+          "Invalid Data",
+          customMessage || "Please check your input and try again.",
         );
         break;
-      case 'permission':
+      case "permission":
         notificationStore.showError(
-          'Access Denied',
-          customMessage || 'You don\'t have permission to perform this action.'
+          "Access Denied",
+          customMessage || "You don't have permission to perform this action.",
         );
         break;
       default:
         notificationStore.showError(
-          'Error',
-          customMessage || 'An unexpected error occurred. Please try again.'
+          "Error",
+          customMessage || "An unexpected error occurred. Please try again.",
         );
     }
   };
 
   const shouldRetry = (error: Error): boolean => {
     // Don't retry validation or permission errors
-    if (error.name === 'ValidationError' || error.message.includes('permission')) {
+    if (
+      error.name === "ValidationError" ||
+      error.message.includes("permission")
+    ) {
       return false;
     }
 
     // Only retry network errors when online
-    if (error.message.includes('fetch') && !online.value) {
+    if (error.message.includes("fetch") && !online.value) {
       return false;
     }
 
@@ -1109,7 +1149,7 @@ export function useErrorHandler(options: ErrorHandlerOptions = {}) {
   };
 
   const delay = (ms: number): Promise<void> => {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   };
 
   return {
@@ -1121,7 +1161,7 @@ export function useErrorHandler(options: ErrorHandlerOptions = {}) {
     // Methods
     execute,
     retry,
-    clearError
+    clearError,
   };
 }
 ```
@@ -1130,8 +1170,8 @@ export function useErrorHandler(options: ErrorHandlerOptions = {}) {
 
 ```typescript
 // composables/use-form-errors.ts
-import { ref, computed } from 'vue';
-import { useNotificationStore } from '@/stores/notification-store';
+import { ref, computed } from "vue";
+import { useNotificationStore } from "@/stores/notification-store";
 
 export interface FormError {
   field: string;
@@ -1150,7 +1190,7 @@ export function useFormErrors() {
   const state = ref<FormErrorState>({
     errors: {},
     hasErrors: false,
-    isSubmitting: false
+    isSubmitting: false,
   });
 
   const hasFieldError = (field: string) => {
@@ -1158,7 +1198,7 @@ export function useFormErrors() {
   };
 
   const getFieldError = (field: string) => {
-    return state.value.errors[field] || '';
+    return state.value.errors[field] || "";
   };
 
   const setFieldError = (field: string, message: string) => {
@@ -1178,10 +1218,13 @@ export function useFormErrors() {
 
   const setErrors = (errors: FormError[] | Record<string, string>) => {
     if (Array.isArray(errors)) {
-      state.value.errors = errors.reduce((acc, error) => {
-        acc[error.field] = error.message;
-        return acc;
-      }, {} as Record<string, string>);
+      state.value.errors = errors.reduce(
+        (acc, error) => {
+          acc[error.field] = error.message;
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
     } else {
       state.value.errors = { ...errors };
     }
@@ -1189,39 +1232,38 @@ export function useFormErrors() {
   };
 
   const handleSubmissionError = (error: any) => {
-    if (error.name === 'ValidationError' && error.details) {
+    if (error.name === "ValidationError" && error.details) {
       // Handle validation errors
       setErrors(error.details);
       notificationStore.showWarning(
-        'Validation Error',
-        'Please check the highlighted fields and try again.'
+        "Validation Error",
+        "Please check the highlighted fields and try again.",
       );
-    } else if (error.message.includes('duplicate') || error.status === 409) {
+    } else if (error.message.includes("duplicate") || error.status === 409) {
       // Handle conflict errors
       notificationStore.showError(
-        'Duplicate Entry',
-        'A record with this information already exists.'
+        "Duplicate Entry",
+        "A record with this information already exists.",
       );
     } else {
       // Handle generic errors
       notificationStore.showError(
-        'Submission Error',
-        'Failed to save changes. Please try again.'
+        "Submission Error",
+        "Failed to save changes. Please try again.",
       );
     }
   };
 
-  const withSubmission = async <T>(operation: () => Promise<T>): Promise<T | null> => {
+  const withSubmission = async <T>(
+    operation: () => Promise<T>,
+  ): Promise<T | null> => {
     try {
       state.value.isSubmitting = true;
       clearAllErrors();
 
       const result = await operation();
 
-      notificationStore.showSuccess(
-        'Success',
-        'Changes saved successfully.'
-      );
+      notificationStore.showSuccess("Success", "Changes saved successfully.");
 
       return result;
     } catch (error) {
@@ -1246,7 +1288,7 @@ export function useFormErrors() {
     clearAllErrors,
     setErrors,
     handleSubmissionError,
-    withSubmission
+    withSubmission,
   };
 }
 ```
@@ -1255,9 +1297,9 @@ export function useFormErrors() {
 
 ```typescript
 // composables/use-async-operation.ts
-import { ref, computed } from 'vue';
-import { useErrorHandler } from './use-error-handler';
-import { useNotificationStore } from '@/stores/notification-store';
+import { ref, computed } from "vue";
+import { useErrorHandler } from "./use-error-handler";
+import { useNotificationStore } from "@/stores/notification-store";
 
 export interface AsyncOperationState<T> {
   data: T | null;
@@ -1274,7 +1316,7 @@ export function useAsyncOperation<T>() {
     data: null,
     isLoading: false,
     error: null,
-    hasError: false
+    hasError: false,
   });
 
   const execute = async (
@@ -1284,7 +1326,7 @@ export function useAsyncOperation<T>() {
       successMessage?: string;
       showErrorMessage?: boolean;
       errorMessage?: string;
-    }
+    },
   ): Promise<T | null> => {
     state.value.isLoading = true;
     state.value.error = null;
@@ -1296,8 +1338,8 @@ export function useAsyncOperation<T>() {
 
       if (options?.showSuccessMessage) {
         notificationStore.showSuccess(
-          'Success',
-          options.successMessage || 'Operation completed successfully.'
+          "Success",
+          options.successMessage || "Operation completed successfully.",
         );
       }
 
@@ -1308,8 +1350,8 @@ export function useAsyncOperation<T>() {
 
       if (options?.showErrorMessage !== false) {
         notificationStore.showError(
-          'Error',
-          options?.errorMessage || 'Operation failed. Please try again.'
+          "Error",
+          options?.errorMessage || "Operation failed. Please try again.",
         );
       }
 
@@ -1348,7 +1390,7 @@ export function useAsyncOperation<T>() {
     // Methods
     execute,
     retry,
-    reset
+    reset,
   };
 }
 ```
@@ -1359,12 +1401,12 @@ export function useAsyncOperation<T>() {
 
 ```typescript
 // stores/notification-store.ts
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
 
 export interface Notification {
   id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
+  type: "success" | "error" | "warning" | "info";
   title: string;
   message: string;
   timestamp: Date;
@@ -1376,34 +1418,37 @@ export interface Notification {
 export interface NotificationAction {
   label: string;
   action: () => void;
-  style?: 'primary' | 'secondary' | 'danger';
+  style?: "primary" | "secondary" | "danger";
 }
 
-export const useNotificationStore = defineStore('notification', () => {
+export const useNotificationStore = defineStore("notification", () => {
   const notifications = ref<Notification[]>([]);
   const maxNotifications = ref(5);
 
   const activeNotifications = computed(() => notifications.value);
   const hasErrors = computed(() =>
-    notifications.value.some(n => n.type === 'error')
+    notifications.value.some((n) => n.type === "error"),
   );
-  const errorCount = computed(() =>
-    notifications.value.filter(n => n.type === 'error').length
+  const errorCount = computed(
+    () => notifications.value.filter((n) => n.type === "error").length,
   );
 
-  const show = (notification: Omit<Notification, 'id' | 'timestamp'>) => {
+  const show = (notification: Omit<Notification, "id" | "timestamp">) => {
     const newNotification: Notification = {
       id: crypto.randomUUID(),
       timestamp: new Date(),
       duration: 5000,
-      ...notification
+      ...notification,
     };
 
     notifications.value.unshift(newNotification);
 
     // Limit number of notifications
     if (notifications.value.length > maxNotifications.value) {
-      notifications.value = notifications.value.slice(0, maxNotifications.value);
+      notifications.value = notifications.value.slice(
+        0,
+        maxNotifications.value,
+      );
     }
 
     // Auto-remove after duration
@@ -1414,8 +1459,12 @@ export const useNotificationStore = defineStore('notification', () => {
     }
   };
 
-  const showSuccess = (title: string, message: string, actions?: NotificationAction[]) => {
-    show({ type: 'success', title, message, actions });
+  const showSuccess = (
+    title: string,
+    message: string,
+    actions?: NotificationAction[],
+  ) => {
+    show({ type: "success", title, message, actions });
   };
 
   const showError = (
@@ -1425,49 +1474,57 @@ export const useNotificationStore = defineStore('notification', () => {
       actions?: NotificationAction[];
       metadata?: Record<string, any>;
       duration?: number;
-    }
+    },
   ) => {
     show({
-      type: 'error',
+      type: "error",
       title,
       message,
       duration: options?.duration || 0, // Errors persist until dismissed
       actions: options?.actions,
-      metadata: options?.metadata
+      metadata: options?.metadata,
     });
   };
 
-  const showWarning = (title: string, message: string, actions?: NotificationAction[]) => {
-    show({ type: 'warning', title, message, actions });
+  const showWarning = (
+    title: string,
+    message: string,
+    actions?: NotificationAction[],
+  ) => {
+    show({ type: "warning", title, message, actions });
   };
 
-  const showInfo = (title: string, message: string, actions?: NotificationAction[]) => {
-    show({ type: 'info', title, message, actions });
+  const showInfo = (
+    title: string,
+    message: string,
+    actions?: NotificationAction[],
+  ) => {
+    show({ type: "info", title, message, actions });
   };
 
   const showErrorWithRetry = (
     title: string,
     message: string,
     retryFn: () => void,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ) => {
     showError(title, message, {
       actions: [
         {
-          label: 'Retry',
+          label: "Retry",
           action: () => {
             retryFn();
             remove(); // Remove current error after retry
           },
-          style: 'primary'
+          style: "primary",
         },
         {
-          label: 'Dismiss',
+          label: "Dismiss",
           action: () => remove(),
-          style: 'secondary'
-        }
+          style: "secondary",
+        },
       ],
-      metadata
+      metadata,
     });
   };
 
@@ -1475,42 +1532,42 @@ export const useNotificationStore = defineStore('notification', () => {
     title: string,
     message: string,
     options?: {
-      type?: 'info' | 'warning' | 'error';
+      type?: "info" | "warning" | "error";
       confirmText?: string;
       cancelText?: string;
-    }
+    },
   ): Promise<{ confirmed: boolean }> => {
     return new Promise((resolve) => {
       show({
-        type: options?.type || 'info',
+        type: options?.type || "info",
         title,
         message,
         duration: 0, // Don't auto-dismiss
         actions: [
           {
-            label: options?.confirmText || 'Confirm',
+            label: options?.confirmText || "Confirm",
             action: () => {
               resolve({ confirmed: true });
               remove();
             },
-            style: 'primary'
+            style: "primary",
           },
           {
-            label: options?.cancelText || 'Cancel',
+            label: options?.cancelText || "Cancel",
             action: () => {
               resolve({ confirmed: false });
               remove();
             },
-            style: 'secondary'
-          }
-        ]
+            style: "secondary",
+          },
+        ],
       });
     });
   };
 
   const remove = (id?: string) => {
     if (id) {
-      notifications.value = notifications.value.filter(n => n.id !== id);
+      notifications.value = notifications.value.filter((n) => n.id !== id);
     } else {
       // Remove the most recent notification
       notifications.value.shift();
@@ -1521,8 +1578,8 @@ export const useNotificationStore = defineStore('notification', () => {
     notifications.value = [];
   };
 
-  const removeByType = (type: Notification['type']) => {
-    notifications.value = notifications.value.filter(n => n.type !== type);
+  const removeByType = (type: Notification["type"]) => {
+    notifications.value = notifications.value.filter((n) => n.type !== type);
   };
 
   return {
@@ -1541,7 +1598,7 @@ export const useNotificationStore = defineStore('notification', () => {
     showConfirm,
     remove,
     removeAll,
-    removeByType
+    removeByType,
   };
 });
 ```
@@ -1550,13 +1607,13 @@ export const useNotificationStore = defineStore('notification', () => {
 
 ```typescript
 // stores/error-tracking-store.ts
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
 
 export interface ErrorLog {
   id: string;
-  type: 'network' | 'validation' | 'application' | 'system';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: "network" | "validation" | "application" | "system";
+  severity: "low" | "medium" | "high" | "critical";
   message: string;
   stack?: string;
   context: {
@@ -1572,28 +1629,31 @@ export interface ErrorLog {
   metadata?: Record<string, any>;
 }
 
-export const useErrorTrackingStore = defineStore('errorTracking', () => {
+export const useErrorTrackingStore = defineStore("errorTracking", () => {
   const errors = ref<ErrorLog[]>([]);
   const maxErrors = ref(100);
 
   const unresolvedErrors = computed(() =>
-    errors.value.filter(e => !e.resolved)
+    errors.value.filter((e) => !e.resolved),
   );
 
   const criticalErrors = computed(() =>
-    errors.value.filter(e => e.severity === 'critical' && !e.resolved)
+    errors.value.filter((e) => e.severity === "critical" && !e.resolved),
   );
 
   const errorsByType = computed(() => {
-    return errors.value.reduce((acc, error) => {
-      acc[error.type] = (acc[error.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    return errors.value.reduce(
+      (acc, error) => {
+        acc[error.type] = (acc[error.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
   });
 
   const logError = (
     error: Error,
-    context: Partial<ErrorLog['context']> = {}
+    context: Partial<ErrorLog["context"]> = {},
   ) => {
     const errorLog: ErrorLog = {
       id: crypto.randomUUID(),
@@ -1605,10 +1665,10 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
         timestamp: new Date(),
         url: window.location.href,
         userAgent: navigator.userAgent,
-        ...context
+        ...context,
       },
       resolved: false,
-      metadata: {}
+      metadata: {},
     };
 
     errors.value.unshift(errorLog);
@@ -1619,7 +1679,7 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
     }
 
     // Send to remote logging service if critical
-    if (errorLog.severity === 'critical') {
+    if (errorLog.severity === "critical") {
       sendToRemoteLogging(errorLog);
     }
 
@@ -1627,7 +1687,7 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
   };
 
   const resolveError = (id: string) => {
-    const error = errors.value.find(e => e.id === id);
+    const error = errors.value.find((e) => e.id === id);
     if (error) {
       error.resolved = true;
       error.resolvedAt = new Date();
@@ -1635,44 +1695,50 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
   };
 
   const clearResolvedErrors = () => {
-    errors.value = errors.value.filter(e => !e.resolved);
+    errors.value = errors.value.filter((e) => !e.resolved);
   };
 
   const clearAllErrors = () => {
     errors.value = [];
   };
 
-  const classifyError = (error: Error): ErrorLog['type'] => {
-    if (error.message.includes('fetch') || error.message.includes('network')) {
-      return 'network';
-    } else if (error.name === 'ValidationError') {
-      return 'validation';
-    } else if (error.message.includes('system') || error.message.includes('quota')) {
-      return 'system';
+  const classifyError = (error: Error): ErrorLog["type"] => {
+    if (error.message.includes("fetch") || error.message.includes("network")) {
+      return "network";
+    } else if (error.name === "ValidationError") {
+      return "validation";
+    } else if (
+      error.message.includes("system") ||
+      error.message.includes("quota")
+    ) {
+      return "system";
     }
-    return 'application';
+    return "application";
   };
 
-  const getSeverity = (error: Error): ErrorLog['severity'] => {
-    if (error.message.includes('critical') || error.name === 'SecurityError') {
-      return 'critical';
-    } else if (error.message.includes('network') || error.name === 'TypeError') {
-      return 'high';
-    } else if (error.name === 'ValidationError') {
-      return 'medium';
+  const getSeverity = (error: Error): ErrorLog["severity"] => {
+    if (error.message.includes("critical") || error.name === "SecurityError") {
+      return "critical";
+    } else if (
+      error.message.includes("network") ||
+      error.name === "TypeError"
+    ) {
+      return "high";
+    } else if (error.name === "ValidationError") {
+      return "medium";
     }
-    return 'low';
+    return "low";
   };
 
   const sendToRemoteLogging = async (errorLog: ErrorLog) => {
     try {
-      await fetch('/api/errors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(errorLog)
+      await fetch("/api/errors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(errorLog),
       });
     } catch (logError) {
-      console.error('Failed to send error log:', logError);
+      console.error("Failed to send error log:", logError);
     }
   };
 
@@ -1687,7 +1753,7 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
     logError,
     resolveError,
     clearResolvedErrors,
-    clearAllErrors
+    clearAllErrors,
   };
 });
 ```
@@ -1707,9 +1773,9 @@ export const useErrorTrackingStore = defineStore('errorTracking', () => {
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ProductService } from '@/services/product-service';
-import ErrorBoundary from '@/components/error-boundary';
+import { ref } from "vue";
+import { ProductService } from "@/services/product-service";
+import ErrorBoundary from "@/components/error-boundary";
 
 const productService = new ProductService();
 const isSubmitting = ref(false);
@@ -1723,19 +1789,19 @@ const submitForm = async () => {
     await productService.createProduct(formData.value);
 
     // Success handling
-    router.push('/products');
+    router.push("/products");
   } catch (error) {
     if (error instanceof ValidationError) {
       // Handle validation errors
-      error.details?.forEach(detail => {
+      error.details?.forEach((detail) => {
         errors.value[detail.field] = detail.message;
       });
     } else if (error instanceof ConflictError) {
       // Handle conflict errors
-      errors.value.barcode = 'Product with this barcode already exists';
+      errors.value.barcode = "Product with this barcode already exists";
     } else {
       // Handle other errors
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
       // Show generic error message
     }
   } finally {
@@ -1744,7 +1810,7 @@ const submitForm = async () => {
 };
 
 const handleFormError = (error: Error) => {
-  console.error('Form error boundary caught:', error);
+  console.error("Form error boundary caught:", error);
   // Additional error handling specific to form
 };
 </script>
@@ -1759,8 +1825,16 @@ const handleFormError = (error: Error) => {
     <!-- Error State -->
     <div v-if="hasError" class="bg-red-50 border border-red-200 rounded-md p-4">
       <div class="flex items-center">
-        <svg class="h-5 w-5 text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        <svg
+          class="h-5 w-5 text-red-400 mr-3"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clip-rule="evenodd"
+          />
         </svg>
         <h3 class="text-sm font-medium text-red-800">
           Failed to load products
@@ -1787,7 +1861,10 @@ const handleFormError = (error: Error) => {
     </div>
 
     <!-- Products List -->
-    <div v-else-if="data" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div
+      v-else-if="data"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+    >
       <div
         v-for="product in data"
         :key="product._id"
@@ -1822,18 +1899,19 @@ const handleFormError = (error: Error) => {
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAsyncOperation } from '@/composables/use-async-operation';
-import { useErrorHandler } from '@/composables/use-error-handler';
-import { useNotificationStore } from '@/stores/notification-store';
-import { productService } from '@/services/product-service';
-import type { Product } from '@/types/product';
+import { onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useAsyncOperation } from "@/composables/use-async-operation";
+import { useErrorHandler } from "@/composables/use-error-handler";
+import { useNotificationStore } from "@/stores/notification-store";
+import { productService } from "@/services/product-service";
+import type { Product } from "@/types/product";
 
 const router = useRouter();
 const notificationStore = useNotificationStore();
 const errorHandler = useErrorHandler({ enableRetry: true });
-const { data, isLoading, error, hasError, execute } = useAsyncOperation<Product[]>();
+const { data, isLoading, error, hasError, execute } =
+  useAsyncOperation<Product[]>();
 
 const loadProducts = async () => {
   await execute(() => productService.listProducts());
@@ -1849,9 +1927,9 @@ const editProduct = (product: Product) => {
 
 const deleteProduct = async (product: Product) => {
   const confirmed = await notificationStore.showConfirm(
-    'Delete Product',
+    "Delete Product",
     `Are you sure you want to delete "${product.name}"? This action cannot be undone.`,
-    { type: 'warning' }
+    { type: "warning" },
   );
 
   if (confirmed.confirmed) {
@@ -1861,8 +1939,8 @@ const deleteProduct = async (product: Product) => {
         await loadProducts(); // Refresh list
       },
       {
-        customMessage: `Failed to delete ${product.name}. Please try again.`
-      }
+        customMessage: `Failed to delete ${product.name}. Please try again.`,
+      },
     );
   }
 };
@@ -1888,8 +1966,8 @@ The approach ensures consistent error handling across the entire Vue.js POS appl
 
 ```typescript
 // error-handling.test.ts
-describe('Error Handling', () => {
-  it('should handle network errors gracefully', async () => {
+describe("Error Handling", () => {
+  it("should handle network errors gracefully", async () => {
     // Mock network failure
     mockNetworkFailure();
 
@@ -1900,8 +1978,8 @@ describe('Error Handling', () => {
     expect(queueService.hasQueuedOperations).toBe(true);
   });
 
-  it('should recover from validation errors', async () => {
-    const invalidProduct = { name: '', price: -1 };
+  it("should recover from validation errors", async () => {
+    const invalidProduct = { name: "", price: -1 };
 
     try {
       await productService.createProduct(invalidProduct);

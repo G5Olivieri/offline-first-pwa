@@ -1,9 +1,11 @@
 # Copilot Instructions for POS Frontend - Vue 3 PWA with PouchDB
 
 ## Project Overview
+
 This is a **Point of Sale (POS) Frontend Application** built as an offline-first Progressive Web App. The application manages products, customers, operators, and orders with full offline capability and real-time sync when online.
 
 ## Project Stack
+
 - **Framework**: Vue 3 with TypeScript (Composition API with `<script setup>`)
 - **Build Tool**: Vite 6.x
 - **PWA**: Vite PWA Plugin (`vite-plugin-pwa`) with Workbox for offline caching
@@ -16,6 +18,7 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 - **TypeScript**: Full TypeScript support with strict type checking
 
 ## Core Business Entities
+
 - **Products**: Items for sale with barcode, name, price, inventory
 - **Customers**: Customer information and purchase history
 - **Operators**: POS system users with authentication
@@ -33,6 +36,7 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 ## Copilot Coding Guidelines
 
 ### 1. Project Structure
+
 - Use Vite’s default project structure.
 - Place PouchDB logic in `/src/db/`.
 - Place service worker and PWA logic in `/src/pwa/`.
@@ -40,6 +44,7 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 - All file and folder names must follow the **snake_case** convention.
 
 ### 2. PWA Integration
+
 - Use `vite-plugin-pwa` in `vite.config.ts` for automatic service worker generation.
 - Register the service worker on app startup with `registerType: "autoUpdate"`.
 - Include manifest with relevant app metadata (name, icons, start_url, theme_color).
@@ -47,6 +52,7 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 - Workbox strategies for caching assets and API calls.
 
 ### 3. PouchDB Usage
+
 - Initialization and configuration in `/src/db.ts` using `pouchdb-browser`.
 - Uses `pouchdb-find` plugin for advanced queries with indexes.
 - Provides typed database instances for each entity (products, customers, operators, orders).
@@ -55,12 +61,14 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 - Database instances are singletons with lazy initialization.
 
 ### 4. Offline-First Patterns
+
 - Ensure all critical app functionality is usable offline.
 - Show clear UI indicators for online/offline status.
 - Queue changes locally and auto-sync in the background on reconnect.
 - Use optimistic UI updates for a responsive app feel.
 
 ### 5. Example Tasks for Copilot
+
 - Scaffold a new Vue 3 + Vite PWA with `vite-plugin-pwa`.
 - Set up PouchDB instance with local and remote sync logic using TypeScript.
 - Show how to register and update the service worker.
@@ -70,6 +78,7 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 - Demonstrate how to cache API responses for offline use.
 
 ### 6. Best Practices
+
 - Use async/await for all DB and network logic.
 - Use Vue’s reactivity for syncing DB changes to UI.
 - Keep all state in Vue’s Composition API or Pinia.
@@ -80,10 +89,11 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 ## Example Snippets
 
 ### PouchDB Initialization (src/db.ts)
+
 ```typescript
-import PouchDB from 'pouchdb-browser';
-import PouchDBFind from 'pouchdb-find';
-import type { Product } from './types/product';
+import PouchDB from "pouchdb-browser";
+import PouchDBFind from "pouchdb-find";
+import type { Product } from "./types/product";
 
 PouchDB.plugin(PouchDBFind);
 
@@ -93,9 +103,9 @@ export const getProductDB = (): PouchDB.Database<Product> => {
     return _productDB;
   }
 
-  _productDB = new PouchDB('products');
+  _productDB = new PouchDB("products");
   _productDB.createIndex({
-    index: { fields: ['barcode'] },
+    index: { fields: ["barcode"] },
   });
 
   return _productDB;
@@ -103,46 +113,48 @@ export const getProductDB = (): PouchDB.Database<Product> => {
 ```
 
 ### Vite PWA Plugin Setup (vite.config.ts)
+
 ```typescript
-import { defineConfig, loadEnv } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import { VitePWA } from 'vite-plugin-pwa';
+import { defineConfig, loadEnv } from "vite";
+import vue from "@vitejs/plugin-vue";
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+  const env = loadEnv(mode, process.cwd(), "");
 
   return {
     plugins: [
       vue(),
       VitePWA({
-        registerType: 'autoUpdate',
-        injectRegister: 'auto',
+        registerType: "autoUpdate",
+        injectRegister: "auto",
         manifest: {
-          name: env.VITE_APP_TITLE || 'Modern POS System',
-          short_name: 'POS',
-          theme_color: env.VITE_THEME_PRIMARY_COLOR || '#3B82F6',
-          background_color: '#ffffff',
-          display: 'standalone',
-          start_url: '/',
+          name: env.VITE_APP_TITLE || "Modern POS System",
+          short_name: "POS",
+          theme_color: env.VITE_THEME_PRIMARY_COLOR || "#3B82F6",
+          background_color: "#ffffff",
+          display: "standalone",
+          start_url: "/",
         },
         workbox: {
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/.*\.couchdb\.com\/.*/i,
-              handler: 'NetworkFirst',
-              options: { cacheName: 'couchdb-cache' }
-            }
-          ]
-        }
-      })
-    ]
+              handler: "NetworkFirst",
+              options: { cacheName: "couchdb-cache" },
+            },
+          ],
+        },
+      }),
+    ],
   };
 });
 ```
 
 ### Online/Offline Composable (src/composables/use-online-status.ts)
+
 ```typescript
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from "vue";
 
 export function useOnlineStatus() {
   const online = ref(navigator.onLine);
@@ -152,13 +164,13 @@ export function useOnlineStatus() {
   };
 
   onMounted(() => {
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
+    window.addEventListener("online", updateOnlineStatus);
+    window.addEventListener("offline", updateOnlineStatus);
   });
 
   onUnmounted(() => {
-    window.removeEventListener('online', updateOnlineStatus);
-    window.removeEventListener('offline', updateOnlineStatus);
+    window.removeEventListener("online", updateOnlineStatus);
+    window.removeEventListener("offline", updateOnlineStatus);
   });
 
   return { online };

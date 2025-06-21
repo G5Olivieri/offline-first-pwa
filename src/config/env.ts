@@ -6,14 +6,23 @@ interface SearchConfig {
 }
 
 interface TrackingConfig {
-  enabled: boolean;
-  remote: {
+  error: {
     enabled: boolean;
-    endpoint: string;
+    remote: {
+      enabled: boolean;
+      endpoint: string;
+    };
+
+    console: {
+      enabled: boolean;
+    };
   };
 
-  console: {
+  user: {
     enabled: boolean;
+    console: {
+      enabled: boolean;
+    };
   };
 }
 
@@ -168,13 +177,28 @@ export const config: AppConfig = {
     indexKey: getEnvVar("VITE_SEARCH_INDEX_KEY", "id"),
   },
   tracking: {
-    enabled: getEnvVar("VITE_TRACKING_ENABLED", false, toBool),
-    remote: {
-      enabled: getEnvVar("VITE_TRACKING_REMOTE_ENABLED", false, toBool),
-      endpoint: getEnvVar("VITE_TRACKING_REMOTE_ENDPOINT", "/api/error-logs"),
+    error: {
+      enabled: getEnvVar("VITE_TRACKING_ERROR_ENABLED", false, toBool),
+      remote: {
+        enabled: getEnvVar("VITE_TRACKING_ERROR_REMOTE_ENABLED", false, toBool),
+        endpoint: getEnvVar(
+          "VITE_TRACKING_ERROR_REMOTE_ENDPOINT",
+          "/api/error-logs",
+        ),
+      },
+      console: {
+        enabled: getEnvVar(
+          "VITE_TRACKING_ERROR_CONSOLE_ENABLED",
+          false,
+          toBool,
+        ),
+      },
     },
-    console: {
-      enabled: getEnvVar("VITE_TRACKING_CONSOLE_ENABLED", false, toBool),
+    user: {
+      enabled: getEnvVar("VITE_TRACKING_USER_ENABLED", false, toBool),
+      console: {
+        enabled: getEnvVar("VITE_TRACKING_USER_CONSOLE_ENABLED", false, toBool),
+      },
     },
   },
 };

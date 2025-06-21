@@ -169,7 +169,7 @@ function validateEnvironment() {
     Object.assign(allVars, vars);
     if (Object.keys(vars).length > 0) {
       console.log(
-        `📁 Loaded ${Object.keys(vars).length} variables from ${file}`
+        `📁 Loaded ${Object.keys(vars).length} variables from ${file}`,
       );
     }
   });

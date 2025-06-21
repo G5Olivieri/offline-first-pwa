@@ -14,7 +14,6 @@ export class OrderNotificationHandler {
   }
 
   private setupEventListeners() {
-    // Stock and inventory events
     this.unsubscribeFunctions.push(
       orderEventEmitter.on(
         "stock_limit_reached",
@@ -25,7 +24,6 @@ export class OrderNotificationHandler {
       orderEventEmitter.on("out_of_stock", this.handleOutOfStock.bind(this)),
     );
 
-    // Order lifecycle events
     this.unsubscribeFunctions.push(
       orderEventEmitter.on(
         "order_completed",
@@ -39,7 +37,6 @@ export class OrderNotificationHandler {
       ),
     );
 
-    // Customer and operator events
     this.unsubscribeFunctions.push(
       orderEventEmitter.on(
         "customer_selected",
@@ -53,7 +50,6 @@ export class OrderNotificationHandler {
       ),
     );
 
-    // Error events
     this.unsubscribeFunctions.push(
       orderEventEmitter.on("order_error", this.handleOrderError.bind(this)),
     );
@@ -138,14 +134,12 @@ export class OrderNotificationHandler {
         "An unexpected error occurred while processing your order.",
     );
 
-    // Log the error for tracking
     this.errorTracking.track(payload.error, {
       component: "OrderStore",
       timestamp: event.timestamp,
       context: payload.context,
     });
 
-    // Show user-friendly notification
     this.notification.showError(
       "Order Error",
       payload.error.message ||
@@ -184,7 +178,6 @@ export class OrderNotificationHandler {
   }
 }
 
-// Singleton instance for global use
 let orderNotificationHandler: OrderNotificationHandler | null = null;
 
 export const startOrderNotificationHandler = (

@@ -5,6 +5,18 @@ interface SearchConfig {
   indexKey: string;
 }
 
+interface TrackingConfig {
+  enabled: boolean;
+  remote: {
+    enabled: boolean;
+    endpoint: string;
+  };
+
+  console: {
+    enabled: boolean;
+  };
+}
+
 interface AppConfig {
   appTitle: string;
   appVersion: string;
@@ -43,6 +55,7 @@ interface AppConfig {
   logLevel: string;
 
   search: SearchConfig;
+  tracking: TrackingConfig;
 }
 
 /**
@@ -51,7 +64,7 @@ interface AppConfig {
 function getEnvVar<T>(
   key: string,
   defaultValue: T,
-  converter?: (value: string) => T,
+  converter?: (value: string) => T
 ): T {
   const value = import.meta.env[key];
 
@@ -153,6 +166,16 @@ export const config: AppConfig = {
     dbVersion: getEnvVar("VITE_SEARCH_DB_VERSION", 1, toNumber),
     storeName: getEnvVar("VITE_SEARCH_STORE_NAME", "products"),
     indexKey: getEnvVar("VITE_SEARCH_INDEX_KEY", "id"),
+  },
+  tracking: {
+    enabled: getEnvVar("VITE_TRACKING_ENABLED", false, toBool),
+    remote: {
+      enabled: getEnvVar("VITE_TRACKING_REMOTE_ENABLED", false, toBool),
+      endpoint: getEnvVar("VITE_TRACKING_REMOTE_ENDPOINT", "/api/error-logs"),
+    },
+    console: {
+      enabled: getEnvVar("VITE_TRACKING_CONSOLE_ENABLED", false, toBool),
+    },
   },
 };
 

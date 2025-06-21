@@ -1,17 +1,30 @@
-export interface ErrorLog {
-  id: string;
-  type: "network" | "validation" | "application" | "system";
-  severity: "low" | "medium" | "high" | "critical";
-  message: string;
-  stack?: string;
-  context: Record<string, unknown>;
-}
+import type { ErrorTracking } from "./error-tracking";
+import type { ErrorLog } from "./error-log";
+import type { EventTrackHandler } from "./event-track-handler";
 
-export class ErrorTrackingService {
+export class ErrorTrackingPubSub implements ErrorTracking {
+  private handlers: EventTrackHandler[] = [];
+
   constructor(
     private readonly source: string,
-    private readonly context?: Record<string, unknown>,
+    private readonly context?: Record<string, unknown>
   ) {}
+
+  public addHandler(handler: EventTrackHandler) {
+    this.handlers.push(handler);
+  }
+
+  public removeHandler(handler: EventTrackHandler) {
+    this.handlers = this.handlers.filter((h) => h !== handler);
+  }
+
+  public clearHandlers() {
+    this.handlers = [];
+  }
+
+  public setHandlers(handlers: EventTrackHandler[]) {
+    this.handlers = handlers;
+  }
 
   public track(error: Error, context: Record<string, unknown> = {}) {
     const errorLog: ErrorLog = {
@@ -20,24 +33,26 @@ export class ErrorTrackingService {
       severity: this.getSeverity(error),
       message: error.message,
       stack: error.stack,
+      timestamp: new Date(),
       context: {
         ...this.context,
         source: this.source,
-        timestamp: new Date(),
         url: window.location.href,
         userAgent: navigator.userAgent,
         ...context,
       },
     };
 
-    if (errorLog.severity === "critical") {
-      this.sendToRemoteLogging(errorLog).catch((logError) => {
+    this.handlers.map(async (handler) => {
+      try {
+        await handler.handle(errorLog);
+      } catch (handlerError) {
         console.error(
-          "Failed to send critical error to remote logging:",
-          logError,
+          `Error in error tracking handler (${handler.constructor.name}):`,
+          handlerError
         );
-      });
-    }
+      }
+    });
 
     return errorLog.id;
   }
@@ -85,34 +100,4 @@ export class ErrorTrackingService {
     }
     return "low";
   }
-
-  private async sendToRemoteLogging(errorLog: ErrorLog): Promise<void> {
-    try {
-      // Only send in production and if endpoint is configured
-      const logEndpoint = import.meta.env.VITE_ERROR_LOG_ENDPOINT;
-      if (!logEndpoint || import.meta.env.DEV) {
-        return;
-      }
-
-      await fetch(logEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Error-Source": "pos-frontend",
-        },
-        body: JSON.stringify({
-          ...errorLog,
-          // Sanitize sensitive data
-          context: {
-            ...errorLog.context,
-            userAgent: undefined, // Remove user agent for privacy
-          },
-        }),
-      });
-    } catch (logError) {
-      console.error("Failed to send error log to remote service:", logError);
-    }
-  }
 }
-
-export const errorTrackingService = new ErrorTrackingService("global");

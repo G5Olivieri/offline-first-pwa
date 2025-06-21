@@ -147,7 +147,7 @@
 </template>
 
 <script setup lang="ts">
-import { errorTrackingService } from "@/error/error-tracking-service";
+import { errorTrackingService } from "@/error/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOnlineStatusStore } from "@/stores/online-status-store";
 import { computed, onMounted } from "vue";

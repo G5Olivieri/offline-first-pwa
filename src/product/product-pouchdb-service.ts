@@ -1,4 +1,4 @@
-import { ConflictError, ValidationError } from "@/error/error-middleware";
+import { ConflictError, ValidationError } from "@/error/errors";
 import type { Product } from "@/product/product";
 import { ProductSearchService } from "./product-search-service";
 import type { ProductService } from "./product-service";

@@ -3,7 +3,7 @@ defineOptions({
   name: "AllCustomers",
 });
 
-import { errorTrackingService } from "@/error/error-tracking-service";
+import { errorTrackingService } from "@/error/singleton";
 import { customerService } from "@/customer/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { type Customer } from "@/customer/customer";

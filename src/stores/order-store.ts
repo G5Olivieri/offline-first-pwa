@@ -14,7 +14,7 @@ import { useLocalStorage } from "@vueuse/core";
 import throttle from "lodash.throttle";
 import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, toValue, watch } from "vue";
-import { errorTrackingService } from "../error/error-tracking-service";
+import { errorTrackingService } from "@/error/singleton";
 import { useNotificationStore } from "./notification-store";
 import { useTerminalStore } from "./terminal-store";
 

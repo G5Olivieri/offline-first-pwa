@@ -1,4 +1,3 @@
-import type { ErrorContext } from "@/error/error-middleware";
 import type { ErrorTracking } from "@/error/error-tracking";
 import type { Product } from "@/product/product";
 import type { ProductService } from "./product-service";
@@ -8,12 +7,12 @@ export class ProductServiceWithErrorHandlingDecorator
 {
   constructor(
     private readonly productService: ProductService,
-    private readonly errorTracking: ErrorTracking,
+    private readonly errorTracking: ErrorTracking
   ) {}
 
   private async withErrorHandling<T>(
     operation: () => Promise<T>,
-    context: Partial<ErrorContext>,
+    context?: Record<string, unknown>
   ): Promise<T> {
     try {
       return await operation();
@@ -25,18 +24,18 @@ export class ProductServiceWithErrorHandlingDecorator
 
   async searchProducts(
     query: string,
-    options?: { limit?: number; skip?: number },
+    options?: { limit?: number; skip?: number }
   ): Promise<{ count: number; products: Product[] }> {
     return this.withErrorHandling(
       () => this.productService.searchProducts(query, options),
-      { operation: "searchProducts", metadata: { query, ...options } },
+      { operation: "searchProducts", metadata: { query, ...options } }
     );
   }
 
   async findProductByBarcode(barcode: string): Promise<Product | null> {
     return this.withErrorHandling(
       () => this.productService.findProductByBarcode(barcode),
-      { operation: "findProductByBarcode", metadata: { barcode } },
+      { operation: "findProductByBarcode", metadata: { barcode } }
     );
   }
 
@@ -48,11 +47,11 @@ export class ProductServiceWithErrorHandlingDecorator
   }
 
   async changeStock(
-    input: Map<string, number>,
+    input: Map<string, number>
   ): Promise<(PouchDB.Core.Error | PouchDB.Core.Response)[]> {
     return this.withErrorHandling(
       () => this.productService.changeStock(input),
-      { operation: "changeStock", metadata: { productCount: input.size } },
+      { operation: "changeStock", metadata: { productCount: input.size } }
     );
   }
 
@@ -62,7 +61,7 @@ export class ProductServiceWithErrorHandlingDecorator
   }> {
     return this.withErrorHandling(
       () => this.productService.listProducts(options),
-      { operation: "listProducts", metadata: options },
+      { operation: "listProducts", metadata: options }
     );
   }
   async createProduct(product: Omit<Product, "_id" | "rev">): Promise<Product> {
@@ -71,7 +70,7 @@ export class ProductServiceWithErrorHandlingDecorator
       {
         operation: "createProduct",
         metadata: { productName: product.name, barcode: product.barcode },
-      },
+      }
     );
   }
 
@@ -81,7 +80,7 @@ export class ProductServiceWithErrorHandlingDecorator
       {
         operation: "updateProduct",
         metadata: { productId: product._id, productName: product.name },
-      },
+      }
     );
   }
 
@@ -93,14 +92,14 @@ export class ProductServiceWithErrorHandlingDecorator
   }
 
   async bulkInsertProducts(
-    products: Product[],
+    products: Product[]
   ): Promise<Array<PouchDB.Core.Response | PouchDB.Core.Error>> {
     return this.withErrorHandling(
       () => this.productService.bulkInsertProducts(products),
       {
         operation: "bulkInsertProducts",
         metadata: { productCount: products.length },
-      },
+      }
     );
   }
 }

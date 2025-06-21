@@ -1,4 +1,3 @@
-import type { ErrorContext } from "@/error/error-middleware";
 import type { ErrorTracking } from "@/error/error-tracking";
 import type { Operator } from "./operator";
 import type { OperatorService } from "./operator-service";
@@ -13,7 +12,7 @@ export class OperatorServiceWithErrorHandlingDecorator
 
   private async withErrorHandling<T>(
     operation: () => Promise<T>,
-    context: Partial<ErrorContext>,
+    context?: Record<string, unknown>
   ): Promise<T> {
     try {
       return await operation();

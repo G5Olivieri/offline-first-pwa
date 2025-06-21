@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { errorTrackingService } from "@/error/error-tracking-service";
+import { errorTrackingService } from "@/error/singleton";
 import { computed, onErrorCaptured, ref, watch } from "vue";
 
 interface Props {

@@ -1,4 +1,4 @@
-import { ValidationError, ConflictError } from "@/error/error-middleware";
+import { ValidationError, ConflictError } from "@/error/errors";
 import type { Operator } from "./operator";
 import type { OperatorService } from "./operator-service";
 

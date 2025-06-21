@@ -1,4 +1,4 @@
-import { ValidationError, ConflictError } from "@/error/error-middleware";
+import { ValidationError, ConflictError } from "@/error/errors";
 import type { Customer } from "@/customer/customer";
 import type { CustomerService } from "./customer-service";
 

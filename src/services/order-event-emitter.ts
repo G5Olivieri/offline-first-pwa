@@ -1,14 +1,14 @@
+import type { Customer } from "@/customer/customer";
 import type { ErrorTracking } from "@/error/error-tracking";
 import {
   AbstractTypedEventEmitter,
   type ExtractEvent,
   type TypedEventEmitter,
 } from "@/interfaces/typed-event-emitter";
-import type { Customer } from "@/customer/customer";
 import type { Operator } from "@/operator/operator";
-import type { Order } from "@/types/order";
 import type { Product } from "@/product/product";
-import { errorTrackingService } from "../error/error-tracking-service";
+import type { Order } from "@/types/order";
+import { errorTrackingService } from "@/error/singleton";
 
 export type OrderEventTypeMap = {
   stock_limit_reached: {
@@ -55,7 +55,7 @@ export class OrderEventEmitter
 
   protected handleListenerError(
     error: unknown,
-    eventType: keyof OrderEventTypeMap,
+    eventType: keyof OrderEventTypeMap
   ): void {
     this.errorTracking.track(
       new Error(`Error in listener for event type "${eventType}": ${error}`),
@@ -63,7 +63,7 @@ export class OrderEventEmitter
         eventType,
         error,
         timestamp: new Date(),
-      },
+      }
     );
   }
 }

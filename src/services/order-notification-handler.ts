@@ -1,4 +1,5 @@
 import type { ErrorTracking } from "@/error/error-tracking";
+import { ValidationError } from "@/error/errors";
 import type { Product } from "@/product/product";
 import type { NotificationService } from "./notification-service";
 import { orderEventEmitter, type OrderEvent } from "./order-event-emitter";
@@ -83,10 +84,17 @@ export class OrderNotificationHandler {
   }
 
   private handleOutOfStock(event: OrderEvent<"out_of_stock">) {
-    const payload = event.payload;
+    this.errorTracking.track(new Error("Out of stock error"), {
+      component: "OrderStore",
+      operation: "addProductToOrder",
+      product: {
+        id: event.payload.product._id,
+        rev: event.payload.product.rev,
+      },
+    });
     this.notification.showError(
       "Out of Stock",
-      `${payload.product.name} is currently out of stock and cannot be added to the order.`,
+      `${event.payload.product.name} is currently out of stock and cannot be added to the order.`,
     );
   }
 
@@ -98,12 +106,7 @@ export class OrderNotificationHandler {
     );
   }
 
-  private handleOrderAbandoned(event: OrderEvent<"order_abandoned">) {
-    this.errorTracking.track(new Error("Order Abandoned"), {
-      component: "OrderStore",
-      operation: "abandonOrder",
-      timestamp: event.timestamp,
-    });
+  private handleOrderAbandoned() {
     this.notification.showSuccess(
       "Order Abandoned",
       "The current order has been successfully abandoned.",
@@ -135,26 +138,23 @@ export class OrderNotificationHandler {
     );
 
     this.errorTracking.track(payload.error, {
+      ...payload.context,
       component: "OrderStore",
-      timestamp: event.timestamp,
-      context: payload.context,
     });
-
-    this.notification.showError(
-      "Order Error",
-      payload.error.message ||
-        "An unexpected error occurred while processing your order.",
-    );
   }
 
   private handlePaymentValidationFailed(
     event: OrderEvent<"payment_validation_failed">,
   ) {
-    const payload = event.payload as {
-      message: string;
-      details?: Record<string, unknown>;
-    };
-    this.notification.showWarning("Payment Validation Failed", payload.message);
+    this.errorTracking.track(new ValidationError(event.payload.message), {
+      component: "OrderStore",
+      operation: "validatePayment",
+      context: event.payload.details || {},
+    });
+    this.notification.showWarning(
+      "Payment Validation Failed",
+      event.payload.message,
+    );
   }
 
   private handleOrderLoadFailed(event: OrderEvent<"order_load_failed">) {
@@ -162,8 +162,7 @@ export class OrderNotificationHandler {
     this.errorTracking.track(payload.error, {
       component: "OrderStore",
       operation: "loadOrder",
-      timestamp: event.timestamp,
-      context: payload.context,
+      ...event.payload.context,
     });
 
     this.notification.showError(

@@ -8,33 +8,34 @@ import { productService, searchService } from "@/product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOrderStore } from "@/stores/order-store";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const notificationStore = useNotificationStore();
 const orderStore = useOrderStore();
+const route = useRoute();
+const router = useRouter();
 
 const products = ref<{ count: number; products: Product[] }>({
   count: 0,
   products: [],
 });
-const limit = ref(12);
-const skip = ref(0);
+const limit = ref(Number(route.query.limit || 10));
+const skip = ref((Number(route.query.page || 1) - 1) * limit.value);
+const currentPage = computed(() => Math.ceil((skip.value + 1) / limit.value));
 const isLoading = ref(false);
-const searchQuery = ref("");
+const searchQuery = ref(route.query.q ? String(route.query.q) : "");
 const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
-const isSearchIndexReady = ref(false);
+const isSearchIndexReady = ref(searchService.isReady());
 const searchInputRef = ref<HTMLInputElement | null>(null);
 
-// Computed properties
 const totalPages = computed(() =>
   Math.ceil(products.value.count / limit.value),
 );
-const currentPage = computed(() => Math.floor(skip.value / limit.value) + 1);
 const hasNextPage = computed(
   () => skip.value + limit.value < products.value.count,
 );
 const hasPreviousPage = computed(() => skip.value > 0);
 
-// Pagination display logic
 const paginationRange = computed(() => {
   const total = totalPages.value;
   const current = currentPage.value;
@@ -111,6 +112,10 @@ const loadProducts = async () => {
     );
   } finally {
     isLoading.value = false;
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 };
 
@@ -161,6 +166,13 @@ const performSearch = () => {
 
   searchTimeout.value = setTimeout(async () => {
     skip.value = 0; // Reset to first page when searching
+    router.replace({
+      query: {
+        page: 1,
+        limit: limit.value,
+        q: searchQuery.value.trim() || undefined,
+      },
+    });
     await loadProducts();
   }, 200);
 };
@@ -168,6 +180,13 @@ const performSearch = () => {
 const nextPage = () => {
   if (hasNextPage.value) {
     skip.value += limit.value;
+    router.replace({
+      query: {
+        page: currentPage.value + 1,
+        limit: limit.value,
+        q: searchQuery.value.trim() || undefined,
+      },
+    });
     loadProducts();
   }
 };
@@ -175,12 +194,39 @@ const nextPage = () => {
 const previousPage = () => {
   if (hasPreviousPage.value) {
     skip.value -= limit.value;
+    router.replace({
+      query: {
+        page: currentPage.value - 1,
+        limit: limit.value,
+        q: searchQuery.value.trim() || undefined,
+      },
+    });
     loadProducts();
   }
 };
 
 const goToPage = (page: number) => {
   skip.value = (page - 1) * limit.value;
+  router.replace({
+    query: {
+      page: page,
+      limit: limit.value,
+      q: searchQuery.value.trim() || undefined,
+    },
+  });
+  loadProducts();
+};
+
+const changeLimit = (newLimit: number) => {
+  limit.value = newLimit;
+  skip.value = 0; // Reset to first page when changing limit
+  router.replace({
+    query: {
+      page: 1,
+      limit: newLimit,
+      q: searchQuery.value.trim() || undefined,
+    },
+  });
   loadProducts();
 };
 
@@ -207,11 +253,6 @@ const copyEAN = async (barcode: string) => {
   }
 };
 
-// Watch for search query changes for real-time search
-watch(searchQuery, () => {
-  performSearch();
-});
-
 // Keyboard shortcut handler
 const handleKeydown = (event: KeyboardEvent) => {
   // Alt + Shift + F to focus search
@@ -237,10 +278,15 @@ const escapeSearch = (event: KeyboardEvent) => {
   }
 };
 
+watch(searchQuery, () => {
+  performSearch();
+});
+
 onMounted(() => {
   loadProducts();
   window.addEventListener("keydown", handleKeydown);
 });
+
 onUnmounted(() => {
   if (searchTimeout.value) {
     clearTimeout(searchTimeout.value);
@@ -451,7 +497,7 @@ onUnmounted(() => {
 
       <!-- Loading State -->
       <div
-        v-if="isLoading && products.products.length === 0"
+        v-if="isLoading && products.count === 0"
         class="flex items-center justify-center py-12"
       >
         <div class="text-center">
@@ -480,7 +526,7 @@ onUnmounted(() => {
 
       <!-- Empty State -->
       <div
-        v-else-if="!isLoading && products.products.length === 0"
+        v-else-if="!isLoading && products.count === 0"
         class="text-center py-12"
       >
         <div
@@ -873,17 +919,43 @@ onUnmounted(() => {
 
       <!-- Pagination -->
       <div
-        v-if="totalPages > 1"
+        v-if="totalPages > 0"
         class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-white/20"
       >
         <div
           class="flex flex-col sm:flex-row items-center justify-between gap-4"
         >
-          <!-- Pagination Info -->
-          <div class="text-sm text-gray-600">
-            Showing {{ skip + 1 }} to
-            {{ Math.min(skip + limit, products.count) }} of
-            {{ products.count }} products
+          <!-- Pagination Info and Limit Selector -->
+          <div class="flex flex-col sm:flex-row items-center gap-4">
+            <div class="text-sm text-gray-600">
+              Showing {{ skip + 1 }} to
+              {{ Math.min(skip + limit, products.count) }} of
+              {{ products.count }} products
+            </div>
+
+            <!-- Limit Selector -->
+            <div class="flex items-center gap-2">
+              <label
+                for="limit-select"
+                class="text-sm text-gray-600 font-medium"
+              >
+                Per page:
+              </label>
+              <select
+                id="limit-select"
+                v-model="limit"
+                @change="changeLimit(limit)"
+                class="text-sm border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              >
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
           </div>
 
           <!-- Pagination Controls -->

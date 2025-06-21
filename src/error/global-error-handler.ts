@@ -1,5 +1,5 @@
-import type { App } from "vue";
 import { errorTrackingService } from "@/error/singleton";
+import type { App } from "vue";
 export class GlobalErrorHandler {
   setupVueErrorHandler(app: App) {
     app.config.errorHandler = (error, instance, info) => {

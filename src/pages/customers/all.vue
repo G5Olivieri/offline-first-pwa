@@ -3,10 +3,10 @@ defineOptions({
   name: "AllCustomers",
 });
 
-import { errorTrackingService } from "@/error/singleton";
-import { customerService } from "@/customer/singleton";
-import { useNotificationStore } from "@/stores/notification-store";
 import { type Customer } from "@/customer/customer";
+import { customerService } from "@/customer/singleton";
+import { errorTrackingService } from "@/error/singleton";
+import { useNotificationStore } from "@/stores/notification-store";
 import { onMounted, ref } from "vue";
 
 const customers = ref<Customer[]>([]);

@@ -33,7 +33,6 @@ const processPayment = async () => {
   isProcessing.value = true;
   try {
     await orderStore.complete();
-    // Redirect to success page or home
     router.push("/");
   } catch (error) {
     console.error("Payment processing failed:", error);

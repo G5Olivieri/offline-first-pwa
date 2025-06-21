@@ -7,7 +7,7 @@ export class ErrorTrackingPubSub implements ErrorTracking {
 
   constructor(
     private readonly source: string,
-    private readonly context?: Record<string, unknown>
+    private readonly context?: Record<string, unknown>,
   ) {}
 
   public addHandler(handler: EventTrackHandler) {
@@ -49,7 +49,7 @@ export class ErrorTrackingPubSub implements ErrorTracking {
       } catch (handlerError) {
         console.error(
           `Error in error tracking handler (${handler.constructor.name}):`,
-          handlerError
+          handlerError,
         );
       }
     });

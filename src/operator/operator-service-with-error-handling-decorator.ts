@@ -12,7 +12,7 @@ export class OperatorServiceWithErrorHandlingDecorator
 
   private async withErrorHandling<T>(
     operation: () => Promise<T>,
-    context?: Record<string, unknown>
+    context?: Record<string, unknown>,
   ): Promise<T> {
     try {
       return await operation();

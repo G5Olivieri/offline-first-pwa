@@ -9,13 +9,13 @@ import {
   createPOSShortcuts,
   useKeyboardShortcuts,
 } from "@/composables/use-keyboard-shortcuts";
-import { productService } from "./product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOnlineStatusStore } from "@/stores/online-status-store";
 import { useOrderStore } from "@/stores/order-store";
 import { useSetupStore } from "@/stores/setup-store";
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { productService } from "./product/singleton";
 
 const barcode = ref("");
 const router = useRouter();
@@ -187,16 +187,8 @@ const completeOrder = async () => {
     return;
   }
 
-  try {
-    await orderStore.complete();
-
-    notificationStore.showSuccess(
-      "Order Completed",
-      "Thank you for your order!",
-    );
-  } catch {
-    notificationStore.showError("Error", "Failed to complete order");
-  }
+  await orderStore.complete();
+  router.push("/");
 };
 
 const abandonOrder = async () => {

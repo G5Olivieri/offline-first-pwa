@@ -1,16 +1,11 @@
 import type { ErrorLog } from "./error-log";
 import type { EventTrackHandler } from "./event-track-handler";
 
-export class RemoteHttpErrorTrackHandler implements EventTrackHandler {
+export class RemoteHttpEventTrackHandler implements EventTrackHandler {
+  constructor(private readonly endpoint: string) {}
   public async handle(error: ErrorLog) {
     try {
-      // TODO: config/env
-      const logEndpoint = import.meta.env.VITE_ERROR_LOG_ENDPOINT;
-      if (!logEndpoint) {
-        return;
-      }
-
-      await fetch(logEndpoint, {
+      await fetch(this.endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

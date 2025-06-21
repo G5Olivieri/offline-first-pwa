@@ -3,12 +3,12 @@ defineOptions({
   name: "OperatorsPage",
 });
 
+import type { Operator } from "@/operator/operator";
+import { operatorService } from "@/operator/singleton";
+import { useNotificationStore } from "@/stores/notification-store";
+import { useOrderStore } from "@/stores/order-store";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { useNotificationStore } from "@/stores/notification-store";
-import { operatorService } from "@/operator/singleton";
-import { useOrderStore } from "@/stores/order-store";
-import type { Operator } from "@/operator/operator";
 
 const router = useRouter();
 const operators = ref<Operator[]>([]);

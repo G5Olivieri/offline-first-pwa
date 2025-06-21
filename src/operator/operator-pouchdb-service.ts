@@ -1,4 +1,4 @@
-import { ValidationError, ConflictError } from "@/error/errors";
+import { ConflictError, ValidationError } from "@/error/errors";
 import type { Operator } from "./operator";
 import type { OperatorService } from "./operator-service";
 
@@ -83,7 +83,9 @@ export class OperatorPouchDBService implements OperatorService {
     const operators = await this.db
       .allDocs({ include_docs: true, limit, skip })
       .then((result) => {
-        return result.rows.map((row) => row.doc as Operator);
+        return result.rows
+          .filter((row) => !row.id.startsWith("_design"))
+          .map((row) => row.doc as Operator);
       });
 
     return {

@@ -55,7 +55,7 @@ export class OrderEventEmitter
 
   protected handleListenerError(
     error: unknown,
-    eventType: keyof OrderEventTypeMap
+    eventType: keyof OrderEventTypeMap,
   ): void {
     this.errorTracking.track(
       new Error(`Error in listener for event type "${eventType}": ${error}`),
@@ -63,7 +63,7 @@ export class OrderEventEmitter
         eventType,
         error,
         timestamp: new Date(),
-      }
+      },
     );
   }
 }

@@ -41,6 +41,13 @@ export class ProductPouchDBService implements ProductService {
 
   async searchProducts(query: string, { limit = 100, skip = 0 } = {}) {
     const searchResult = this.search.search(query, { limit, skip });
+    if (searchResult.count === 0) {
+      return { count: 0, products: [] as Product[] };
+    }
+
+    if (searchResult.productIds.length === 0) {
+      return { count: searchResult.count, products: [] as Product[] };
+    }
 
     const products = await this.db
       .bulkGet({

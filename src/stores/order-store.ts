@@ -1,20 +1,20 @@
-import { getOrderDB } from "@/db";
+import type { Customer } from "@/customer/customer";
 import { customerService } from "@/customer/singleton";
+import { getOrderDB } from "@/db";
+import { errorTrackingService } from "@/error/singleton";
+import type { Operator } from "@/operator/operator";
 import { operatorService } from "@/operator/singleton";
+import type { Product } from "@/product/product";
+import { productService } from "@/product/singleton";
 import { orderEventEmitter } from "@/services/order-event-emitter";
 import { startOrderNotificationHandler } from "@/services/order-notification-handler";
-import { productService } from "@/product/singleton";
 import { recommendationEngine } from "@/services/recommendation-engine";
-import type { Customer } from "@/customer/customer";
-import type { Operator } from "@/operator/operator";
 import type { Item, Order, PaymentMethod } from "@/types/order";
 import { OrderStatus } from "@/types/order";
-import type { Product } from "@/product/product";
 import { useLocalStorage } from "@vueuse/core";
 import throttle from "lodash.throttle";
 import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, toValue, watch } from "vue";
-import { errorTrackingService } from "@/error/singleton";
 import { useNotificationStore } from "./notification-store";
 import { useTerminalStore } from "./terminal-store";
 
@@ -260,6 +260,9 @@ export const useOrderStore = defineStore("orderStore", () => {
       const orderDocument = mapOrderToDocument(OrderStatus.COMPLETED);
       putOrder(orderDocument);
       await putOrder.flush();
+      orderEventEmitter.emit("order_completed", {
+        order: orderDocument,
+      });
 
       await recommendationEngine.updateProductAffinities(orderDocument);
       await recommendationEngine.updateCustomerPreferences(orderDocument);

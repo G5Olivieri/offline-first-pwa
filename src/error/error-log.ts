@@ -1,4 +1,3 @@
-
 export interface ErrorLog {
   id: string;
   type: "network" | "validation" | "application" | "system";

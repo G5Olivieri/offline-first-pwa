@@ -1,7 +1,14 @@
+import type { ErrorTracking } from "@/error/error-tracking";
+import {
+  AbstractTypedEventEmitter,
+  type ExtractEvent,
+  type TypedEventEmitter,
+} from "@/interfaces/typed-event-emitter";
 import type { Customer } from "@/types/customer";
 import type { Operator } from "@/types/operator";
 import type { Order } from "@/types/order";
 import type { Product } from "@/types/product";
+import { errorTrackingService } from "./error-tracking-service";
 
 export type OrderEventTypeMap = {
   stock_limit_reached: {
@@ -33,81 +40,32 @@ export type OrderEventTypeMap = {
   order_load_failed: { error: Error; context?: Record<string, unknown> };
 };
 
-export type OrderEventType = keyof OrderEventTypeMap;
+export type OrderEvent<T extends keyof OrderEventTypeMap> = ExtractEvent<
+  T,
+  OrderEventTypeMap
+>;
 
-export interface OrderEvent<T extends OrderEventType> {
-  type: T;
-  payload: OrderEventTypeMap[T];
-  timestamp: Date;
-}
-
-type Listener<T> = (event: T) => void;
-
-export class OrderEventEmitter {
-  constructor(
-    private readonly listeners: Map<
-      OrderEventType,
-      Array<Listener<unknown>>
-    > = new Map()
-  ) {}
-
-  emit = <T extends OrderEventType>(type: T, payload: OrderEventTypeMap[T]) => {
-    const event: OrderEvent<T> = {
-      type,
-      payload,
-      timestamp: new Date(),
-    };
-
-    const eventListeners = this.listeners.get(type) || [];
-    eventListeners.forEach((listener) => {
-      try {
-        listener(event);
-      } catch (error) {
-        console.error(`Error in order event listener for ${type}:`, error);
-      }
-    });
-  };
-
-  public on<T extends OrderEventType>(
-    type: T,
-    listener: Listener<OrderEvent<T>>
-  ) {
-    if (!this.listeners.has(type)) {
-      this.listeners.set(type, []);
-    }
-    this.listeners.get(type)!.push(listener as Listener<unknown>);
-
-    return () => {
-      const eventListeners = this.listeners.get(type);
-      if (eventListeners) {
-        const index = eventListeners.indexOf(listener as Listener<unknown>);
-        if (index > -1) {
-          eventListeners.splice(index, 1);
-        }
-      }
-    };
+export class OrderEventEmitter
+  extends AbstractTypedEventEmitter<OrderEventTypeMap>
+  implements TypedEventEmitter<OrderEventTypeMap>
+{
+  public constructor(private readonly errorTracking: ErrorTracking) {
+    super();
   }
 
-  public off<T extends OrderEventType>(
-    type: T,
-    listener?: Listener<OrderEvent<T>>
-  ) {
-    if (!listener) {
-      this.listeners.delete(type);
-    } else {
-      const eventListeners = this.listeners.get(type);
-      if (eventListeners) {
-        const index = eventListeners.indexOf(listener as Listener<unknown>);
-        if (index > -1) {
-          eventListeners.splice(index, 1);
-        }
+  protected handleListenerError(
+    error: unknown,
+    eventType: keyof OrderEventTypeMap
+  ): void {
+    this.errorTracking.track(
+      new Error(`Error in listener for event type "${eventType}": ${error}`),
+      {
+        eventType,
+        error,
+        timestamp: new Date(),
       }
-    }
-  }
-
-  public clear() {
-    this.listeners.clear();
+    );
   }
 }
 
-export const orderEventEmitter = new OrderEventEmitter();
+export const orderEventEmitter = new OrderEventEmitter(errorTrackingService);

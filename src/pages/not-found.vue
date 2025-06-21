@@ -147,11 +147,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import { useErrorTrackingStore } from "@/services/error-tracking-service";
+import { errorTrackingService } from "@/services/error-tracking-service";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOnlineStatusStore } from "@/stores/online-status-store";
+import { computed, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 defineOptions({
   name: "NotFound",
@@ -159,7 +159,6 @@ defineOptions({
 
 const router = useRouter();
 const route = useRoute();
-const errorTrackingStore = useErrorTrackingStore();
 const notificationStore = useNotificationStore();
 const onlineStatusStore = useOnlineStatusStore();
 
@@ -179,9 +178,9 @@ onMounted(() => {
     timestamp: new Date(),
   };
 
-  errorTrackingStore.track(
+  errorTrackingService.track(
     new Error(`Page not found: ${route.fullPath}`),
-    context,
+    context
   );
 });
 
@@ -190,13 +189,21 @@ const goHome = async () => {
     await router.push("/");
     notificationStore.showSuccess(
       "Navigation",
-      "Successfully returned to home page",
+      "Successfully returned to home page"
     );
   } catch (error) {
-    console.error("Navigation error:", error);
+    errorTrackingService.track(new Error("Failed to navigate to home page"), {
+      error,
+      component: "NotFound",
+      operation: "goHome",
+      url: route.fullPath,
+      referrer: document.referrer,
+      userAgent: navigator.userAgent,
+      timestamp: new Date(),
+    });
     notificationStore.showError(
       "Navigation Error",
-      "Failed to navigate to home page. Please try again.",
+      "Failed to navigate to home page. Please try again."
     );
   }
 };
@@ -212,7 +219,7 @@ const goBack = async () => {
     console.error("Navigation error:", error);
     notificationStore.showError(
       "Navigation Error",
-      "Unable to go back. Redirecting to home page.",
+      "Unable to go back. Redirecting to home page."
     );
     await goHome();
   }
@@ -229,16 +236,16 @@ const reportIssue = () => {
   };
 
   // Track the user's report action
-  errorTrackingStore.track(
+  errorTrackingService.track(
     new Error(`User reported 404 issue for path: ${route.fullPath}`),
-    context,
+    context
   );
 
   // Show confirmation notification
   notificationStore.showInfo(
     "Issue Reported",
     "Thank you for your feedback. Our team has been notified and will investigate this issue.",
-    5000,
+    5000
   );
 };
 </script>

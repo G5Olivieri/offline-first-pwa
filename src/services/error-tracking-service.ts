@@ -18,7 +18,7 @@ export interface ErrorLog {
 }
 
 export class ErrorTrackingService {
-  public track(error: Error, context: Partial<ErrorLog["context"]> = {}) {
+  public track(error: Error, context: Record<string, unknown> = {}) {
     const errorLog: ErrorLog = {
       id: crypto.randomUUID(),
       type: this.classifyError(error),

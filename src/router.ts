@@ -6,7 +6,7 @@ import Home from "@/pages/home/home.vue";
 import NotFound from "@/pages/not-found.vue";
 import NewOperator from "@/pages/operators/new.vue";
 import Operators from "@/pages/operators/operators.vue";
-import ProductDetail from "@/pages/products/detail-simple.vue";
+import ProductDetail from "@/pages/products/detail.vue";
 import EditProduct from "@/pages/products/edit.vue";
 import ImportProducts from "@/pages/products/import.vue";
 import NewProduct from "@/pages/products/new.vue";

@@ -37,9 +37,6 @@ const processPayment = async () => {
   try {
     await orderStore.complete();
     router.push("/");
-  } catch (error) {
-    console.error("Payment processing failed:", error);
-    // Handle error
   } finally {
     isProcessing.value = false;
   }

@@ -105,27 +105,6 @@
                     : `${product.stock} in stock`
                 }}
               </div>
-
-              <!-- Edit Button -->
-              <RouterLink
-                :to="`/products/${product._id}/edit`"
-                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  ></path>
-                </svg>
-                Edit Product
-              </RouterLink>
             </div>
           </div>
         </div>
@@ -291,128 +270,6 @@
               </div>
             </div>
 
-            <!-- Pharmaceutical Information Card -->
-            <div
-              v-if="hasPharmaceuticalInfo"
-              class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-hidden"
-            >
-              <div
-                class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4"
-              >
-                <h2 class="text-xl font-semibold text-white">
-                  Pharmaceutical Information
-                </h2>
-              </div>
-              <div class="p-6 space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Prescription Status -->
-                  <div
-                    v-if="product.prescriptionStatus"
-                    class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <span class="font-medium text-gray-700"
-                      >Prescription Status:</span
-                    >
-                    <span
-                      class="px-3 py-1 rounded-full text-sm font-medium"
-                      :class="{
-                        'bg-red-100 text-red-700':
-                          product.prescriptionStatus === 'PrescriptionOnly',
-                      }"
-                    >
-                      {{
-                        product.prescriptionStatus === "PrescriptionOnly"
-                          ? "Prescription Only"
-                          : product.prescriptionStatus
-                      }}
-                    </span>
-                  </div>
-
-                  <!-- Dosage Form -->
-                  <div
-                    v-if="product.dosageForm"
-                    class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <span class="font-medium text-gray-700">Dosage Form:</span>
-                    <span
-                      class="text-gray-800 bg-white px-3 py-1 rounded-full text-sm"
-                      >{{ product.dosageForm }}</span
-                    >
-                  </div>
-
-                  <!-- Drug Class -->
-                  <div
-                    v-if="product.drugClass"
-                    class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <span class="font-medium text-gray-700">Drug Class:</span>
-                    <span
-                      class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium"
-                      >{{ product.drugClass }}</span
-                    >
-                  </div>
-
-                  <!-- Proprietary Status -->
-                  <div
-                    v-if="product.isProprietary !== undefined"
-                    class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <span class="font-medium text-gray-700">Type:</span>
-                    <span
-                      class="px-3 py-1 rounded-full text-sm font-medium"
-                      :class="{
-                        'bg-blue-100 text-blue-700': product.isProprietary,
-                        'bg-gray-100 text-gray-700': !product.isProprietary,
-                      }"
-                    >
-                      {{ product.isProprietary ? "Brand Name" : "Generic" }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Active Ingredient -->
-                <div
-                  v-if="product.activeIngredient"
-                  class="p-4 bg-orange-50 rounded-lg border border-orange-200"
-                >
-                  <h4 class="font-medium text-orange-800 mb-2">
-                    Active Ingredient
-                  </h4>
-                  <p class="text-orange-700">{{ product.activeIngredient }}</p>
-                </div>
-
-                <!-- Contraindication Warning -->
-                <div
-                  v-if="product.contraindication"
-                  class="p-4 bg-red-50 rounded-lg border border-red-200"
-                >
-                  <div class="flex items-start gap-3">
-                    <svg
-                      class="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                      ></path>
-                    </svg>
-                    <div>
-                      <h4 class="font-medium text-red-800 mb-2">
-                        Contraindication Warning
-                      </h4>
-                      <p class="text-red-700 leading-relaxed">
-                        {{ product.contraindication }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- Additional Information Card -->
             <div
               v-if="hasAdditionalInfo"
@@ -469,6 +326,109 @@
                     >
                       {{ tag }}
                     </span>
+                  </div>
+                </div>
+
+                <!-- Pharmaceutical Information -->
+                <div v-if="hasPharmaceuticalInfo" class="space-y-4">
+                  <h4 class="font-medium text-gray-700">
+                    Pharmaceutical Details
+                  </h4>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div
+                      v-if="product.prescriptionStatus"
+                      class="p-3 bg-yellow-50 rounded-lg"
+                    >
+                      <span class="font-medium text-gray-700 block mb-2">{{
+                        product.prescriptionStatus
+                      }}</span>
+                    </div>
+
+                    <div
+                      v-if="product.dosageForm"
+                      class="p-3 bg-gray-50 rounded-lg"
+                    >
+                      <span class="font-medium text-gray-700 block mb-2"
+                        >Dosage Form</span
+                      >
+                      <span
+                        class="text-gray-800 bg-white px-3 py-1 rounded text-sm"
+                        >{{ product.dosageForm }}</span
+                      >
+                    </div>
+
+                    <div
+                      v-if="product.drugClass"
+                      class="p-3 bg-purple-50 rounded-lg"
+                    >
+                      <span class="font-medium text-gray-700 block mb-2"
+                        >Drug Class</span
+                      >
+                      <span
+                        class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium"
+                        >{{ product.drugClass }}</span
+                      >
+                    </div>
+
+                    <div
+                      v-if="product.isProprietary !== undefined"
+                      class="p-3 bg-gray-50 rounded-lg"
+                    >
+                      <span class="font-medium text-gray-700 block mb-2"
+                        >Type</span
+                      >
+                      <span
+                        class="px-3 py-1 rounded-full text-sm font-medium"
+                        :class="{
+                          'bg-blue-100 text-blue-700': product.isProprietary,
+                          'bg-gray-100 text-gray-700': !product.isProprietary,
+                        }"
+                      >
+                        {{ product.isProprietary ? "Brand Name" : "Generic" }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="product.activeIngredient"
+                    class="p-4 bg-orange-50 rounded-lg border border-orange-200"
+                  >
+                    <h5 class="font-medium text-orange-800 mb-2">
+                      Active Ingredient
+                    </h5>
+                    <p class="text-orange-700">
+                      {{ product.activeIngredient }}
+                    </p>
+                  </div>
+
+                  <div
+                    v-if="product.contraindication"
+                    class="p-4 bg-red-50 rounded-lg border border-red-200"
+                  >
+                    <div class="flex items-start gap-3">
+                      <svg
+                        class="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                        ></path>
+                      </svg>
+                      <div>
+                        <h5 class="font-medium text-red-800 mb-2">
+                          Contraindication Warning
+                        </h5>
+                        <p class="text-red-700 leading-relaxed">
+                          {{ product.contraindication }}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -528,26 +488,6 @@
                   Copy Barcode
                 </button>
 
-                <RouterLink
-                  :to="`/products/${product._id}/edit`"
-                  class="w-full inline-flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-                >
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    ></path>
-                  </svg>
-                  Edit Product
-                </RouterLink>
-
                 <button
                   @click="deleteProduct"
                   class="w-full inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
@@ -567,22 +507,6 @@
                   </svg>
                   Delete Product
                 </button>
-              </div>
-            </div>
-
-            <!-- Recommendations Card -->
-            <div
-              class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-hidden"
-            >
-              <div
-                class="bg-gradient-to-r from-purple-600 to-violet-600 px-6 py-4"
-              >
-                <h2 class="text-xl font-semibold text-white">
-                  Related Products
-                </h2>
-              </div>
-              <div class="p-6">
-                <ProductDetailRecommendations :current-product="product" />
               </div>
             </div>
 
@@ -665,7 +589,6 @@ defineOptions({
   name: "ProductDetailPage",
 });
 
-import ProductDetailRecommendations from "@/components/product-detail-recommendations.vue";
 import { getProductDB } from "@/db";
 import type { Product } from "@/product/product";
 import { productService } from "@/product/singleton";
@@ -703,7 +626,8 @@ const hasAdditionalInfo = computed(() => {
   return !!(
     product.value.category ||
     product.value.manufacturer ||
-    (product.value.tags && product.value.tags.length > 0)
+    (product.value.tags && product.value.tags.length > 0) ||
+    hasPharmaceuticalInfo.value
   );
 });
 
@@ -728,7 +652,12 @@ async function loadProduct(): Promise<void> {
       error.value = "Product not found";
     }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : "Failed to load product";
+    if (err instanceof Error && err.name === "not_found") {
+      error.value = "Product not found";
+    } else {
+      error.value =
+        err instanceof Error ? err.message : "Failed to load product";
+    }
   } finally {
     isLoading.value = false;
   }
@@ -736,8 +665,7 @@ async function loadProduct(): Promise<void> {
 
 async function addToOrder(): Promise<void> {
   if (!product.value) return;
-
-  userTrackingService.track("add_product_to_order", {
+  userTrackingService.track("product_add_to_order", {
     id: product.value._id,
   });
   try {
@@ -762,6 +690,11 @@ async function deleteProduct(): Promise<void> {
     `Are you sure you want to delete "${product.value.name}"? This action cannot be undone.`,
     { type: "error" },
   );
+
+  userTrackingService.track("product_deleted", {
+    id: product.value._id,
+    result: result.confirmed ? "confirmed" : "cancelled",
+  });
 
   if (result.confirmed) {
     try {
@@ -790,7 +723,7 @@ async function copyToClipboard(text: string): Promise<void> {
   } catch (error) {
     notificationStore.showError(
       "Copy Error",
-      `Failed to copy to clipboard. Please try again. ${error}`,
+      `Failed to copy to clipboard. Please try again ${error}`,
     );
   }
 }

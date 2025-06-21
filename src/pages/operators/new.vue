@@ -3,12 +3,13 @@ defineOptions({
   name: "NewOperator",
 });
 
+import { operatorService } from "@/operator/singleton";
+import { useOrderStore } from "@/stores/order-store";
+import { userTrackingService } from "@/user-tracking/singleton";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
 import * as z from "zod";
-import { operatorService } from "@/operator/singleton";
-import { useOrderStore } from "@/stores/order-store";
 
 const router = useRouter();
 
@@ -28,6 +29,9 @@ const orderStore = useOrderStore();
 const onSubmit = handleSubmit(async (values) => {
   const { name } = values;
 
+  userTrackingService.track("create_operator", {
+    name,
+  });
   try {
     const operator = await operatorService.createOperator({ name });
     orderStore.selectOperator(operator);

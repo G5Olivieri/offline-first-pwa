@@ -231,10 +231,10 @@ import ErrorBoundary from "@/components/error-boundary.vue";
 import type { Product } from "@/product/product";
 import { productService } from "@/product/singleton";
 import { userTrackingService } from "@/user-tracking/singleton";
-import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
-import { useRouter } from "vue-router";
+import { useForm } from "vee-validate";
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 import { z } from "zod";
 
 defineOptions({
@@ -244,7 +244,6 @@ defineOptions({
 const router = useRouter();
 const isSubmitting = ref(false);
 
-// Zod validation schema
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required").trim(),
   barcode: z
@@ -263,7 +262,6 @@ const productSchema = z.object({
 
 type ProductFormData = z.infer<typeof productSchema>;
 
-// VeeValidate form setup
 const { handleSubmit, errors, defineField, meta } = useForm<ProductFormData>({
   validationSchema: toTypedSchema(productSchema),
   initialValues: {
@@ -277,7 +275,6 @@ const { handleSubmit, errors, defineField, meta } = useForm<ProductFormData>({
   },
 });
 
-// Define form fields with VeeValidate
 const [name, nameAttrs] = defineField("name");
 const [barcode, barcodeAttrs] = defineField("barcode");
 const [price, priceAttrs] = defineField("price");
@@ -286,7 +283,6 @@ const [category, categoryAttrs] = defineField("category");
 const [manufacturer, manufacturerAttrs] = defineField("manufacturer");
 const [description, descriptionAttrs] = defineField("description");
 
-// Form submission with VeeValidate
 const onSubmit = handleSubmit(async (values) => {
   isSubmitting.value = true;
 
@@ -312,21 +308,18 @@ const onSubmit = handleSubmit(async (values) => {
 
     await productService.createProduct(productData);
     router.push("/products");
-  } catch (error) {
-    console.error("Failed to create product:", error);
-    // VeeValidate will handle the error display through the form's error handling
   } finally {
     isSubmitting.value = false;
   }
 });
 
-// Navigation
 const handleCancel = () => {
+  userTrackingService.track("cancel_create_product");
   router.push("/products");
 };
 
 const handleRetry = () => {
-  // Reset form state or perform other retry logic
+  userTrackingService.track("retry_create_product");
   console.log("Retrying form operation...");
 };
 </script>

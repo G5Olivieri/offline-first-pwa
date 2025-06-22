@@ -106,6 +106,8 @@ export type CustomerProductPreference = {
 };
 
 export type RecommendationConfig = {
+  _id: string;
+  _rev?: string;
   enabled: boolean;
   max_recommendations_per_context: number;
   min_confidence_threshold: number;

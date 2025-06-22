@@ -25,6 +25,11 @@ A modern, feature-rich Point of Sale (POS) system built as a Progressive Web App
 ### 🚀 Modern Technology Stack
 
 - **Progressive Web App**: Offline-first architecture with service workers
+- **Advanced Sync Strategy**: Enhanced database synchronization with conflict resolution
+  - **Products**: Bidirectional sync with remote-wins conflict resolution for product details
+  - **Orders**: Unidirectional sync (local→remote) with automatic local cleanup after sync
+  - **Customers/Operators**: Bidirectional sync with timestamp-based conflict resolution
+  - **Real-time Monitoring**: Live sync status indicators and error tracking
 - **Real-time Sync**: CouchDB integration with PouchDB for seamless data synchronization
 - **Responsive Design**: Mobile-first UI with Tailwind CSS and glassmorphism effects
 - **Type Safety**: Full TypeScript implementation with strict type checking

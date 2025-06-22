@@ -4,13 +4,13 @@ import ClockComponent from "@/components/clock.vue";
 import HelpDialog from "@/components/help-dialog.vue";
 import OrderDialog from "@/components/order-dialog.vue";
 import SetupLoading from "@/components/setup-loading.vue";
+import SyncStatusIndicator from "@/components/sync-status-indicator.vue";
 import ToastContainer from "@/components/toast-container.vue";
 import {
   createPOSShortcuts,
   useKeyboardShortcuts,
 } from "@/composables/use-keyboard-shortcuts";
 import { useNotificationStore } from "@/stores/notification-store";
-import { useOnlineStatusStore } from "@/stores/online-status-store";
 import { useOrderStore } from "@/stores/order-store";
 import { useSetupStore } from "@/stores/setup-store";
 import { computed, onMounted, ref } from "vue";
@@ -24,119 +24,12 @@ const barcodeInput = ref<HTMLInputElement | null>(null);
 const showHelpDialog = ref(false);
 const showOrderDialog = ref(false);
 const orderStore = useOrderStore();
-const onlineStatusStore = useOnlineStatusStore();
 const notificationStore = useNotificationStore();
 const setupStore = useSetupStore();
 const isHome = computed(() => router.currentRoute.value.path === "/");
 const isCheckout = computed(
   () => router.currentRoute.value.path === "/checkout",
 );
-
-const getSyncStatus = (dbName: string) => {
-  const isOnline = onlineStatusStore.isOnline;
-  const isSyncEnabled = onlineStatusStore.isSyncEnabled;
-
-  if (!isOnline) {
-    return {
-      text: "Offline",
-      color: "bg-yellow-400",
-      textColor: "text-yellow-700",
-      icon: "●",
-    };
-  }
-
-  if (!isSyncEnabled) {
-    return {
-      text: "Disabled",
-      color: "bg-gray-400",
-      textColor: "text-gray-700",
-      icon: "●",
-    };
-  }
-
-  if (dbName === "orders") {
-    return {
-      text: "Push Only",
-      color: "bg-blue-400",
-      textColor: "text-blue-700",
-      icon: "↑",
-    };
-  }
-
-  return {
-    text: "Ready",
-    color: "bg-green-400",
-    textColor: "text-green-700",
-    icon: "↕",
-  };
-};
-
-const databaseStatus = computed(() => {
-  return [
-    {
-      name: "Products",
-      status: getSyncStatus("products"),
-    },
-    {
-      name: "Orders",
-      status: getSyncStatus("orders"),
-    },
-    {
-      name: "Customers",
-      status: getSyncStatus("customers"),
-    },
-    {
-      name: "Operators",
-      status: getSyncStatus("operators"),
-    },
-  ];
-});
-
-const dbStatusSummary = computed(() => {
-  const allReady = databaseStatus.value.every(
-    (db) => db.status.text === "Ready" || db.status.text === "Push Only",
-  );
-  const hasOffline = databaseStatus.value.some(
-    (db) => db.status.text === "Offline",
-  );
-  const hasDisabled = databaseStatus.value.some(
-    (db) => db.status.text === "Disabled",
-  );
-
-  if (hasOffline) {
-    return {
-      text: "DB Offline",
-      color: "bg-yellow-500",
-      textColor: "text-yellow-700",
-      icon: "●",
-    };
-  }
-
-  if (hasDisabled) {
-    return {
-      text: "DB Disabled",
-      color: "bg-gray-500",
-      textColor: "text-gray-700",
-      icon: "●",
-    };
-  }
-
-  if (allReady) {
-    return {
-      text: "DB Ready",
-      color: "bg-green-500",
-      textColor: "text-green-700",
-      icon: "✓",
-    };
-  }
-
-  return {
-    text: "DB Mixed",
-    color: "bg-blue-500",
-    textColor: "text-blue-700",
-    icon: "~",
-  };
-});
 
 const focusBarcode = () => {
   if (barcodeInput.value) {
@@ -534,45 +427,8 @@ onMounted(() => {
             <div class="flex flex-col items-center gap-2 flex-shrink-0">
               <ClockComponent />
 
-              <!-- Online Status -->
-              <div
-                class="flex items-center gap-1 bg-white/60 backdrop-blur-sm rounded-lg px-2 py-1 text-xs"
-              >
-                <div
-                  v-if="onlineStatusStore.isOnline"
-                  class="flex items-center gap-1"
-                >
-                  <div
-                    class="w-2 h-2 rounded-full bg-green-500 animate-pulse"
-                  ></div>
-                  <span class="font-medium text-green-700">Online</span>
-                </div>
-                <div v-else class="flex items-center gap-1">
-                  <div
-                    class="w-2 h-2 rounded-full bg-red-500 animate-pulse"
-                  ></div>
-                  <span class="font-medium text-red-700">Offline</span>
-                </div>
-              </div>
-
-              <!-- Database Status Summary -->
-              <div
-                class="flex items-center gap-1 bg-white/60 backdrop-blur-sm rounded-lg px-2 py-1 text-xs cursor-help"
-                :title="`Database Status: ${databaseStatus
-                  .map((db) => `${db.name}: ${db.status.text}`)
-                  .join(', ')}`"
-              >
-                <div
-                  class="w-2 h-2 rounded-full animate-pulse"
-                  :class="dbStatusSummary.color"
-                ></div>
-                <span class="font-medium" :class="dbStatusSummary.textColor">{{
-                  dbStatusSummary.text
-                }}</span>
-                <span class="text-gray-500 ml-1">{{
-                  dbStatusSummary.icon
-                }}</span>
-              </div>
+              <!-- Enhanced Sync Status Indicator -->
+              <SyncStatusIndicator />
             </div>
           </div>
         </div>

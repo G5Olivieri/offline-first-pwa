@@ -10,13 +10,29 @@ import type {
   ProductAffinity,
   RecommendationConfig,
 } from "@/types/recommendation";
+import { syncManager } from "@/services/sync-manager";
 
 PouchDB.plugin(PouchDBFind);
 
-// TODO: review and refactor database syncing
-
 export const SYNCING = config.enableSync;
 const COUCHDB_URL = config.couchdbUrl;
+
+const productConflictResolution = {
+  strategy: 'remote-wins' as const,
+  resolver: (local: Product, remote: Product): Product => {
+    // For products, remote should always win for product details
+    // but stock levels should be handled by order sync completion
+    return {
+      ...remote,
+      // Keep local stock until orders are synced and remote updates stock
+      stock: local.stock
+    };
+  }
+};
+
+const timestampConflictResolution = {
+  strategy: 'merge' as const // Uses timestamp-based merge in sync manager
+};
 
 let _productDB: PouchDB.Database<Product> | null = null;
 export const getProductDB = (): PouchDB.Database<Product> => {
@@ -37,10 +53,16 @@ export const getProductDB = (): PouchDB.Database<Product> => {
       },
     });
 
-    remoteProductDB.sync(_productDB, {
-      live: true,
-      retry: true,
-    });
+    syncManager.setupBidirectionalSync(
+      _productDB,
+      remoteProductDB,
+      'products',
+      productConflictResolution,
+      {
+        live: true,
+        retry: true
+      }
+    );
   }
 
   return _productDB;
@@ -62,12 +84,15 @@ export const getOrderDB = (): PouchDB.Database<Order> => {
       },
     });
 
-    // TODO: only push orders, never pull
-    // TODO: purge local orders when they are synced
-    _orderDB.sync(remoteOrderDB, {
-      live: true,
-      retry: true,
-    });
+    syncManager.setupUnidirectionalSync(
+      _orderDB,
+      remoteOrderDB,
+      'orders',
+      {
+        live: true,
+        retry: true
+      }
+    );
   }
 
   return _orderDB;
@@ -85,17 +110,23 @@ export const getOperatorDB = (): PouchDB.Database<Operator> => {
   });
 
   if (SYNCING) {
-    const remoteOperatorsDB = new PouchDB(`${COUCHDB_URL}/operators`, {
+    const remoteOperatorsDB = new PouchDB<Operator>(`${COUCHDB_URL}/operators`, {
       auth: {
         username: config.couchdbUsername,
         password: config.couchdbPassword,
       },
     });
 
-    remoteOperatorsDB.sync(_operatorDB, {
-      live: true,
-      retry: true,
-    });
+    syncManager.setupBidirectionalSync(
+      _operatorDB,
+      remoteOperatorsDB,
+      'operators',
+      timestampConflictResolution,
+      {
+        live: true,
+        retry: true
+      }
+    );
   }
   return _operatorDB;
 };
@@ -111,17 +142,23 @@ export const getCustomerDB = (): PouchDB.Database<Customer> => {
   });
 
   if (SYNCING) {
-    const remoteCustomersDB = new PouchDB(`${COUCHDB_URL}/customers`, {
+    const remoteCustomersDB = new PouchDB<Customer>(`${COUCHDB_URL}/customers`, {
       auth: {
         username: config.couchdbUsername,
         password: config.couchdbPassword,
       },
     });
 
-    remoteCustomersDB.sync(_customerDB, {
-      live: true,
-      retry: true,
-    });
+    syncManager.setupBidirectionalSync(
+      _customerDB,
+      remoteCustomersDB,
+      'customers',
+      timestampConflictResolution,
+      {
+        live: true,
+        retry: true
+      }
+    );
   }
   return _customerDB;
 };
@@ -154,10 +191,16 @@ export const getProductAffinityDB = (): PouchDB.Database<ProductAffinity> => {
       },
     );
 
-    remoteAffinityDB.sync(_productAffinityDB, {
-      live: true,
-      retry: true,
-    });
+    syncManager.setupBidirectionalSync(
+      _productAffinityDB,
+      remoteAffinityDB,
+      'product-affinity',
+      timestampConflictResolution,
+      {
+        live: true,
+        retry: true
+      }
+    );
   }
 
   return _productAffinityDB;
@@ -193,10 +236,16 @@ export const getCustomerPreferencesDB =
         },
       );
 
-      remotePreferencesDB.sync(_customerPreferencesDB, {
-        live: true,
-        retry: true,
-      });
+      syncManager.setupBidirectionalSync(
+        _customerPreferencesDB,
+        remotePreferencesDB,
+        'customer-preferences',
+        timestampConflictResolution,
+        {
+          live: true,
+          retry: true
+        }
+      );
     }
 
     return _customerPreferencesDB;
@@ -223,10 +272,16 @@ export const getRecommendationConfigDB =
         },
       );
 
-      remoteConfigDB.sync(_recommendationConfigDB, {
-        live: true,
-        retry: true,
-      });
+      syncManager.setupBidirectionalSync(
+        _recommendationConfigDB,
+        remoteConfigDB,
+        'recommendation-config',
+        timestampConflictResolution,
+        {
+          live: true,
+          retry: true
+        }
+      );
     }
 
     return _recommendationConfigDB;

@@ -85,7 +85,7 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 - Keep all logic modular and composable.
 - **Always use snake_case for all file names and helpers.**
 - Use always alias imports for better readability (e.g., `@/db` for database imports).
-- Only add comment explain why, never how. Code should be self-explanatory.
+- Code should be self-explanatory, don't comment the code.
 
 ## Example Snippets
 
@@ -180,4 +180,4 @@ export function useOnlineStatus() {
 
 ---
 
-**Copilot: Always prefer patterns that emphasize offline-first reliability, modular code, Vite/Vue best practices, and kebab-case file naming.**
+**Copilot: Always prefer patterns that emphasize offline-first reliability, modular code, Vite/Vue best practices, don't comment code, and kebab-case file naming.**

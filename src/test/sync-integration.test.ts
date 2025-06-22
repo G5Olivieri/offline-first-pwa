@@ -3,8 +3,21 @@ import type { Product } from "@/product/product";
 import { SyncService } from "@/services/sync-service";
 import type { Order } from "@/types/order";
 import { OrderStatus } from "@/types/order";
-import PouchDB from "pouchdb";
+import PouchDBCore from "pouchdb-core";
+import MemoryAdapter from "pouchdb-adapter-memory";
+import HttpAdapter from "pouchdb-adapter-http";
+import PouchDBFind from "pouchdb-find";
+import PouchDBMapReduce from "pouchdb-mapreduce";
+import PouchDBReplication from "pouchdb-replication";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+// Create PouchDB instance with all necessary plugins
+const PouchDB = PouchDBCore
+  .plugin(MemoryAdapter)
+  .plugin(HttpAdapter)
+  .plugin(PouchDBFind)
+  .plugin(PouchDBMapReduce)
+  .plugin(PouchDBReplication);
 
 const TEST_COUCHDB_URL = "http://localhost:5984";
 const TEST_DB_PREFIX = "test_pos_";

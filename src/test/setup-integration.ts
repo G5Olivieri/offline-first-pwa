@@ -1,12 +1,16 @@
 import { config } from "@vue/test-utils";
 import { afterEach, beforeEach, vi } from "vitest";
 
-import PouchDB from "pouchdb";
+import PouchDBCore from "pouchdb-core";
 import MemoryAdapter from "pouchdb-adapter-memory";
 import PouchDBFind from "pouchdb-find";
+import PouchDBMapReduce from "pouchdb-mapreduce";
 
-PouchDB.plugin(MemoryAdapter);
-PouchDB.plugin(PouchDBFind);
+// Create PouchDB instance with plugins
+export const PouchDB = PouchDBCore
+  .plugin(MemoryAdapter)
+  .plugin(PouchDBFind)
+  .plugin(PouchDBMapReduce);
 
 beforeEach(() => {
   vi.clearAllMocks();

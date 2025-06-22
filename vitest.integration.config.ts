@@ -1,12 +1,12 @@
-import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
 import { resolve } from "path";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [vue()],
   test: {
     globals: true,
-    environment: "node", // Use Node.js environment for LevelDB
+    environment: "happy-dom", // Use happy-dom environment for better memory adapter support
     setupFiles: ["./src/test/setup-integration.ts"],
     coverage: {
       provider: "v8",
@@ -23,13 +23,8 @@ export default defineConfig({
         "postcss.config.js",
       ],
     },
-    include: [
-      "src/test/sync-*.test.ts",
-    ],
-    exclude: [
-      "node_modules/",
-      "dist/",
-    ],
+    include: ["src/test/sync-*.test.ts"],
+    exclude: ["node_modules/", "dist/"],
   },
   resolve: {
     alias: {
@@ -44,5 +39,6 @@ export default defineConfig({
     "import.meta.env.VITE_COUCHDB_USERNAME": '"test"',
     "import.meta.env.VITE_COUCHDB_PASSWORD": '"test"',
     "import.meta.env.VITE_SYNCING": "true",
+    "import.meta.env.VITE_POUCHDB_ADAPTER": '"memory"',
   },
 });

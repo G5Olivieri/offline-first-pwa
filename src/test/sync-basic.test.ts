@@ -8,6 +8,7 @@ const TEST_COUCHDB_URL = "http://localhost:5984";
 const TEST_DB_PREFIX = "test_pos_sync_";
 const TEST_USERNAME = "admin";
 const TEST_PASSWORD = "password";
+const TEST_POUCHDB_ADAPTER = import.meta.env.VITE_POUCHDB_ADAPTER || "memory"; // Use memory adapter for tests
 
 describe("PouchDB Sync Integration Tests", () => {
   let localProductDB: PouchDB.Database<Product>;
@@ -41,8 +42,12 @@ describe("PouchDB Sync Integration Tests", () => {
     const customerDbName = `${TEST_DB_PREFIX}customers_${timestamp}`;
 
     // Initialize local databases
-    localProductDB = new PouchDB<Product>(productDbName);
-    localCustomerDB = new PouchDB<Customer>(customerDbName);
+    localProductDB = new PouchDB<Product>(productDbName, {
+      adapter: TEST_POUCHDB_ADAPTER,
+    });
+    localCustomerDB = new PouchDB<Customer>(customerDbName, {
+      adapter: TEST_POUCHDB_ADAPTER,
+    });
 
     // Initialize remote databases
     remoteProductDB = new PouchDB<Product>(

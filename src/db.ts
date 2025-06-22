@@ -1,37 +1,38 @@
-import PouchDB from "pouchdb-browser";
-import PouchDBFind from "pouchdb-find";
 import { config } from "@/config/env";
 import type { Customer } from "@/customer/customer";
 import type { Operator } from "@/operator/operator";
-import { type Order } from "@/types/order";
 import type { Product } from "@/product/product";
+import { syncManager } from "@/services/sync-manager";
+import { type Order } from "@/types/order";
 import type {
   CustomerProductPreference,
   ProductAffinity,
   RecommendationConfig,
 } from "@/types/recommendation";
-import { syncManager } from "@/services/sync-manager";
+import PouchDB from "pouchdb";
+import PouchDBFind from "pouchdb-find";
 
 PouchDB.plugin(PouchDBFind);
 
 export const SYNCING = config.enableSync;
 const COUCHDB_URL = config.couchdbUrl;
+const POUCHDB_ADAPTER = config.pouchdbAdapter || "idb"; // Default to IndexedDB if not specified
 
 const productConflictResolution = {
-  strategy: 'remote-wins' as const,
+  strategy: "remote-wins" as const,
   resolver: (local: Product, remote: Product): Product => {
     // For products, remote should always win for product details
     // but stock levels should be handled by order sync completion
     return {
       ...remote,
       // Keep local stock until orders are synced and remote updates stock
-      stock: local.stock
+      stock: local.stock,
     };
-  }
+  },
 };
 
 const timestampConflictResolution = {
-  strategy: 'merge' as const // Uses timestamp-based merge in sync manager
+  strategy: "merge" as const, // Uses timestamp-based merge in sync manager
 };
 
 let _productDB: PouchDB.Database<Product> | null = null;
@@ -40,7 +41,9 @@ export const getProductDB = (): PouchDB.Database<Product> => {
     return _productDB;
   }
 
-  _productDB = new PouchDB("products");
+  _productDB = new PouchDB("products", {
+    adapter: POUCHDB_ADAPTER,
+  });
   _productDB.createIndex({
     index: { fields: ["barcode"] },
   });
@@ -56,12 +59,12 @@ export const getProductDB = (): PouchDB.Database<Product> => {
     syncManager.setupBidirectionalSync(
       _productDB,
       remoteProductDB,
-      'products',
+      "products",
       productConflictResolution,
       {
         live: true,
-        retry: true
-      }
+        retry: true,
+      },
     );
   }
 
@@ -74,7 +77,9 @@ export const getOrderDB = (): PouchDB.Database<Order> => {
     return _orderDB;
   }
 
-  _orderDB = new PouchDB("orders");
+  _orderDB = new PouchDB("orders", {
+    adapter: POUCHDB_ADAPTER,
+  });
 
   if (SYNCING) {
     const remoteOrderDB = new PouchDB<Order>(`${COUCHDB_URL}/orders`, {
@@ -84,15 +89,10 @@ export const getOrderDB = (): PouchDB.Database<Order> => {
       },
     });
 
-    syncManager.setupUnidirectionalSync(
-      _orderDB,
-      remoteOrderDB,
-      'orders',
-      {
-        live: true,
-        retry: true
-      }
-    );
+    syncManager.setupUnidirectionalSync(_orderDB, remoteOrderDB, "orders", {
+      live: true,
+      retry: true,
+    });
   }
 
   return _orderDB;
@@ -104,28 +104,33 @@ export const getOperatorDB = (): PouchDB.Database<Operator> => {
   if (_operatorDB) {
     return _operatorDB;
   }
-  _operatorDB = new PouchDB("operators");
+  _operatorDB = new PouchDB("operators", {
+    adapter: POUCHDB_ADAPTER,
+  });
   _operatorDB.createIndex({
     index: { fields: ["name"] },
   });
 
   if (SYNCING) {
-    const remoteOperatorsDB = new PouchDB<Operator>(`${COUCHDB_URL}/operators`, {
-      auth: {
-        username: config.couchdbUsername,
-        password: config.couchdbPassword,
+    const remoteOperatorsDB = new PouchDB<Operator>(
+      `${COUCHDB_URL}/operators`,
+      {
+        auth: {
+          username: config.couchdbUsername,
+          password: config.couchdbPassword,
+        },
       },
-    });
+    );
 
     syncManager.setupBidirectionalSync(
       _operatorDB,
       remoteOperatorsDB,
-      'operators',
+      "operators",
       timestampConflictResolution,
       {
         live: true,
-        retry: true
-      }
+        retry: true,
+      },
     );
   }
   return _operatorDB;
@@ -136,28 +141,33 @@ export const getCustomerDB = (): PouchDB.Database<Customer> => {
   if (_customerDB) {
     return _customerDB;
   }
-  _customerDB = new PouchDB("customers");
+  _customerDB = new PouchDB("customers", {
+    adapter: POUCHDB_ADAPTER,
+  });
   _customerDB.createIndex({
     index: { fields: ["document"] },
   });
 
   if (SYNCING) {
-    const remoteCustomersDB = new PouchDB<Customer>(`${COUCHDB_URL}/customers`, {
-      auth: {
-        username: config.couchdbUsername,
-        password: config.couchdbPassword,
+    const remoteCustomersDB = new PouchDB<Customer>(
+      `${COUCHDB_URL}/customers`,
+      {
+        auth: {
+          username: config.couchdbUsername,
+          password: config.couchdbPassword,
+        },
       },
-    });
+    );
 
     syncManager.setupBidirectionalSync(
       _customerDB,
       remoteCustomersDB,
-      'customers',
+      "customers",
       timestampConflictResolution,
       {
         live: true,
-        retry: true
-      }
+        retry: true,
+      },
     );
   }
   return _customerDB;
@@ -169,7 +179,9 @@ export const getProductAffinityDB = (): PouchDB.Database<ProductAffinity> => {
     return _productAffinityDB;
   }
 
-  _productAffinityDB = new PouchDB("product-affinity");
+  _productAffinityDB = new PouchDB("product-affinity", {
+    adapter: POUCHDB_ADAPTER,
+  });
   _productAffinityDB.createIndex({
     index: { fields: ["product_a_id"] },
   });
@@ -194,12 +206,12 @@ export const getProductAffinityDB = (): PouchDB.Database<ProductAffinity> => {
     syncManager.setupBidirectionalSync(
       _productAffinityDB,
       remoteAffinityDB,
-      'product-affinity',
+      "product-affinity",
       timestampConflictResolution,
       {
         live: true,
-        retry: true
-      }
+        retry: true,
+      },
     );
   }
 
@@ -214,7 +226,9 @@ export const getCustomerPreferencesDB =
       return _customerPreferencesDB;
     }
 
-    _customerPreferencesDB = new PouchDB("customer-preferences");
+    _customerPreferencesDB = new PouchDB("customer-preferences", {
+      adapter: POUCHDB_ADAPTER,
+    });
     _customerPreferencesDB.createIndex({
       index: { fields: ["customer_id"] },
     });
@@ -239,12 +253,12 @@ export const getCustomerPreferencesDB =
       syncManager.setupBidirectionalSync(
         _customerPreferencesDB,
         remotePreferencesDB,
-        'customer-preferences',
+        "customer-preferences",
         timestampConflictResolution,
         {
           live: true,
-          retry: true
-        }
+          retry: true,
+        },
       );
     }
 
@@ -259,7 +273,9 @@ export const getRecommendationConfigDB =
       return _recommendationConfigDB;
     }
 
-    _recommendationConfigDB = new PouchDB("recommendation-config");
+    _recommendationConfigDB = new PouchDB("recommendation-config", {
+      adapter: POUCHDB_ADAPTER,
+    });
 
     if (SYNCING) {
       const remoteConfigDB = new PouchDB<RecommendationConfig>(
@@ -275,12 +291,12 @@ export const getRecommendationConfigDB =
       syncManager.setupBidirectionalSync(
         _recommendationConfigDB,
         remoteConfigDB,
-        'recommendation-config',
+        "recommendation-config",
         timestampConflictResolution,
         {
           live: true,
-          retry: true
-        }
+          retry: true,
+        },
       );
     }
 

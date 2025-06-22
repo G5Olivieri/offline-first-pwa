@@ -1,6 +1,6 @@
 export type Product = {
   _id: string;
-  rev?: string;
+  _rev?: string;
   name: string;
   barcode: string;
   price: number;

@@ -10,7 +10,7 @@ import {
 } from '@/db';
 import { syncManager, type BaseDocument } from './sync-manager';
 import { config } from '@/config/env';
-import PouchDB from 'pouchdb-browser';
+import PouchDB from 'pouchdb';
 
 export interface DatabaseInstance {
   name: string;

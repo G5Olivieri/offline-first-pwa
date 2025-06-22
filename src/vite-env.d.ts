@@ -8,6 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_ENVIRONMENT: string;
 
   // Database Configuration
+  readonly VITE_POUCHDB_ADAPTER: string;
   readonly VITE_COUCHDB_URL: string;
   readonly VITE_COUCHDB_USERNAME?: string;
   readonly VITE_COUCHDB_PASSWORD?: string;

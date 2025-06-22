@@ -5,6 +5,31 @@ interface SearchConfig {
   indexKey: string;
 }
 
+function safeLocalStorage() {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    return window.localStorage;
+  }
+  return {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {}
+  };
+}
+
+function generateTerminalId(): string {
+  const storage = safeLocalStorage();
+  const storedTerminalId = storage.getItem("terminalId") ?? undefined;
+  if (storedTerminalId) {
+    return storedTerminalId;
+  }
+
+  const terminalId = crypto.randomUUID();
+
+  storage.setItem("terminalId", terminalId);
+
+  return terminalId;
+}
+
 interface TrackingConfig {
   error: {
     enabled: boolean;
@@ -37,6 +62,7 @@ interface AppConfig {
   couchdbUrl: string;
   couchdbUsername?: string;
   couchdbPassword?: string;
+  pouchdbAdapter: string;
   enableSync: boolean;
 
   defaultLocale: string;
@@ -111,19 +137,6 @@ function toNumber(value: string): number {
   return num;
 }
 
-function generateTerminalId(): string {
-  const storedTerminalId = localStorage.getItem("terminalId");
-  if (storedTerminalId) {
-    return storedTerminalId;
-  }
-
-  const terminalId = crypto.randomUUID();
-
-  localStorage.setItem("terminalId", terminalId);
-
-  return terminalId;
-}
-
 export const config: AppConfig = {
   // Application Settings
   appTitle: getEnvVar("VITE_APP_TITLE", "Modern POS System"),
@@ -135,6 +148,7 @@ export const config: AppConfig = {
   terminalName: getEnvVar("VITE_TERMINAL_NAME", "POS Terminal"),
 
   // Database Configuration
+  pouchdbAdapter: getEnvVar("VITE_POUCHDB_ADAPTER", "idb"),
   couchdbUrl: getEnvVar("VITE_COUCHDB_URL", "http://localhost:5984"),
   couchdbUsername: getEnvVar("VITE_COUCHDB_USERNAME", undefined),
   couchdbPassword: getEnvVar("VITE_COUCHDB_PASSWORD", undefined),

@@ -427,7 +427,6 @@ onMounted(() => {
             <div class="flex flex-col items-center gap-2 flex-shrink-0">
               <ClockComponent />
 
-              <!-- Enhanced Sync Status Indicator -->
               <SyncStatusIndicator />
             </div>
           </div>
@@ -435,18 +434,15 @@ onMounted(() => {
       </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-1">
       <router-view />
     </main>
 
-    <!-- Toast Notifications -->
     <ToastContainer
       :toasts="notificationStore.activeToasts"
       @remove="(id: string) => notificationStore.removeToast(id)"
     />
 
-    <!-- Global Modal -->
     <AppModal
       :show="notificationStore.modalState.show"
       :type="notificationStore.modalState.options.type"
@@ -461,7 +457,6 @@ onMounted(() => {
       @close="notificationStore.closeModal"
     />
 
-    <!-- Order Dialog -->
     <OrderDialog
       :is-open="showOrderDialog"
       @close="closeOrderDialog"
@@ -469,7 +464,6 @@ onMounted(() => {
       @abandon="abandonOrder"
     />
 
-    <!-- Help Dialog -->
     <HelpDialog
       :show="showHelpDialog"
       :shortcuts="posShortcuts"

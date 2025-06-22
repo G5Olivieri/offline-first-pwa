@@ -3,4 +3,6 @@ export type Customer = {
   _rev?: string;
   name: string;
   document: string;
+  created_at: string;
+  updated_at: string;
 };

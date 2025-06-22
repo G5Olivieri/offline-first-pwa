@@ -1,5 +1,5 @@
-import { ValidationError, ConflictError } from "@/error/errors";
 import type { Customer } from "@/customer/customer";
+import { ConflictError, ValidationError } from "@/error/errors";
 import type { CustomerService } from "./customer-service";
 
 export class CustomerPouchDBService implements CustomerService {
@@ -30,7 +30,6 @@ export class CustomerPouchDBService implements CustomerService {
   }: Pick<Customer, "name" | "document">): Promise<Customer> {
     this.validateCustomer({ name, document });
 
-    // Check if customer with this document already exists
     const existingCustomer = await this.findByDocument(document);
     if (existingCustomer) {
       throw new ConflictError(
@@ -38,7 +37,13 @@ export class CustomerPouchDBService implements CustomerService {
       );
     }
 
-    const newCustomer: Customer = { _id: crypto.randomUUID(), name, document };
+    const newCustomer: Customer = {
+      _id: crypto.randomUUID(),
+      name,
+      document,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
     const result = await this.db.put(newCustomer);
     newCustomer._rev = result.rev;
     return newCustomer;
@@ -118,7 +123,7 @@ export class CustomerPouchDBService implements CustomerService {
       throw error;
     }
 
-    await this.db.put(customer);
+    await this.db.put({ ...customer, updated_at: new Date().toISOString() });
     return customer;
   }
 

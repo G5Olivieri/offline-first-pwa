@@ -12,6 +12,7 @@ import {
 } from "@/types/recommendation";
 
 export const DEFAULT_RECOMMENDATION_CONFIG: RecommendationConfig = {
+  _id: 'default_recommendation_config',
   enabled: true,
   max_recommendations_per_context: 8,
   min_confidence_threshold: 0.3,

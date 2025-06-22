@@ -49,6 +49,7 @@ export class RecommendationEngine {
 
   private getDefaultConfig(): RecommendationConfig {
     return {
+      _id: 'default_fallback_config',
       enabled: true,
       max_recommendations_per_context: 6,
       min_confidence_threshold: 0.3,

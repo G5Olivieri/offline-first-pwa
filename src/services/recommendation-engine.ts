@@ -1,9 +1,3 @@
-import {
-  getCustomerProductPreferenceDB,
-  getOrderDB,
-  getProductAffinityDB,
-  getRecommendationConfigDB,
-} from "@/db";
 import type { Customer } from "@/customer/customer";
 import type { Item, Order } from "@/types/order";
 import type { Product } from "@/product/product";
@@ -19,13 +13,14 @@ import {
 } from "@/types/recommendation";
 
 export class RecommendationEngine {
-  private affinityDB = getProductAffinityDB();
-  private preferencesDB = getCustomerProductPreferenceDB();
-  private configDB = getRecommendationConfigDB();
-  private orderDB = getOrderDB();
   private config: RecommendationConfig | null = null;
 
-  constructor() {
+  constructor(
+    private affinityDB: PouchDB.Database<ProductAffinity>,
+    private preferencesDB: PouchDB.Database<CustomerProductPreference>,
+    private configDB: PouchDB.Database<RecommendationConfig>,
+    private orderDB: PouchDB.Database<Order>
+  ) {
     this.loadConfig();
   }
 
@@ -772,5 +767,36 @@ export class RecommendationEngine {
   }
 }
 
-// Export singleton instance
-export const recommendationEngine = new RecommendationEngine();
+// Factory function to create recommendation engine with dependencies
+export async function createRecommendationEngine(): Promise<RecommendationEngine> {
+  const [
+    { getProductAffinityDB },
+    { getCustomerProductPreferenceDB },
+    { getRecommendationConfigDB },
+    { getOrderDB }
+  ] = await Promise.all([
+    import("@/db"),
+    import("@/db"),
+    import("@/db"),
+    import("@/db")
+  ]);
+
+  const [affinityDB, preferencesDB, configDB, orderDB] = await Promise.all([
+    getProductAffinityDB(),
+    getCustomerProductPreferenceDB(),
+    getRecommendationConfigDB(),
+    getOrderDB()
+  ]);
+
+  return new RecommendationEngine(affinityDB, preferencesDB, configDB, orderDB);
+}
+
+// Lazy singleton instance
+let recommendationEngineInstance: RecommendationEngine | null = null;
+
+export async function getRecommendationEngine(): Promise<RecommendationEngine> {
+  if (!recommendationEngineInstance) {
+    recommendationEngineInstance = await createRecommendationEngine();
+  }
+  return recommendationEngineInstance;
+}

@@ -1,5 +1,5 @@
 import { productService } from "@/product/singleton";
-import { recommendationEngine } from "@/services/recommendation-engine";
+import { getRecommendationEngine } from "@/services/recommendation-engine";
 import type { Customer } from "@/customer/customer";
 import type { Item } from "@/types/order";
 import type { Product } from "@/product/product";
@@ -81,6 +81,7 @@ export const useRecommendationStore = defineStore("recommendationStore", () => {
       });
       const allProducts = allProductsResult.products;
 
+      const recommendationEngine = await getRecommendationEngine();
       const recommendations =
         await recommendationEngine.generateRecommendations(context, {
           ...options,

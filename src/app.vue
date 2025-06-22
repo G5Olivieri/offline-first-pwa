@@ -155,7 +155,7 @@ const addProduct = async () => {
   });
 
   try {
-    const fetchedProduct = await productService.findProductByBarcode(
+    const fetchedProduct = await productService.getProductByBarcode(
       barcode.value,
     );
 

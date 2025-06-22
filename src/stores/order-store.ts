@@ -8,7 +8,7 @@ import type { Product } from "@/product/product";
 import { productService } from "@/product/singleton";
 import { orderEventEmitter } from "@/services/order-event-emitter";
 import { startOrderNotificationHandler } from "@/services/order-notification-handler";
-import { recommendationEngine } from "@/services/recommendation-engine";
+import { getRecommendationEngine } from "@/services/recommendation-engine";
 import type { Item, Order, PaymentMethod } from "@/types/order";
 import { OrderStatus } from "@/types/order";
 import { useLocalStorage } from "@vueuse/core";
@@ -19,8 +19,15 @@ import { useNotificationStore } from "./notification-store";
 import { useTerminalStore } from "./terminal-store";
 
 export const useOrderStore = defineStore("orderStore", () => {
-  const orderDB = getOrderDB();
+  let orderDB: PouchDB.Database<Order> | null = null;
   const notificationStore = useNotificationStore();
+
+  const initializeDatabase = async () => {
+    if (!orderDB) {
+      orderDB = await getOrderDB();
+    }
+    return orderDB;
+  };
 
   // order
   const id = useLocalStorage("currentOrderId", "");
@@ -78,7 +85,8 @@ export const useOrderStore = defineStore("orderStore", () => {
   };
 
   const putOrder = throttle(async (order: Order) => {
-    const result = await orderDB.put(order);
+    const db = await initializeDatabase();
+    const result = await db.put(order);
     rev.value = result.rev;
   }, 1000);
 
@@ -264,6 +272,7 @@ export const useOrderStore = defineStore("orderStore", () => {
         order: orderDocument,
       });
 
+      const recommendationEngine = await getRecommendationEngine();
       await recommendationEngine.updateProductAffinities(orderDocument);
       await recommendationEngine.updateCustomerPreferences(orderDocument);
 
@@ -288,7 +297,8 @@ export const useOrderStore = defineStore("orderStore", () => {
         return;
       }
 
-      const doc = await orderDB.get(id.value);
+      const db = await initializeDatabase();
+      const doc = await db.get(id.value);
       if (
         !doc ||
         doc.status === OrderStatus.COMPLETED ||
@@ -326,7 +336,7 @@ export const useOrderStore = defineStore("orderStore", () => {
       }
 
       if (customerId.value) {
-        const result = await customerService.getCustomerByID(customerId.value);
+        const result = await customerService.getCustomer(customerId.value);
         customer.value = result;
       }
 

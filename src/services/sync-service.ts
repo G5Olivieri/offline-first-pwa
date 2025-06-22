@@ -27,9 +27,10 @@ export interface SyncStatistics {
 export class SyncService {
   private static instance: SyncService;
   private databases: DatabaseInstance[] = [];
+  private initialized = false;
 
   private constructor() {
-    this.initializeDatabases();
+    // Async initialization will happen on first use
   }
 
   static getInstance(): SyncService {
@@ -39,8 +40,8 @@ export class SyncService {
     return SyncService.instance;
   }
 
-  private initializeDatabases(): void {
-    if (!SYNCING) return;
+  private async initializeDatabases(): Promise<void> {
+    if (!SYNCING || this.initialized) return;
 
     const COUCHDB_URL = config.couchdbUrl;
     const auth = {
@@ -51,46 +52,56 @@ export class SyncService {
     this.databases = [
       {
         name: 'products',
-        localDB: getProductDB(),
+        localDB: await getProductDB(),
         remoteDB: new PouchDB(`${COUCHDB_URL}/products`, { auth })
       },
       {
         name: 'customers',
-        localDB: getCustomerDB(),
+        localDB: await getCustomerDB(),
         remoteDB: new PouchDB(`${COUCHDB_URL}/customers`, { auth })
       },
       {
         name: 'operators',
-        localDB: getOperatorDB(),
+        localDB: await getOperatorDB(),
         remoteDB: new PouchDB(`${COUCHDB_URL}/operators`, { auth })
       },
       {
         name: 'orders',
-        localDB: getOrderDB(),
+        localDB: await getOrderDB(),
         remoteDB: new PouchDB(`${COUCHDB_URL}/orders`, { auth })
       },
       {
         name: 'product-affinity',
-        localDB: getProductAffinityDB(),
+        localDB: await getProductAffinityDB(),
         remoteDB: new PouchDB(`${COUCHDB_URL}/product-affinity`, { auth })
       },
       {
         name: 'customer-preferences',
-        localDB: getCustomerPreferencesDB(),
+        localDB: await getCustomerProductPreferenceDB(),
         remoteDB: new PouchDB(`${COUCHDB_URL}/customer-preferences`, { auth })
       },
       {
         name: 'recommendation-config',
-        localDB: getRecommendationConfigDB(),
+        localDB: await getRecommendationConfigDB(),
         remoteDB: new PouchDB(`${COUCHDB_URL}/recommendation-config`, { auth })
       }
     ];
+
+    this.initialized = true;
+  }
+
+  private async ensureInitialized(): Promise<void> {
+    if (!this.initialized) {
+      await this.initializeDatabases();
+    }
   }
 
   /**
    * Trigger manual sync for a specific database
    */
   async syncDatabase(databaseName: string): Promise<void> {
+    await this.ensureInitialized();
+
     if (!SYNCING) {
       throw new Error('Synchronization is disabled');
     }
@@ -127,6 +138,8 @@ export class SyncService {
    * Trigger manual sync for all databases
    */
   async syncAllDatabases(): Promise<void> {
+    await this.ensureInitialized();
+
     if (!SYNCING) {
       throw new Error('Synchronization is disabled');
     }
@@ -242,20 +255,13 @@ export class SyncService {
     }
   }
 
-  /**
-   * Get list of available databases
-   */
   getDatabaseNames(): string[] {
     return this.databases.map(db => db.name);
   }
 
-  /**
-   * Check if sync is enabled
-   */
   isSyncEnabled(): boolean {
     return SYNCING;
   }
 }
 
-// Export singleton instance
 export const syncService = SyncService.getInstance();

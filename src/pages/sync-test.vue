@@ -461,7 +461,7 @@ const createTestOrder = async () => {
 
     const randomProduct = products.rows[Math.floor(Math.random() * products.rows.length)].doc as Product;
 
-    const orderDB = getOrderDB();
+    const orderDB = await getOrderDB();
     const order: Order = {
       _id: `order_${Date.now()}`,
       items: [{

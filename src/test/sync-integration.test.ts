@@ -1,6 +1,5 @@
 import type { Customer } from "@/customer/customer";
 import type { Product } from "@/product/product";
-import { SyncManager } from "@/services/sync-manager";
 import { SyncService } from "@/services/sync-service";
 import type { Order } from "@/types/order";
 import { OrderStatus } from "@/types/order";
@@ -13,7 +12,9 @@ const TEST_COUCHDB_USERNAME = "admin";
 const TEST_COUCHDB_PASSWORD = "password";
 const TEST_POUCHDB_ADAPTER = import.meta.env.VITE_POUCHDB_ADAPTER || "memory";
 
-interface TestDatabase<T extends Record<string, unknown> = Record<string, unknown>> {
+interface TestDatabase<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
   name: string;
   localDB: PouchDB.Database<T>;
   remoteDB: PouchDB.Database<T>;
@@ -26,7 +27,9 @@ describe("Sync Integration Tests", () => {
   let syncService: SyncService;
 
   // Helper function to create test databases
-  const createTestDatabase = async <T extends Record<string, unknown>>(name: string): Promise<TestDatabase<T>> => {
+  const createTestDatabase = async <T extends Record<string, unknown>>(
+    name: string,
+  ): Promise<TestDatabase<T>> => {
     const fullName = `${TEST_DB_PREFIX}${name}_${Date.now()}`;
     const localDB = new PouchDB<T>(fullName, {
       adapter: TEST_POUCHDB_ADAPTER,
@@ -43,7 +46,7 @@ describe("Sync Integration Tests", () => {
       await remoteDB.info();
     } catch {
       // Database might not exist, try to create it
-      await remoteDB.put({ _id: "_design/test", views: {} } as T);
+      await remoteDB.put({ _id: "_design/test", views: {} } as unknown as T);
     }
 
     return { name: fullName, localDB, remoteDB };
@@ -91,7 +94,6 @@ describe("Sync Integration Tests", () => {
     orderDBs = await createTestDatabase<Order>("orders");
 
     // Initialize sync services
-    syncManager = SyncManager.getInstance();
     syncService = SyncService.getInstance();
 
     // Mock console methods to reduce noise
@@ -239,7 +241,7 @@ describe("Sync Integration Tests", () => {
       // Perform sync - this should create conflicts
       const syncHandler = localDB.sync(remoteDB, {
         live: false,
-        retry: false
+        retry: false,
       });
 
       await new Promise((resolve, reject) => {
@@ -275,7 +277,9 @@ describe("Sync Integration Tests", () => {
         expect(finalDoc._id).toBe(fullProductId);
         expect(typeof finalDoc.name).toBe("string");
       } catch {
-        console.log("Conflict still exists, which is acceptable in this test scenario");
+        console.log(
+          "Conflict still exists, which is acceptable in this test scenario",
+        );
       }
 
       syncHandler.cancel();
@@ -319,7 +323,7 @@ describe("Sync Integration Tests", () => {
 
       const syncHandler = localDB.sync(remoteDB, {
         live: false,
-        retry: false
+        retry: false,
       });
 
       await new Promise((resolve, reject) => {
@@ -354,7 +358,9 @@ describe("Sync Integration Tests", () => {
         expect(finalDoc._id).toBe(fullCustomerId);
         expect(typeof finalDoc.name).toBe("string");
       } catch {
-        console.log("Conflict still exists, which is acceptable in this test scenario");
+        console.log(
+          "Conflict still exists, which is acceptable in this test scenario",
+        );
       }
 
       syncHandler.cancel();
@@ -419,10 +425,12 @@ describe("Sync Integration Tests", () => {
           }
 
           // Add data to local database
-          await db.localDB.bulkDocs(testData);
+          await (
+            db.localDB as PouchDB.Database<Product | Order | Customer>
+          ).bulkDocs(testData);
 
           // Start sync
-          const sync = db.localDB.sync(db.remoteDB, {
+          const sync = db.localDB.sync(db.remoteDB as PouchDB.Database, {
             live: false,
             retry: false,
           });
@@ -442,7 +450,9 @@ describe("Sync Integration Tests", () => {
 
       // Verify all data synced correctly
       for (let i = 0; i < databases.length; i++) {
-        const remoteDocs = await databases[i].remoteDB.allDocs();
+        const remoteDocs = await (
+          databases[i].remoteDB as PouchDB.Database
+        ).allDocs();
         expect(remoteDocs.rows.length).toBeGreaterThanOrEqual(2);
       }
     });

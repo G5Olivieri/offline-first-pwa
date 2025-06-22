@@ -1,47 +1,80 @@
-import Checkout from "@/pages/checkout/checkout.vue";
-import ListAllCustomers from "@/pages/customers/all.vue";
-import Customers from "@/pages/customers/customers.vue";
-import NewCustomer from "@/pages/customers/new.vue";
-import Home from "@/pages/home/home.vue";
-import NotFound from "@/pages/not-found.vue";
-import NewOperator from "@/pages/operators/new.vue";
-import Operators from "@/pages/operators/operators.vue";
-import ProductDetail from "@/pages/products/detail.vue";
-import EditProduct from "@/pages/products/edit.vue";
-import ImportProducts from "@/pages/products/import.vue";
-import NewProduct from "@/pages/products/new.vue";
-import Products from "@/pages/products/products.vue";
-import SyncTest from "@/pages/sync-test.vue";
-import Utils from "@/pages/utils/utils.vue";
 import type { RouteRecordRaw } from "vue-router";
 import { createRouter, createWebHistory } from "vue-router";
 import { userTrackingService } from "./user-tracking/singleton";
 
 const routes: RouteRecordRaw[] = [
-  { path: "/", name: "home", component: Home },
-  { path: "/operators", name: "operators", component: Operators },
-  { path: "/customers", name: "customers", component: Customers },
-  { path: "/customers/new", name: "new-customer", component: NewCustomer },
-  { path: "/products", name: "products", component: Products },
-  { path: "/products/:id", name: "product-detail", component: ProductDetail },
-  { path: "/products/:id/edit", name: "edit-product", component: EditProduct },
-  { path: "/checkout", name: "checkout", component: Checkout },
+  { path: "/", name: "home", component: () => import("@/pages/home/home.vue") },
+  {
+    path: "/operators",
+    name: "operators",
+    component: () => import("@/pages/operators/operators.vue"),
+  },
+  {
+    path: "/customers",
+    name: "customers",
+    component: () => import("@/pages/customers/customers.vue"),
+  },
+  {
+    path: "/customers/new",
+    name: "new-customer",
+    component: () => import("@/pages/customers/new.vue"),
+  },
+  {
+    path: "/products",
+    name: "products",
+    component: () => import("@/pages/products/products.vue"),
+  },
+  {
+    path: "/products/:id",
+    name: "product-detail",
+    component: () => import("@/pages/products/detail.vue"),
+  },
+  {
+    path: "/products/:id/edit",
+    name: "edit-product",
+    component: () => import("@/pages/products/edit.vue"),
+  },
+  {
+    path: "/checkout",
+    name: "checkout",
+    component: () => import("@/pages/checkout/checkout.vue"),
+  },
   {
     path: "/customers/all",
     name: "all-customers",
-    component: ListAllCustomers,
+    component: () => import("@/pages/customers/all.vue"),
   },
-  { path: "/operators/new", name: "new-operator", component: NewOperator },
+  {
+    path: "/operators/new",
+    name: "new-operator",
+    component: () => import("@/pages/operators/new.vue"),
+  },
   {
     path: "/products/import",
     name: "import-products",
-    component: ImportProducts,
+    component: () => import("@/pages/products/import.vue"),
   },
-  { path: "/products/new", name: "new-product", component: NewProduct },
-  { path: "/_utils", name: "utils", component: Utils },
-  { path: "/_sync-test", name: "sync-test", component: SyncTest },
+  {
+    path: "/products/new",
+    name: "new-product",
+    component: () => import("@/pages/products/new.vue"),
+  },
+  {
+    path: "/_utils",
+    name: "utils",
+    component: () => import("@/pages/utils/utils.vue"),
+  },
+  {
+    path: "/_sync-test",
+    name: "sync-test",
+    component: () => import("@/pages/sync-test.vue"),
+  },
   // must be last
-  { path: "/:pathMatch(.*)*", name: "not-found", component: NotFound },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "not-found",
+    component: () => import("@/pages/not-found.vue"),
+  },
 ];
 
 export const router = createRouter({

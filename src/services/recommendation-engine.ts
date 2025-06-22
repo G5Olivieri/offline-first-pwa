@@ -1,5 +1,5 @@
 import {
-  getCustomerPreferencesDB,
+  getCustomerProductPreferenceDB,
   getOrderDB,
   getProductAffinityDB,
   getRecommendationConfigDB,
@@ -20,7 +20,7 @@ import {
 
 export class RecommendationEngine {
   private affinityDB = getProductAffinityDB();
-  private preferencesDB = getCustomerPreferencesDB();
+  private preferencesDB = getCustomerProductPreferenceDB();
   private configDB = getRecommendationConfigDB();
   private orderDB = getOrderDB();
   private config: RecommendationConfig | null = null;

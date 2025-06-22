@@ -89,7 +89,7 @@ export class OrderNotificationHandler {
       operation: "addProductToOrder",
       product: {
         id: event.payload.product._id,
-        rev: event.payload.product.rev,
+        rev: event.payload.product._rev,
       },
     });
     this.notification.showError(

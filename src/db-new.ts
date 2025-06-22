@@ -28,17 +28,6 @@ export const getOperatorDB = async () => {
   return getOperatorDB();
 };
 
-// Lazy-loaded service getters for better code splitting
-export const getSyncService = async () => {
-  const { syncService } = await import("@/db/sync-service");
-  return syncService;
-};
-
-export const getQueryService = async () => {
-  const { queryService } = await import("@/db/query-service");
-  return queryService;
-};
-
 // Reset functions for cleanup
 export const resetProductDB = async () => {
   const { resetProductDB } = await import("@/db/product-db");

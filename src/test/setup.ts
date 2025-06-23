@@ -1,12 +1,14 @@
 import { config } from "@vue/test-utils";
 import { afterEach, beforeEach, vi } from "vitest";
 
-import PouchDB from "pouchdb";
+import PouchDBCore from "pouchdb-core";
 import MemoryAdapter from "pouchdb-adapter-memory";
 import PouchDBFind from "pouchdb-find";
 
-PouchDB.plugin(MemoryAdapter);
-PouchDB.plugin(PouchDBFind);
+// Create PouchDB instance with plugins like in the test file
+const PouchDB = PouchDBCore
+  .plugin(MemoryAdapter)
+  .plugin(PouchDBFind);
 
 PouchDB.defaults({
   adapter: "memory",

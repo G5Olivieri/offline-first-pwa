@@ -87,6 +87,44 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 - Use always alias imports for better readability (e.g., `@/db` for database imports).
 - Don't comment the code.
 
+### 7. VueJS Best Practices
+
+1. Template Best Practices
+
+- Keep Templates Simple: Avoid complex logic in templates; move it to computed properties or methods.
+- Use v-bind and v-on Shorthand: Use : for v-bind and @ for v-on to keep the code concise.
+- Key Attribute: Always use a unique key when rendering lists with v-for.
+- Avoid Inline Handlers: Define methods in the script section instead of inline event handlers.
+
+2. Script Section
+
+- Prop Validation: Always define and validate props with proper types and default values.
+- Avoid Mutating Props: Use computed properties or data to handle derived or mutable values.
+- Use watch Sparingly: Prefer computed properties over watch for reactive transformations.
+- Error Handling: Use try-catch blocks for async operations and handle errors gracefully.
+
+3. State Management
+
+- Use Pinia: For shared state, use Pinia instead of relying on $root or $parent.
+- Avoid Overusing Global State: Keep state local to components unless truly shared.
+
+4. Performance Optimization
+
+- Lazy Loading: Use dynamic imports for components to enable lazy loading.
+- Debounce Expensive Operations: Debounce or throttle expensive operations like API calls.
+- Avoid Unnecessary Re-renders: Use v-once or v-memo for static content.
+
+5. Accessibility and UX
+- ARIA Attributes: Add ARIA attributes for better accessibility.
+- Keyboard Navigation: Ensure interactive elements are keyboard-accessible.
+- Loading States: Provide visual feedback for async operations (e.g., spinners).
+
+6. Testing and Debugging
+
+- Unit Tests: Write unit tests for components using tools like Vue Test Utils.
+- Linting: Use ESLint with Vue-specific rules to enforce consistent code style.
+- DevTools: Leverage Vue DevTools for debugging and performance monitoring.
+
 ---
 
 **Copilot: Always prefer patterns that emphasize offline-first reliability, modular code, Vite/Vue best practices, don't comment code, and kebab-case file naming.**

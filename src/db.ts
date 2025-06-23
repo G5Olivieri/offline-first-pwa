@@ -1,4 +1,5 @@
 import { config } from "@/config/env";
+import { getFullPouchDB } from "@/db/pouchdb-config";
 import type {
   CustomerProductPreference,
   ProductAffinity,
@@ -7,25 +8,38 @@ import type {
 
 export const SYNCING = config.enableSync;
 
+let _PouchDB: PouchDB.Static | null = null;
+const getPouchDB = async (): Promise<PouchDB.Static> => {
+  if (_PouchDB) {
+    return _PouchDB;
+  }
+
+  _PouchDB = await getFullPouchDB();
+  return _PouchDB;
+};
 // Lazy-loaded database getters for better code splitting
 export const getProductDB = async () => {
+  const PouchDB = await getPouchDB();
   const { getProductDB } = await import("@/db/product-db");
-  return getProductDB();
+  return getProductDB(PouchDB);
 };
 
 export const getCustomerDB = async () => {
+  const PouchDB = await getPouchDB();
   const { getCustomerDB } = await import("@/db/customer-db");
-  return getCustomerDB();
+  return getCustomerDB(PouchDB);
 };
 
 export const getOrderDB = async () => {
+  const PouchDB = await getPouchDB();
   const { getOrderDB } = await import("@/db/order-db");
-  return getOrderDB();
+  return getOrderDB(PouchDB);
 };
 
 export const getOperatorDB = async () => {
+  const PouchDB = await getPouchDB();
   const { getOperatorDB } = await import("@/db/operator-db");
-  return getOperatorDB();
+  return getOperatorDB(PouchDB);
 };
 
 // Lazy-loaded service getters for better code splitting
@@ -61,11 +75,15 @@ export const resetOperatorDB = async () => {
 };
 
 // Recommendation system databases
-let _customerProductPreferenceDB: PouchDB.Database<CustomerProductPreference> | null = null;
+let _customerProductPreferenceDB: PouchDB.Database<CustomerProductPreference> | null =
+  null;
 let _productAffinityDB: PouchDB.Database<ProductAffinity> | null = null;
-let _recommendationConfigDB: PouchDB.Database<RecommendationConfig> | null = null;
+let _recommendationConfigDB: PouchDB.Database<RecommendationConfig> | null =
+  null;
 
-export const getCustomerProductPreferenceDB = async (): Promise<PouchDB.Database<CustomerProductPreference>> => {
+export const getCustomerProductPreferenceDB = async (): Promise<
+  PouchDB.Database<CustomerProductPreference>
+> => {
   if (_customerProductPreferenceDB) {
     return _customerProductPreferenceDB;
   }
@@ -86,7 +104,9 @@ export const getCustomerProductPreferenceDB = async (): Promise<PouchDB.Database
   return _customerProductPreferenceDB;
 };
 
-export const getProductAffinityDB = async (): Promise<PouchDB.Database<ProductAffinity>> => {
+export const getProductAffinityDB = async (): Promise<
+  PouchDB.Database<ProductAffinity>
+> => {
   if (_productAffinityDB) {
     return _productAffinityDB;
   }
@@ -107,7 +127,9 @@ export const getProductAffinityDB = async (): Promise<PouchDB.Database<ProductAf
   return _productAffinityDB;
 };
 
-export const getRecommendationConfigDB = async (): Promise<PouchDB.Database<RecommendationConfig>> => {
+export const getRecommendationConfigDB = async (): Promise<
+  PouchDB.Database<RecommendationConfig>
+> => {
   if (_recommendationConfigDB) {
     return _recommendationConfigDB;
   }

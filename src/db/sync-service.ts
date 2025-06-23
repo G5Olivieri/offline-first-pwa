@@ -1,4 +1,4 @@
-import { config } from '@/config/env';
+import { config } from "@/config/env";
 
 export interface SyncOptions {
   live?: boolean;
@@ -24,7 +24,7 @@ export class SyncService {
   async startSync(
     localDb: PouchDB.Database,
     remoteUrl: string,
-    options: SyncOptions = {}
+    options: SyncOptions = {},
   ) {
     if (!config.enableSync) {
       return null;
@@ -46,15 +46,23 @@ export class SyncService {
     };
 
     try {
-      const sync = localDb.sync(remoteUrl, defaultOptions);
+      const sync = localDb.sync(
+        new PouchDB(remoteUrl, {
+          auth: {
+            username: config.couchdbUsername,
+            password: config.couchdbPassword,
+          },
+        }),
+        defaultOptions,
+      );
       this.activeSyncs.set(syncKey, sync);
 
-      sync.on('error', (err) => {
+      sync.on("error", (err) => {
         console.error(`Sync error for ${syncKey}:`, err);
         this.activeSyncs.delete(syncKey);
       });
 
-      sync.on('denied', (err) => {
+      sync.on("denied", (err) => {
         console.error(`Sync denied for ${syncKey}:`, err);
       });
 

@@ -36,9 +36,9 @@ export default defineConfig({
     "import.meta.env.VITE_APP_TITLE": '"POS Test"',
     "import.meta.env.VITE_THEME_PRIMARY_COLOR": '"#3B82F6"',
     "import.meta.env.VITE_COUCHDB_URL": '"http://localhost:5984"',
-    "import.meta.env.VITE_COUCHDB_USERNAME": '"test"',
-    "import.meta.env.VITE_COUCHDB_PASSWORD": '"test"',
-    "import.meta.env.VITE_SYNCING": "true",
+    "import.meta.env.VITE_COUCHDB_USERNAME": '"admin"',
+    "import.meta.env.VITE_COUCHDB_PASSWORD": '"password"',
+    "import.meta.env.VITE_SYNCING": '"true"',
     "import.meta.env.VITE_POUCHDB_ADAPTER": '"memory"',
   },
 });

@@ -1,6 +1,5 @@
 import { config } from "@/config/env";
 import type { Order } from "@/types/order";
-import { getFullPouchDB } from "@/db/pouchdb-config";
 
 const SYNCING = config.enableSync;
 const COUCHDB_URL = config.couchdbUrl;
@@ -8,12 +7,13 @@ const POUCHDB_ADAPTER = config.pouchdbAdapter || "idb";
 
 let _orderDB: PouchDB.Database<Order> | null = null;
 
-export const getOrderDB = async (): Promise<PouchDB.Database<Order>> => {
+export const getOrderDB = async (
+  PouchDB: PouchDB.Static,
+): Promise<PouchDB.Database<Order>> => {
   if (_orderDB) {
     return _orderDB;
   }
 
-  const PouchDB = await getFullPouchDB();
   _orderDB = new PouchDB("orders", {
     adapter: POUCHDB_ADAPTER,
   }) as PouchDB.Database<Order>;

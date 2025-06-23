@@ -1,5 +1,5 @@
 import { config } from "@/config/env";
-import { getFullPouchDB } from "@/db/pouchdb-config";
+import { PouchDBFactory } from "@/db/pouchdb-config";
 import type {
   CustomerProductPreference,
   ProductAffinity,
@@ -8,49 +8,31 @@ import type {
 
 export const SYNCING = config.enableSync;
 
-let _PouchDB: PouchDB.Static | null = null;
-const getPouchDB = async (): Promise<PouchDB.Static> => {
-  if (_PouchDB) {
-    return _PouchDB;
-  }
-
-  _PouchDB = await getFullPouchDB();
-  return _PouchDB;
-};
 // Lazy-loaded database getters for better code splitting
 export const getProductDB = async () => {
-  const PouchDB = await getPouchDB();
   const { getProductDB } = await import("@/db/product-db");
-  return getProductDB(PouchDB);
+  return getProductDB();
 };
 
 export const getCustomerDB = async () => {
-  const PouchDB = await getPouchDB();
   const { getCustomerDB } = await import("@/db/customer-db");
-  return getCustomerDB(PouchDB);
+  return getCustomerDB();
 };
 
 export const getOrderDB = async () => {
-  const PouchDB = await getPouchDB();
   const { getOrderDB } = await import("@/db/order-db");
-  return getOrderDB(PouchDB);
+  return getOrderDB();
 };
 
 export const getOperatorDB = async () => {
-  const PouchDB = await getPouchDB();
   const { getOperatorDB } = await import("@/db/operator-db");
-  return getOperatorDB(PouchDB);
+  return getOperatorDB();
 };
 
 // Lazy-loaded service getters for better code splitting
 export const getSyncService = async () => {
   const { syncService } = await import("@/db/sync-service");
   return syncService;
-};
-
-export const getQueryService = async () => {
-  const { queryService } = await import("@/db/query-service");
-  return queryService;
 };
 
 // Reset functions for cleanup
@@ -87,20 +69,16 @@ export const getCustomerProductPreferenceDB = async (): Promise<
   if (_customerProductPreferenceDB) {
     return _customerProductPreferenceDB;
   }
-
-  const PouchDB = (await import("@/db/pouchdb-config")).default;
+  const PouchDB = await PouchDBFactory.createPouchDB();
   _customerProductPreferenceDB = new PouchDB("customer_product_preferences", {
-    adapter: config.pouchdbAdapter || "idb",
+    adapter: config.pouchdb.adapter,
   });
-
-  _customerProductPreferenceDB.createIndex({
+  await _customerProductPreferenceDB.createIndex({
     index: { fields: ["customer_id"] },
   });
-
-  _customerProductPreferenceDB.createIndex({
+  await _customerProductPreferenceDB.createIndex({
     index: { fields: ["product_id"] },
   });
-
   return _customerProductPreferenceDB;
 };
 
@@ -110,20 +88,16 @@ export const getProductAffinityDB = async (): Promise<
   if (_productAffinityDB) {
     return _productAffinityDB;
   }
-
-  const PouchDB = (await import("@/db/pouchdb-config")).default;
+  const PouchDB = await PouchDBFactory.createPouchDB();
   _productAffinityDB = new PouchDB("product_affinity", {
-    adapter: config.pouchdbAdapter || "idb",
+    adapter: config.pouchdb.adapter,
   });
-
-  _productAffinityDB.createIndex({
+  await _productAffinityDB.createIndex({
     index: { fields: ["product_a"] },
   });
-
-  _productAffinityDB.createIndex({
+  await _productAffinityDB.createIndex({
     index: { fields: ["product_b"] },
   });
-
   return _productAffinityDB;
 };
 
@@ -133,12 +107,10 @@ export const getRecommendationConfigDB = async (): Promise<
   if (_recommendationConfigDB) {
     return _recommendationConfigDB;
   }
-
-  const PouchDB = (await import("@/db/pouchdb-config")).default;
+  const PouchDB = await PouchDBFactory.createPouchDB();
   _recommendationConfigDB = new PouchDB("recommendation_config", {
-    adapter: config.pouchdbAdapter || "idb",
+    adapter: config.pouchdb.adapter,
   });
-
   return _recommendationConfigDB;
 };
 

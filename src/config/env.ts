@@ -1,3 +1,7 @@
+interface PouchDBConfig {
+  adapter: string;
+}
+
 interface SearchConfig {
   dbName: string;
   dbVersion: number;
@@ -6,13 +10,13 @@ interface SearchConfig {
 }
 
 function safeLocalStorage() {
-  if (typeof window !== 'undefined' && window.localStorage) {
+  if (typeof window !== "undefined" && window.localStorage) {
     return window.localStorage;
   }
   return {
     getItem: () => null,
     setItem: () => {},
-    removeItem: () => {}
+    removeItem: () => {},
   };
 }
 
@@ -62,7 +66,7 @@ interface AppConfig {
   couchdbUrl: string;
   couchdbUsername?: string;
   couchdbPassword?: string;
-  pouchdbAdapter: string;
+  pouchdb: PouchDBConfig;
   enableSync: boolean;
 
   defaultLocale: string;
@@ -148,7 +152,9 @@ export const config: AppConfig = {
   terminalName: getEnvVar("VITE_TERMINAL_NAME", "POS Terminal"),
 
   // Database Configuration
-  pouchdbAdapter: getEnvVar("VITE_POUCHDB_ADAPTER", "idb"),
+  pouchdb: {
+    adapter: getEnvVar("VITE_POUCHDB_ADAPTER", "idb"),
+  },
   couchdbUrl: getEnvVar("VITE_COUCHDB_URL", "http://localhost:5984"),
   couchdbUsername: getEnvVar("VITE_COUCHDB_USERNAME", undefined),
   couchdbPassword: getEnvVar("VITE_COUCHDB_PASSWORD", undefined),

@@ -1,10 +1,10 @@
 import { config } from "@/config/env";
-import { getFullPouchDB } from "@/db/pouchdb-config";
+import { PouchDBFactory } from "@/db/pouchdb-config";
 import type { Product } from "@/product/product";
 
 const SYNCING = config.enableSync;
 const COUCHDB_URL = config.couchdbUrl;
-const POUCHDB_ADAPTER = config.pouchdbAdapter || "idb";
+const POUCHDB_ADAPTER = config.pouchdb.adapter || "idb";
 
 let _productDB: PouchDB.Database<Product> | null = null;
 
@@ -13,7 +13,7 @@ export const getProductDB = async (): Promise<PouchDB.Database<Product>> => {
     return _productDB;
   }
 
-  const PouchDB = await getFullPouchDB();
+  const PouchDB = await PouchDBFactory.createPouchDB();
 
   _productDB = new PouchDB("products", {
     adapter: POUCHDB_ADAPTER,

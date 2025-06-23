@@ -1,18 +1,19 @@
 import { config } from "@/config/env";
 import type { Operator } from "@/operator/operator";
+import { PouchDBFactory } from "@/db/pouchdb-config";
 
 const SYNCING = config.enableSync;
 const COUCHDB_URL = config.couchdbUrl;
-const POUCHDB_ADAPTER = config.pouchdbAdapter || "idb";
+const POUCHDB_ADAPTER = config.pouchdb.adapter || "idb";
 
 let _operatorDB: PouchDB.Database<Operator> | null = null;
 
-export const getOperatorDB = async (
-  PouchDB: PouchDB.Static,
-): Promise<PouchDB.Database<Operator>> => {
+export const getOperatorDB = async (): Promise<PouchDB.Database<Operator>> => {
   if (_operatorDB) {
     return _operatorDB;
   }
+
+  const PouchDB = await PouchDBFactory.createPouchDB();
 
   _operatorDB = new PouchDB("operators", {
     adapter: POUCHDB_ADAPTER,

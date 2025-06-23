@@ -35,7 +35,7 @@ describe("Product Database Sync Integration Tests", () => {
     databases = [];
     syncHandlers = [];
     vi.clearAllMocks();
-    
+
     // Mock environment variables for testing
     vi.stubEnv("VITE_ENABLE_SYNC", "true");
     vi.stubEnv("VITE_COUCHDB_URL", TEST_COUCHDB_URL);
@@ -47,7 +47,7 @@ describe("Product Database Sync Integration Tests", () => {
   afterEach(async () => {
     // Stop all sync services
     syncService.stopAllSyncs();
-    
+
     // Reset product database
     try {
       await resetProductDB();
@@ -329,7 +329,7 @@ describe("Product Database Sync Integration Tests", () => {
     it("should efficiently query products by barcode using index", async () => {
       const db = await createTestDB();
       const products = [];
-      
+
       // Create multiple products with different barcodes
       for (let i = 1; i <= 10; i++) {
         products.push(createTestProduct(i.toString().padStart(3, '0'), {
@@ -356,7 +356,7 @@ describe("Product Database Sync Integration Tests", () => {
     it("should sync large product catalog efficiently", async () => {
       const db = await createTestDB();
       const largeProductCatalog = [];
-      
+
       // Create a large product catalog (100 products)
       for (let i = 1; i <= 100; i++) {
         largeProductCatalog.push(createTestProduct(`large_${i.toString().padStart(3, '0')}`));
@@ -372,7 +372,7 @@ describe("Product Database Sync Integration Tests", () => {
 
       await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => reject(new Error("Sync timeout")), 30000);
-        
+
         sync.on("change", (info) => {
           if (info.direction === "push" && info.change.docs_written === 100) {
             clearTimeout(timeout);
@@ -387,11 +387,11 @@ describe("Product Database Sync Integration Tests", () => {
       });
 
       const endTime = performance.now();
-      
+
       // Verify all products are synced
       const remoteAllDocs = await db.remoteDB.allDocs();
       expect(remoteAllDocs.total_rows).toBeGreaterThanOrEqual(100);
-      
+
       // Sync should complete in reasonable time
       expect(endTime - startTime).toBeLessThan(30000);
     });
@@ -401,18 +401,18 @@ describe("Product Database Sync Integration Tests", () => {
     it("should handle network interruption gracefully", async () => {
       const db = await createTestDB();
       const product = createTestProduct("network_test");
-      
+
       // Add product to local database
       await db.localDB.put(product);
-      
+
       // Start sync
       const sync = startBidirectionalSync(db);
-      
+
       // Simulate network interruption by destroying remote connection
       sync.on("error", (error) => {
         expect(error).toBeDefined();
       });
-      
+
       // Force an error by trying to access non-existent remote database
       const fakeRemoteDB = new PouchDB(`${TEST_COUCHDB_URL}/non_existent_db_${Date.now()}`, {
         auth: {
@@ -420,13 +420,13 @@ describe("Product Database Sync Integration Tests", () => {
           password: "fake_password",
         },
       });
-      
+
       try {
         await fakeRemoteDB.info();
       } catch (error) {
         expect(error).toBeDefined();
       }
-      
+
       // Verify local database still works
       const localProduct = await db.localDB.get(product._id);
       expect(localProduct).toMatchObject({
@@ -437,7 +437,7 @@ describe("Product Database Sync Integration Tests", () => {
 
     it("should handle authentication failure appropriately", async () => {
       const db = await createTestDB();
-      
+
       // Try to create a remote database with invalid credentials
       const invalidRemoteDB = new PouchDB(`${TEST_COUCHDB_URL}/test_auth_fail_${Date.now()}`, {
         auth: {
@@ -445,7 +445,7 @@ describe("Product Database Sync Integration Tests", () => {
           password: "invalid_password",
         },
       });
-      
+
       let authError = false;
       try {
         await invalidRemoteDB.info();
@@ -453,9 +453,9 @@ describe("Product Database Sync Integration Tests", () => {
         authError = true;
         expect(error).toBeDefined();
       }
-      
+
       expect(authError).toBe(true);
-      
+
       // Verify local database still works despite auth failure
       const product = createTestProduct("auth_test");
       await db.localDB.put(product);
@@ -471,22 +471,22 @@ describe("Product Database Sync Integration Tests", () => {
     it("should report sync statistics correctly", async () => {
       const db = await createTestDB();
       const products = [];
-      
+
       // Create test products
       for (let i = 1; i <= 5; i++) {
         products.push(createTestProduct(`stats_${i}`));
       }
-      
+
       // Add products to local database
       await db.localDB.bulkDocs(products);
-      
+
       // Start sync and monitor statistics
       const sync = startBidirectionalSync(db);
-      
+
       let syncStats: PouchDB.Replication.SyncResult<Product> | null = null;
       await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => reject(new Error("Sync timeout")), 10000);
-        
+
         sync.on("change", (info) => {
           syncStats = info;
           if (info.direction === "push" && info.change.docs_written === 5) {
@@ -494,13 +494,13 @@ describe("Product Database Sync Integration Tests", () => {
             resolve(undefined);
           }
         });
-        
+
         sync.on("error", (err) => {
           clearTimeout(timeout);
           reject(err);
         });
       });
-      
+
       expect(syncStats).toBeDefined();
       expect(syncStats!.direction).toBe("push");
       expect(syncStats!.change.docs_written).toBe(5);
@@ -509,27 +509,27 @@ describe("Product Database Sync Integration Tests", () => {
 
     it("should maintain live sync for real-time updates", async () => {
       const db = await createTestDB();
-      
+
       // Start live sync
       const sync = startBidirectionalSync(db);
-      
+
       // Add initial product
       const product1 = createTestProduct("live_sync_1");
       await db.localDB.put(product1);
-      
+
       // Wait for initial sync
       await new Promise((resolve) => {
         sync.on("change", resolve);
       });
-      
+
       // Verify initial sync worked
       const remoteProduct1 = await db.remoteDB.get(product1._id);
       expect(remoteProduct1.name).toBe(product1.name);
-      
+
       // Add another product and verify live sync picks it up
       const product2 = createTestProduct("live_sync_2");
       await db.localDB.put(product2);
-      
+
       // Wait for live sync to pick up the change
       await new Promise((resolve) => {
         sync.on("change", (info) => {
@@ -538,7 +538,7 @@ describe("Product Database Sync Integration Tests", () => {
           }
         });
       });
-      
+
       // Verify second product was synced
       const remoteProduct2 = await db.remoteDB.get(product2._id);
       expect(remoteProduct2.name).toBe(product2.name);
@@ -548,22 +548,22 @@ describe("Product Database Sync Integration Tests", () => {
   describe("getProductDB Integration with Sync Service", () => {
     it("should initialize product database with proper indexes", async () => {
       await resetProductDB();
-      
+
       const productDB = await getProductDB();
       expect(productDB).toBeDefined();
-      
+
       // Check if indexes exist by trying to use them
       const barcodeIndex = await productDB.getIndexes();
       expect(barcodeIndex.indexes.length).toBeGreaterThan(1); // Should have at least the default + barcode index
-      
+
       // Test barcode index functionality
       const product = createTestProduct("index_test");
       await productDB.put(product);
-      
+
       const result = await productDB.find({
         selector: { barcode: product.barcode }
       });
-      
+
       expect(result.docs).toHaveLength(1);
       expect(result.docs[0]._id).toBe(product._id);
     });
@@ -572,17 +572,17 @@ describe("Product Database Sync Integration Tests", () => {
       // Mock environment to enable sync
       vi.stubEnv("VITE_ENABLE_SYNC", "true");
       vi.stubEnv("VITE_COUCHDB_URL", TEST_COUCHDB_URL);
-      
+
       await resetProductDB();
       const productDB = await getProductDB();
-      
+
       // Add a product to test sync functionality
       const product = createTestProduct("sync_init_test");
       await productDB.put(product);
-      
+
       // Give sync service time to initialize
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Verify database is working
       const retrievedProduct = await productDB.get(product._id);
       expect(retrievedProduct).toMatchObject({
@@ -748,18 +748,18 @@ describe("Product Database Sync Integration Tests", () => {
   describe("SYNCING.md Compliance Tests", () => {
     it("should implement two-way sync with conflict resolution as per SYNCING.md", async () => {
       const db = await createTestDB();
-      
+
       // Test two-way sync: local -> remote
       const localProduct = createTestProduct("twoway_local");
       await db.localDB.put(localProduct);
-      
-      // Test two-way sync: remote -> local  
+
+      // Test two-way sync: remote -> local
       const remoteProduct = createTestProduct("twoway_remote");
       await db.remoteDB.put(remoteProduct);
-      
+
       // Start bidirectional sync
       const sync = startBidirectionalSync(db);
-      
+
       // Wait for both directions to sync
       let changeCount = 0;
       await new Promise((resolve) => {
@@ -768,11 +768,11 @@ describe("Product Database Sync Integration Tests", () => {
           if (changeCount >= 2) resolve(undefined);
         });
       });
-      
+
       // Verify both products exist in both databases
       const localFromRemote = await db.localDB.get(remoteProduct._id);
       const remoteFromLocal = await db.remoteDB.get(localProduct._id);
-      
+
       expect(localFromRemote._id).toBe(remoteProduct._id);
       expect(remoteFromLocal._id).toBe(localProduct._id);
     });
@@ -780,71 +780,71 @@ describe("Product Database Sync Integration Tests", () => {
     it("should handle stock level conflicts with order sync completion strategy", async () => {
       const db = await createTestDB();
       const product = createTestProduct("stock_strategy", { stock: 50 });
-      
+
       // Add to both databases
       await db.localDB.put(product);
       await db.remoteDB.put(product);
-      
+
       // Simulate different stock levels from different terminals
       const localDoc = await db.localDB.get(product._id);
       const remoteDoc = await db.remoteDB.get(product._id);
-      
+
       // Local terminal reduces stock (order completion)
       const localUpdate = { ...localDoc, stock: 45 };
       await db.localDB.put(localUpdate);
-      
+
       // Remote terminal also reduces stock (different order)
       const remoteUpdate = { ...remoteDoc, stock: 40 };
       await db.remoteDB.put(remoteUpdate);
-      
+
       // Start sync
       const sync = startBidirectionalSync(db);
       await new Promise((resolve) => {
         sync.on("change", resolve);
       });
-      
+
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Verify consistent final state (one wins)
       const finalLocal = await db.localDB.get(product._id);
       const finalRemote = await db.remoteDB.get(product._id);
-      
+
       expect(finalLocal.stock).toBe(finalRemote.stock);
       expect([40, 45]).toContain(finalLocal.stock); // One of the values should win
     });
 
     it("should support real-time sync with live sync enabled", async () => {
       const db = await createTestDB();
-      
+
       // Start live sync
       const sync = db.localDB.sync(db.remoteDB, {
         live: true,
         retry: true,
       });
       syncHandlers.push(sync);
-      
+
       // Add product and verify immediate sync
       const product = createTestProduct("realtime_test");
       await db.localDB.put(product);
-      
+
       // Wait for live sync to propagate
       await new Promise((resolve) => {
         sync.on("change", resolve);
       });
-      
+
       // Verify product appeared in remote
       const remoteProduct = await db.remoteDB.get(product._id);
       expect(remoteProduct._id).toBe(product._id);
-      
+
       // Test reverse direction
       const product2 = createTestProduct("realtime_test_2");
       await db.remoteDB.put(product2);
-      
+
       // Wait for reverse sync
       await new Promise((resolve) => {
         sync.on("change", resolve);
       });
-      
+
       // Verify product appeared in local
       const localProduct2 = await db.localDB.get(product2._id);
       expect(localProduct2._id).toBe(product2._id);
@@ -852,7 +852,7 @@ describe("Product Database Sync Integration Tests", () => {
 
     it("should maintain barcode field index for fast lookups as specified", async () => {
       const db = await createTestDB();
-      
+
       // Add products with various barcodes
       const products = [];
       for (let i = 1; i <= 50; i++) {
@@ -860,16 +860,16 @@ describe("Product Database Sync Integration Tests", () => {
           barcode: `LOOKUP${i.toString().padStart(6, '0')}`
         }));
       }
-      
+
       await db.localDB.bulkDocs(products);
-      
+
       // Test fast barcode lookup
       const startTime = performance.now();
       const result = await db.localDB.find({
         selector: { barcode: "LOOKUP000025" }
       });
       const endTime = performance.now();
-      
+
       expect(result.docs).toHaveLength(1);
       expect(result.docs[0].barcode).toBe("LOOKUP000025");
       expect(endTime - startTime).toBeLessThan(100); // Fast lookup with index
@@ -877,17 +877,17 @@ describe("Product Database Sync Integration Tests", () => {
 
     it("should handle all prescription status types correctly", async () => {
       const db = await createTestDB();
-      
+
       const prescriptionStatuses = ['OTC', 'PrescriptionOnly', 'Controlled'] as const;
-      const products = prescriptionStatuses.map((status, index) => 
+      const products = prescriptionStatuses.map((status, index) =>
         createTestProduct(`prescription_${index}`, {
           prescriptionStatus: status,
           activeIngredient: status === 'PrescriptionOnly' ? "Active Ingredient" : ""
         })
       );
-      
+
       await db.localDB.bulkDocs(products);
-      
+
       // Verify all prescription types are stored correctly
       for (let i = 0; i < products.length; i++) {
         const retrieved = await db.localDB.get(products[i]._id);
@@ -897,36 +897,36 @@ describe("Product Database Sync Integration Tests", () => {
 
     it("should support error handling and retry logic for sync failures", async () => {
       const db = await createTestDB();
-      
+
       // Start sync with retry enabled
       const sync = db.localDB.sync(db.remoteDB, {
         live: true,
         retry: true,
       });
       syncHandlers.push(sync);
-      
+
       sync.on("error", (error) => {
         expect(error).toBeDefined();
       });
-      
+
       sync.on("active", () => {
         // Sync is active/retrying
         expect(true).toBe(true);
       });
-      
+
       // Add a product to trigger sync
       const product = createTestProduct("retry_test");
       await db.localDB.put(product);
-      
+
       // Wait for sync to complete successfully
       await new Promise((resolve) => {
         sync.on("change", resolve);
       });
-      
+
       // Verify product synced successfully
       const remoteProduct = await db.remoteDB.get(product._id);
       expect(remoteProduct._id).toBe(product._id);
-      
+
       // Verify sync is configured for retry (no actual error needed for this test)
       expect(sync).toBeDefined();
     });

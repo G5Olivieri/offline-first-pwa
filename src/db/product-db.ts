@@ -14,7 +14,7 @@ export const getProductDB = async (): Promise<PouchDB.Database<Product>> => {
   }
 
   const PouchDB = await getFullPouchDB();
-  
+
   _productDB = new PouchDB("products", {
     adapter: POUCHDB_ADAPTER,
   }) as PouchDB.Database<Product>;

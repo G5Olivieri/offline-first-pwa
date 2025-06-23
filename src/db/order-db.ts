@@ -1,9 +1,7 @@
 import { config } from "@/config/env";
+import { PouchDB } from "./pouchdb-config";
 import type { Order } from "@/types/order";
-import { PouchDBFactory } from "@/db/pouchdb-config";
 
-const SYNCING = config.enableSync;
-const COUCHDB_URL = config.couchdbUrl;
 const POUCHDB_ADAPTER = config.pouchdb.adapter || "idb";
 
 let _orderDB: PouchDB.Database<Order> | null = null;
@@ -12,8 +10,6 @@ export const getOrderDB = async (): Promise<PouchDB.Database<Order>> => {
   if (_orderDB) {
     return _orderDB;
   }
-
-  const PouchDB = await PouchDBFactory.createPouchDB();
 
   _orderDB = new PouchDB("orders", {
     adapter: POUCHDB_ADAPTER,
@@ -30,19 +26,6 @@ export const getOrderDB = async (): Promise<PouchDB.Database<Order>> => {
   await _orderDB.createIndex({
     index: { fields: ["terminal_id"] },
   });
-
-  if (SYNCING && COUCHDB_URL) {
-    try {
-      const { syncService } = await import("@/db/sync-service");
-      await syncService.startSync(_orderDB, `${COUCHDB_URL}/orders`, {
-        live: true,
-        retry: true,
-        continuous: true,
-      });
-    } catch (error) {
-      console.warn("Failed to start order database sync:", error);
-    }
-  }
 
   return _orderDB;
 };

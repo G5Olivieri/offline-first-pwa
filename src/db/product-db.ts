@@ -1,9 +1,7 @@
 import { config } from "@/config/env";
-import { PouchDBFactory } from "@/db/pouchdb-config";
+import { PouchDB } from "./pouchdb-config";
 import type { Product } from "@/product/product";
 
-const SYNCING = config.enableSync;
-const COUCHDB_URL = config.couchdbUrl;
 const POUCHDB_ADAPTER = config.pouchdb.adapter || "idb";
 
 let _productDB: PouchDB.Database<Product> | null = null;
@@ -12,8 +10,6 @@ export const getProductDB = async (): Promise<PouchDB.Database<Product>> => {
   if (_productDB) {
     return _productDB;
   }
-
-  const PouchDB = await PouchDBFactory.createPouchDB();
 
   _productDB = new PouchDB("products", {
     adapter: POUCHDB_ADAPTER,
@@ -26,19 +22,6 @@ export const getProductDB = async (): Promise<PouchDB.Database<Product>> => {
   await _productDB.createIndex({
     index: { fields: ["category"] },
   });
-
-  if (SYNCING && COUCHDB_URL) {
-    try {
-      const { syncService } = await import("@/db/sync-service");
-      await syncService.startSync(_productDB, `${COUCHDB_URL}/products`, {
-        live: true,
-        retry: true,
-        continuous: true,
-      });
-    } catch (error) {
-      console.warn("Failed to start product database sync:", error);
-    }
-  }
 
   return _productDB;
 };

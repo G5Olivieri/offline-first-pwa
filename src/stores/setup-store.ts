@@ -31,7 +31,6 @@ export interface SetupState {
 }
 
 export const useSetupStore = defineStore("setupStore", () => {
-  const productDB = getProductDB();
 
   // Reactive state
   const setupState = ref<SetupState>({
@@ -72,6 +71,7 @@ export const useSetupStore = defineStore("setupStore", () => {
       setupState.value.progress = 40;
 
       // Get total count first for progress tracking
+      const productDB = await getProductDB();
       const totalCountResult = await productDB.info();
       const totalDocCount = totalCountResult.doc_count;
       setupState.value.totalProducts = totalDocCount;

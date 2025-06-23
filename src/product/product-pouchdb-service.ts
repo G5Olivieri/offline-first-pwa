@@ -159,14 +159,24 @@ export class ProductPouchDBService implements ProductService {
   async listProducts({ limit = 100, skip = 0 } = {}) {
     const count = await this.db.info().then((info) => info.doc_count);
 
+    let designCounter = 0;
     const products = await this.db
       .allDocs({ include_docs: true, limit, skip })
+
       .then((result) => {
-        return result.rows.map((row) => row.doc as Product);
+        return result.rows
+          .map((row) => row.doc as Product)
+          .filter((doc) => {
+            if (doc._id.startsWith("_design")) {
+              designCounter++;
+              return false;
+            }
+            return true;
+          });
       });
 
     return {
-      count,
+      count: count - designCounter,
       products,
     };
   }

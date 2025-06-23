@@ -1,5 +1,4 @@
 import { config } from "@/config/env";
-import { PouchDBFactory } from "@/db/pouchdb-config";
 import type {
   CustomerProductPreference,
   ProductAffinity,
@@ -27,12 +26,6 @@ export const getOrderDB = async () => {
 export const getOperatorDB = async () => {
   const { getOperatorDB } = await import("@/db/operator-db");
   return getOperatorDB();
-};
-
-// Lazy-loaded service getters for better code splitting
-export const getSyncService = async () => {
-  const { syncService } = await import("@/db/sync-service");
-  return syncService;
 };
 
 // Reset functions for cleanup
@@ -88,7 +81,6 @@ export const getProductAffinityDB = async (): Promise<
   if (_productAffinityDB) {
     return _productAffinityDB;
   }
-  const PouchDB = await PouchDBFactory.createPouchDB();
   _productAffinityDB = new PouchDB("product_affinity", {
     adapter: config.pouchdb.adapter,
   });
@@ -107,7 +99,6 @@ export const getRecommendationConfigDB = async (): Promise<
   if (_recommendationConfigDB) {
     return _recommendationConfigDB;
   }
-  const PouchDB = await PouchDBFactory.createPouchDB();
   _recommendationConfigDB = new PouchDB("recommendation_config", {
     adapter: config.pouchdb.adapter,
   });

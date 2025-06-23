@@ -64,8 +64,6 @@ interface AppConfig {
   terminalName: string;
 
   couchdbUrl: string;
-  couchdbUsername?: string;
-  couchdbPassword?: string;
   pouchdb: PouchDBConfig;
   enableSync: boolean;
 
@@ -152,12 +150,10 @@ export const config: AppConfig = {
   terminalName: getEnvVar("VITE_TERMINAL_NAME", "POS Terminal"),
 
   // Database Configuration
+  couchdbUrl: getEnvVar("VITE_COUCHDB_URL", "http://localhost:5984"),
   pouchdb: {
     adapter: getEnvVar("VITE_POUCHDB_ADAPTER", "idb"),
   },
-  couchdbUrl: getEnvVar("VITE_COUCHDB_URL", "http://localhost:5984"),
-  couchdbUsername: getEnvVar("VITE_COUCHDB_USERNAME", undefined),
-  couchdbPassword: getEnvVar("VITE_COUCHDB_PASSWORD", undefined),
   enableSync: getEnvVar("VITE_ENABLE_SYNC", true, toBool),
 
   // Localization Settings

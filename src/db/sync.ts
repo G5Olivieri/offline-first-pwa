@@ -23,9 +23,14 @@ export const sync = (local: PouchDB.Database) => {
       })
       .on("error", (err) => {
         console.error(`${name} DB replication error:`, err);
-        // TODO: remove store dependency
-        const authStore = useAuthStore();
-        authStore.handleUnauthorized();
+        if (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (err as any).error === "unauthorized"
+        ) {
+          // TODO: remove store dependency
+          const authStore = useAuthStore();
+          authStore.handleUnauthorized();
+        }
       })
       .on("paused", () => {
         console.log(`${name} DB replication paused.`);

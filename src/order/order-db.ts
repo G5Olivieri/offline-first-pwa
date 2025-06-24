@@ -1,7 +1,7 @@
 import { config } from "@/config/env";
 import { PouchDB } from "@/db/pouchdb-config";
-import { sync } from "@/db/sync";
 import type { Order } from "@/order/order";
+import { useAuthStore } from "@/stores/auth-store";
 
 const POUCHDB_ADAPTER = config.pouchdb.adapter || "idb";
 
@@ -28,8 +28,56 @@ export const getOrderDB = async (): Promise<PouchDB.Database<Order>> => {
     index: { fields: ["terminal_id"] },
   });
 
-  sync(_orderDB);
-
+  if (config.enableSync && config.couchdbUrl) {
+    const name = _orderDB.name;
+    _orderDB.replicate
+      .to<Order>(`${config.couchdbUrl}/${name}`, {
+        live: true,
+        retry: true,
+      })
+      .on("active", () => {
+        console.log(`${name} DB replication started successfully.`);
+      })
+      .on("change", (info) => {
+        if (info.docs && info.docs.length > 0) {
+          info.docs.forEach((doc) => {
+            if (["cancelled", "completed"].includes(doc.status)) {
+              // Only supported in IndexedDB adapter
+              if (POUCHDB_ADAPTER === "indexeddb") {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (_orderDB as any).purge(doc._id, doc._rev).then((result) => {
+                  console.log(
+                    `Purged order ${doc._id} (${doc.status}):`,
+                    result,
+                  );
+                });
+                // TODO: purge old orders
+              }
+            }
+          });
+        }
+      })
+      .on("complete", (info) => {
+        console.log(`${name} DB replication completed:`, info);
+      })
+      .on("denied", (err) => {
+        console.error(`${name} DB replication denied:`, err);
+      })
+      .on("error", (err) => {
+        console.error(`${name} DB replication error:`, err);
+        if (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (err as any).error === "unauthorized"
+        ) {
+          // TODO: remove store dependency
+          const authStore = useAuthStore();
+          authStore.handleUnauthorized();
+        }
+      })
+      .on("paused", () => {
+        console.log(`${name} DB replication paused.`);
+      });
+  }
   return _orderDB;
 };
 

@@ -1,3 +1,4 @@
+import { config } from "@/config/env";
 import { errorTrackingService } from "@/error/singleton";
 import type { App } from "vue";
 export class GlobalErrorHandler {
@@ -78,6 +79,9 @@ export class GlobalErrorHandler {
 
 // Factory function to create and configure global error handler
 export function createGlobalErrorHandler(app: App) {
+  if (config.tracking.error.globalEnabled === false) {
+    return null;
+  }
   const errorHandler = new GlobalErrorHandler();
 
   errorHandler.setupVueErrorHandler(app);

@@ -36,6 +36,7 @@ function generateTerminalId(): string {
 
 interface TrackingConfig {
   error: {
+    globalEnabled: boolean;
     enabled: boolean;
     remote: {
       enabled: boolean;
@@ -194,6 +195,11 @@ export const config: AppConfig = {
   },
   tracking: {
     error: {
+      globalEnabled: getEnvVar(
+        "VITE_TRACKING_ERROR_GLOBAL_ENABLED",
+        false,
+        toBool,
+      ),
       enabled: getEnvVar("VITE_TRACKING_ERROR_ENABLED", false, toBool),
       remote: {
         enabled: getEnvVar("VITE_TRACKING_ERROR_REMOTE_ENABLED", false, toBool),

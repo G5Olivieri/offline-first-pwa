@@ -119,18 +119,18 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="space-y-2">
                 <label
-                  for="category"
+                  for="activeIngredient"
                   class="block text-sm font-medium text-gray-700"
                 >
-                  Category
+                  Active Ingredient
                 </label>
                 <input
                   type="text"
-                  id="category"
-                  name="category"
-                  placeholder="Enter category"
-                  v-model="category"
-                  v-bind="categoryAttrs"
+                  id="activeIngredient"
+                  name="activeIngredient"
+                  placeholder="Enter active ingredient"
+                  v-model="activeIngredient"
+                  v-bind="activeIngredientAttrs"
                   :disabled="isSubmitting"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
@@ -155,6 +155,24 @@
                 />
               </div>
             </div>
+            <div class="space-y-2">
+              <label
+                for="category"
+                class="block text-sm font-medium text-gray-700"
+              >
+                Category
+              </label>
+              <input
+                type="text"
+                id="category"
+                name="category"
+                placeholder="Enter category"
+                v-model="category"
+                v-bind="categoryAttrs"
+                :disabled="isSubmitting"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            </div>
 
             <!-- Description -->
             <div class="space-y-2">
@@ -174,6 +192,143 @@
                 :disabled="isSubmitting"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
               ></textarea>
+            </div>
+
+            <!-- Additional Fields -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label
+                  for="dosageForm"
+                  class="block text-sm font-medium text-gray-700"
+                >
+                  Dosage Form
+                </label>
+                <input
+                  type="text"
+                  id="dosageForm"
+                  name="dosageForm"
+                  placeholder="Enter dosage form"
+                  v-model="dosageForm"
+                  v-bind="dosageFormAttrs"
+                  :disabled="isSubmitting"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              <div class="space-y-2">
+                <label
+                  for="drugClass"
+                  class="block text-sm font-medium text-gray-700"
+                >
+                  Drug Class
+                </label>
+                <input
+                  type="text"
+                  id="drugClass"
+                  name="drugClass"
+                  placeholder="Enter drug class"
+                  v-model="drugClass"
+                  v-bind="drugClassAttrs"
+                  :disabled="isSubmitting"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              <div class="space-y-2">
+                <label
+                  for="isProprietary"
+                  class="block text-sm font-medium text-gray-700"
+                >
+                  Proprietary
+                </label>
+                <input
+                  type="checkbox"
+                  id="isProprietary"
+                  name="isProprietary"
+                  v-model="isProprietary"
+                  v-bind="isProprietaryAttrs"
+                  :disabled="isSubmitting"
+                  class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              <div class="space-y-2">
+                <label
+                  for="nonProprietaryName"
+                  class="block text-sm font-medium text-gray-700"
+                >
+                  Non-Proprietary Name
+                </label>
+                <input
+                  type="text"
+                  id="nonProprietaryName"
+                  name="nonProprietaryName"
+                  placeholder="Enter non-proprietary name"
+                  v-model="nonProprietaryName"
+                  v-bind="nonProprietaryNameAttrs"
+                  :disabled="isSubmitting"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              <div class="space-y-2">
+                <label
+                  for="prescriptionStatus"
+                  class="block text-sm font-medium text-gray-700"
+                >
+                  Prescription Status
+                </label>
+                <select
+                  id="prescriptionStatus"
+                  name="prescriptionStatus"
+                  v-model="prescriptionStatus"
+                  v-bind="prescriptionStatusAttrs"
+                  :disabled="isSubmitting"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="OTC">OTC</option>
+                  <option value="PrescriptionOnly">Prescription Only</option>
+                  <option value="Controlled">Controlled</option>
+                </select>
+              </div>
+
+              <div class="space-y-2">
+                <label
+                  for="contraindication"
+                  class="block text-sm font-medium text-gray-700"
+                >
+                  Contraindication
+                </label>
+                <textarea
+                  id="contraindication"
+                  name="contraindication"
+                  rows="3"
+                  placeholder="Enter contraindication"
+                  v-model="contraindication"
+                  v-bind="contraindicationAttrs"
+                  :disabled="isSubmitting"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                ></textarea>
+              </div>
+
+              <div class="space-y-2">
+                <label
+                  for="tags"
+                  class="block text-sm font-medium text-gray-700"
+                >
+                  Tags
+                </label>
+                <input
+                  type="text"
+                  id="tags"
+                  name="tags"
+                  placeholder="Enter tags separated by commas"
+                  v-model="tags"
+                  v-bind="tagsAttrs"
+                  :disabled="isSubmitting"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </div>
             </div>
 
             <!-- Form Actions -->
@@ -236,7 +391,6 @@ import { useForm } from "vee-validate";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { z } from "zod";
-
 defineOptions({
   name: "NewProduct",
 });
@@ -258,6 +412,16 @@ const productSchema = z.object({
   category: z.string().optional(),
   manufacturer: z.string().optional(),
   description: z.string().optional(),
+  dosageForm: z.string().optional(),
+  drugClass: z.string().optional(),
+  isProprietary: z.boolean().optional(),
+  nonProprietaryName: z.string().optional(),
+  prescriptionStatus: z
+    .enum(["OTC", "PrescriptionOnly", "Controlled"])
+    .optional(),
+  contraindication: z.string().optional(),
+  activeIngredient: z.string().optional(),
+  tags: z.string().optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -272,6 +436,14 @@ const { handleSubmit, errors, defineField, meta } = useForm<ProductFormData>({
     category: "",
     manufacturer: "",
     description: "",
+    dosageForm: "",
+    drugClass: "",
+    isProprietary: false,
+    nonProprietaryName: "",
+    prescriptionStatus: "OTC",
+    contraindication: "",
+    activeIngredient: "",
+    tags: "",
   },
 });
 
@@ -282,6 +454,18 @@ const [stock, stockAttrs] = defineField("stock");
 const [category, categoryAttrs] = defineField("category");
 const [manufacturer, manufacturerAttrs] = defineField("manufacturer");
 const [description, descriptionAttrs] = defineField("description");
+const [dosageForm, dosageFormAttrs] = defineField("dosageForm");
+const [drugClass, drugClassAttrs] = defineField("drugClass");
+const [isProprietary, isProprietaryAttrs] = defineField("isProprietary");
+const [nonProprietaryName, nonProprietaryNameAttrs] =
+  defineField("nonProprietaryName");
+const [prescriptionStatus, prescriptionStatusAttrs] =
+  defineField("prescriptionStatus");
+const [contraindication, contraindicationAttrs] =
+  defineField("contraindication");
+const [activeIngredient, activeIngredientAttrs] =
+  defineField("activeIngredient");
+const [tags, tagsAttrs] = defineField("tags");
 
 const onSubmit = handleSubmit(async (values) => {
   isSubmitting.value = true;
@@ -305,6 +489,29 @@ const onSubmit = handleSubmit(async (values) => {
         values.description.trim() && {
           description: values.description.trim(),
         }),
+      ...(values.dosageForm &&
+        values.dosageForm.trim() && { dosageForm: values.dosageForm.trim() }),
+      ...(values.drugClass &&
+        values.drugClass.trim() && { drugClass: values.drugClass.trim() }),
+      ...(values.isProprietary !== undefined && {
+        isProprietary: values.isProprietary,
+      }),
+      ...(values.nonProprietaryName &&
+        values.nonProprietaryName.trim() && {
+          nonProprietaryName: values.nonProprietaryName.trim(),
+        }),
+      ...(values.prescriptionStatus && {
+        prescriptionStatus: values.prescriptionStatus,
+      }),
+      ...(values.contraindication &&
+        values.contraindication.trim() && {
+          contraindication: values.contraindication.trim(),
+        }),
+      ...(values.activeIngredient &&
+        values.activeIngredient.trim() && {
+          activeIngredient: values.activeIngredient.trim(),
+        }),
+      ...(values.tags && values.tags.trim() && { tags: values.tags.trim() }),
     };
 
     await productService.createProduct(productData);

@@ -102,4 +102,9 @@ export class ProductServiceWithErrorHandlingDecorator
       },
     );
   }
+  async count(): Promise<number> {
+    return this.withErrorHandling(() => this.productService.count(), {
+      operation: "count",
+    });
+  }
 }

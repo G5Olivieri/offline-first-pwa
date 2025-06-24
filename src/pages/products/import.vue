@@ -203,7 +203,7 @@ defineOptions({
   name: "ImportProducts",
 });
 
-import { productService } from "@/product/singleton";
+import { getProductService } from "@/product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { ref } from "vue";
@@ -237,6 +237,7 @@ const importProducts = async () => {
   isImporting.value = true;
 
   try {
+    const productService = await getProductService();
     const text = await file.value.text();
 
     const lines = text.split("\n");

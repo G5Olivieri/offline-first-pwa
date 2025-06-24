@@ -229,7 +229,7 @@
 <script setup lang="ts">
 import ErrorBoundary from "@/components/error-boundary.vue";
 import type { Product } from "@/product/product";
-import { productService } from "@/product/singleton";
+import { getProductService } from "@/product/singleton";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
@@ -287,6 +287,7 @@ const onSubmit = handleSubmit(async (values) => {
   isSubmitting.value = true;
 
   try {
+    const productService = await getProductService();
     userTrackingService.track("create_product", values);
 
     const productData: Omit<Product, "_id" | "rev"> = {

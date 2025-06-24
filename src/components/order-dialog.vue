@@ -187,7 +187,7 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useNotificationStore } from "@/stores/notification-store";
-import { useOrderStore } from "@/stores/order-store";
+import { useOrderStore } from "@/order/order-store";
 
 interface Props {
   isOpen: boolean;

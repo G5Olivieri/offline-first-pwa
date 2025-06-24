@@ -3,101 +3,12 @@ defineOptions({
   name: "HomePage",
 });
 
-import { computed, watch } from "vue";
-import ProductSuggestions from "@/components/product-suggestions.vue";
-import { useOrderStore } from "@/stores/order-store";
-import { useRecommendationStore } from "@/stores/recommendation-store";
-import { useTerminalStore } from "@/stores/terminal-store";
-import { RecommendationType } from "@/types/recommendation";
+import { useOrderStore } from "@/order/order-store";
 import ItemCard from "@/pages/home/item-card.vue";
+import { useTerminalStore } from "@/stores/terminal-store";
 
 const orderStore = useOrderStore();
-const recommendationStore = useRecommendationStore();
 const terminalStore = useTerminalStore();
-
-// Load recommendations when cart changes
-const loadRecommendations = async () => {
-  if (orderStore.items.length > 0) {
-    await recommendationStore.getRecommendationsForCheckout(orderStore.items);
-  } else {
-    await recommendationStore.getRecommendationsForHomepage();
-  }
-};
-
-// Watch cart changes and reload recommendations
-watch(
-  () => orderStore.items.length,
-  () => {
-    loadRecommendations();
-  },
-  { immediate: true },
-);
-
-// Get products already in cart for filtering
-const cartProductIds = computed(() =>
-  orderStore.items.map((item) => item.product._id),
-);
-
-// Cross-sell suggestions from recommendation store
-const crossSellSuggestions = computed(() => {
-  const recommendations = recommendationStore.checkoutRecommendations
-    .filter(
-      (rec) =>
-        rec.type === RecommendationType.CROSS_SELL ||
-        rec.type === RecommendationType.FREQUENTLY_BOUGHT_TOGETHER,
-    )
-    .filter((rec) => !cartProductIds.value.includes(rec.product._id))
-    .slice(0, 6);
-
-  return recommendations.map((rec) => rec.product);
-});
-
-// Upsell suggestions from recommendation store
-const upsellSuggestions = computed(() => {
-  const recommendations = recommendationStore.checkoutRecommendations
-    .filter(
-      (rec) =>
-        rec.type === RecommendationType.UPSELL ||
-        rec.type === RecommendationType.CATEGORY_BASED,
-    )
-    .filter((rec) => !cartProductIds.value.includes(rec.product._id))
-    .slice(0, 4);
-
-  return recommendations.map((rec) => rec.product);
-});
-
-// Popular products from recommendation store
-const popularProducts = computed(() => {
-  if (orderStore.items.length === 0) {
-    // Use homepage recommendations when cart is empty
-    const trending = recommendationStore.homepageRecommendations
-      .filter((rec) => rec.type === RecommendationType.TRENDING)
-      .slice(0, 8);
-
-    const seasonal = recommendationStore.homepageRecommendations
-      .filter((rec) => rec.type === RecommendationType.SEASONAL)
-      .slice(0, 4);
-
-    // Combine trending and seasonal recommendations
-    const combined = [...trending, ...seasonal];
-    const uniqueProducts = Array.from(
-      new Map(combined.map((rec) => [rec.product._id, rec.product])).values(),
-    );
-
-    return uniqueProducts.slice(0, 8);
-  }
-
-  // When cart has items, show inventory-based popular products
-  const inventoryBased = recommendationStore.checkoutRecommendations
-    .filter((rec) => rec.type === RecommendationType.INVENTORY_BASED)
-    .filter((rec) => !cartProductIds.value.includes(rec.product._id))
-    .slice(0, 4);
-
-  return inventoryBased.map((rec) => rec.product);
-});
-
-// Loading state from recommendation store
-const isLoading = computed(() => recommendationStore.isLoading);
 </script>
 
 <template>
@@ -228,91 +139,6 @@ const isLoading = computed(() => recommendationStore.isLoading);
             @decrease="orderStore.decrease(item)"
             @increase="orderStore.increase(item)"
           />
-        </div>
-      </div>
-
-      <!-- Loading State -->
-      <div v-if="isLoading" class="text-center py-16">
-        <div
-          class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl mb-4"
-        >
-          <svg
-            class="animate-spin w-8 h-8 text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-        </div>
-        <p class="text-lg font-semibold text-gray-600">
-          Loading suggestions...
-        </p>
-        <p class="text-gray-500">Finding the perfect products for you</p>
-      </div>
-
-      <!-- Suggestions Section -->
-      <div v-else class="space-y-12">
-        <!-- Upsell Suggestions -->
-        <div v-if="orderStore.items.length > 0" class="relative">
-          <div
-            class="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-3xl"
-          ></div>
-          <div
-            class="relative bg-white/40 backdrop-blur-sm rounded-3xl p-8 border border-white/20"
-          >
-            <ProductSuggestions
-              :products="upsellSuggestions"
-              title="🚀 Upgrade Your Selection"
-              subtitle="Consider these premium alternatives"
-              type="upsell"
-            />
-          </div>
-        </div>
-
-        <!-- Cross-sell Suggestions -->
-        <div v-if="orderStore.items.length > 0" class="relative">
-          <div
-            class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-3xl"
-          ></div>
-          <div
-            class="relative bg-white/40 backdrop-blur-sm rounded-3xl p-8 border border-white/20"
-          >
-            <ProductSuggestions
-              :products="crossSellSuggestions"
-              title="🛍️ You Might Also Like"
-              subtitle="Products that go great together"
-              type="crosssell"
-            />
-          </div>
-        </div>
-
-        <!-- Popular Products (shown when cart is empty) -->
-        <div v-if="orderStore.items.length === 0" class="relative">
-          <div
-            class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-3xl"
-          ></div>
-          <div
-            class="relative bg-white/40 backdrop-blur-sm rounded-3xl p-8 border border-white/20"
-          >
-            <ProductSuggestions
-              :products="popularProducts"
-              title="⭐ Popular Products"
-              subtitle="Customer favorites to get you started"
-              type="popular"
-            />
-          </div>
         </div>
       </div>
     </div>

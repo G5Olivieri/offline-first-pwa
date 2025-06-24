@@ -1,6 +1,6 @@
-import type { ErrorTracking } from "./error-tracking";
-import type { ErrorLog } from "./error-log";
-import type { EventTrackHandler } from "./event-track-handler";
+import type { ErrorLog } from "@/error/error-log";
+import type { ErrorTracking } from "@/error/error-tracking";
+import type { EventTrackHandler } from "@/error/event-track-handler";
 
 export class ErrorTrackingPubSub implements ErrorTracking {
   private handlers: EventTrackHandler[] = [];

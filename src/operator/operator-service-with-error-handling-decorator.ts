@@ -1,6 +1,6 @@
 import type { ErrorTracking } from "@/error/error-tracking";
-import type { Operator } from "./operator";
-import type { OperatorService } from "./operator-service";
+import type { Operator } from "@/operator/operator";
+import type { OperatorService } from "@/operator/operator-service";
 
 export class OperatorServiceWithErrorHandlingDecorator
   implements OperatorService

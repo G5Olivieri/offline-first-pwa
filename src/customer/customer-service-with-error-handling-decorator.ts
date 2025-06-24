@@ -1,6 +1,6 @@
 import type { Customer } from "@/customer/customer";
 import type { ErrorTracking } from "@/error/error-tracking";
-import type { CustomerService } from "./customer-service";
+import type { CustomerService } from "@/customer/customer-service";
 
 export class CustomerServiceWithErrorHandlingDecorator
   implements CustomerService

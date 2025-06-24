@@ -1,6 +1,7 @@
 import { config } from "@/config/env";
-import { PouchDB } from "./pouchdb-config";
 import type { Customer } from "@/customer/customer";
+import { PouchDB } from "@/db/pouchdb-config";
+import { sync } from "@/db/sync";
 
 const POUCHDB_ADAPTER = config.pouchdb.adapter || "idb";
 
@@ -23,6 +24,7 @@ export const getCustomerDB = async (): Promise<PouchDB.Database<Customer>> => {
     index: { fields: ["name"] },
   });
 
+  sync(_customerDB);
   return _customerDB;
 };
 

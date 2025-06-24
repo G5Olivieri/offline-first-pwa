@@ -1,22 +1,21 @@
 import type { Customer } from "@/customer/customer";
-import { customerService } from "@/customer/singleton";
-import { getOrderDB } from "@/db";
+import { getCustomerService } from "@/customer/singleton";
 import { errorTrackingService } from "@/error/singleton";
 import type { Operator } from "@/operator/operator";
-import { operatorService } from "@/operator/singleton";
+import { getOperatorService } from "@/operator/singleton";
+import type { Item, Order, PaymentMethod } from "@/order/order";
+import { OrderStatus } from "@/order/order";
+import { getOrderDB } from "@/order/order-db";
+import { orderEventEmitter } from "@/order/order-event-emitter";
+import { startOrderNotificationHandler } from "@/order/order-notification-handler";
 import type { Product } from "@/product/product";
-import { productService } from "@/product/singleton";
-import { orderEventEmitter } from "@/services/order-event-emitter";
-import { startOrderNotificationHandler } from "@/services/order-notification-handler";
-import { getRecommendationEngine } from "@/services/recommendation-engine";
-import type { Item, Order, PaymentMethod } from "@/types/order";
-import { OrderStatus } from "@/types/order";
+import { getProductService } from "@/product/singleton";
+import { useNotificationStore } from "@/stores/notification-store";
+import { useTerminalStore } from "@/stores/terminal-store";
 import { useLocalStorage } from "@vueuse/core";
 import throttle from "lodash.throttle";
 import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, toValue, watch } from "vue";
-import { useNotificationStore } from "./notification-store";
-import { useTerminalStore } from "./terminal-store";
 
 export const useOrderStore = defineStore("orderStore", () => {
   let orderDB: PouchDB.Database<Order> | null = null;
@@ -272,14 +271,10 @@ export const useOrderStore = defineStore("orderStore", () => {
         order: orderDocument,
       });
 
-      const recommendationEngine = await getRecommendationEngine();
-      await recommendationEngine.updateProductAffinities(orderDocument);
-      await recommendationEngine.updateCustomerPreferences(orderDocument);
-
       const productsToUpdate: [string, number][] = Array.from(
         itemsMap.values(),
       ).map((item) => [item.product._id, item.product.stock - item.quantity]);
-
+      const productService = await getProductService();
       await productService.changeStock(new Map(productsToUpdate));
       await createNewOrder();
     } catch (error) {
@@ -336,11 +331,13 @@ export const useOrderStore = defineStore("orderStore", () => {
       }
 
       if (customerId.value) {
-        const result = await customerService.getCustomer(customerId.value);
+        const customerService = await getCustomerService();
+        const result = await customerService.getCustomerByID(customerId.value);
         customer.value = result;
       }
 
       if (operatorId.value) {
+        const operatorService = await getOperatorService();
         const result = await operatorService.getOperatorByID(operatorId.value);
         operator.value = result;
       }

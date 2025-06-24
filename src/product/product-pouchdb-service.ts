@@ -289,4 +289,9 @@ export class ProductPouchDBService implements ProductService {
 
     return response;
   }
+
+  async count(): Promise<number> {
+    const info = await this.db.info();
+    return info.doc_count;
+  }
 }

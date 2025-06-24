@@ -4,8 +4,8 @@ defineOptions({
 });
 
 import { type Customer } from "@/customer/customer";
-import { customerService } from "@/customer/singleton";
-import { useOrderStore } from "@/stores/order-store";
+import { getCustomerService } from "@/customer/singleton";
+import { useOrderStore } from "@/order/order-store";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -32,6 +32,7 @@ const onSubmit = async () => {
   customerFound.value = null;
 
   try {
+    const customerService = await getCustomerService();
     const customer = await customerService.findByDocument(searchDocument.value);
     if (customer) {
       customerFound.value = customer;

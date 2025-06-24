@@ -1,6 +1,6 @@
 import type { Customer } from "@/customer/customer";
+import type { CustomerService } from "@/customer/customer-service";
 import { ConflictError, ValidationError } from "@/error/errors";
-import type { CustomerService } from "./customer-service";
 
 export class CustomerPouchDBService implements CustomerService {
   constructor(private readonly db: PouchDB.Database<Customer>) {}

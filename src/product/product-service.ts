@@ -25,4 +25,6 @@ export interface ProductService {
   bulkInsertProducts(
     products: Product[],
   ): Promise<Array<PouchDB.Core.Response | PouchDB.Core.Error>>;
+
+  count(): Promise<number>;
 }

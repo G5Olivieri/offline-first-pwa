@@ -1,6 +1,5 @@
-import { getProductDB } from "@/db";
 import type { Product } from "@/product/product";
-import { searchService } from "@/product/singleton";
+import { getProductService, searchService } from "@/product/singleton";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
@@ -31,7 +30,6 @@ export interface SetupState {
 }
 
 export const useSetupStore = defineStore("setupStore", () => {
-
   // Reactive state
   const setupState = ref<SetupState>({
     isInitialized: false,
@@ -71,9 +69,9 @@ export const useSetupStore = defineStore("setupStore", () => {
       setupState.value.progress = 40;
 
       // Get total count first for progress tracking
-      const productDB = await getProductDB();
-      const totalCountResult = await productDB.info();
-      const totalDocCount = totalCountResult.doc_count;
+      const productService = await getProductService();
+      const totalCountResult = await productService.count();
+      const totalDocCount = totalCountResult;
       setupState.value.totalProducts = totalDocCount;
 
       // Handle case where there are no products
@@ -84,35 +82,23 @@ export const useSetupStore = defineStore("setupStore", () => {
       } else {
         const BATCH_SIZE = 1000;
         let processedCount = 0;
-        let startkey: string | undefined = undefined;
         let hasMoreData = true;
 
         setupState.value.currentStep = SetupStep.BUILDING_SEARCH_INDEX;
 
         while (hasMoreData) {
-          // Load a batch of products
-          const batchResult: PouchDB.Core.AllDocsResponse<Product> =
-            await productDB.allDocs({
-              include_docs: true,
-              limit: BATCH_SIZE,
-              startkey: startkey,
-              skip: startkey ? 1 : 0, // Skip the last doc from previous batch to avoid duplicates
-            });
+          const batchResult = await productService.listProducts({
+            limit: BATCH_SIZE,
+            skip: processedCount,
+          });
 
-          if (batchResult.rows.length === 0) {
+          if (batchResult.products.length === 0) {
             hasMoreData = false;
-            break; // No more products to process
+            break;
           }
 
-          // Extract products from the batch
-          const batchProducts = batchResult.rows
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .map((row: any) => row.doc as Product)
-            .filter(
-              (product: Product | null): product is Product => product !== null,
-            );
+          const batchProducts = batchResult.products;
 
-          // Update progress for loading
           processedCount += batchProducts.length;
           const loadingProgress = 40 + (processedCount / totalDocCount) * 30; // 40-70% for loading
           setupState.value.progress = Math.min(loadingProgress, 70);
@@ -126,22 +112,18 @@ export const useSetupStore = defineStore("setupStore", () => {
             barcode: product.barcode,
           }));
 
-          // Add batch to search index
           await searchService.bulkAdd(indexableProducts);
 
-          // Update progress for indexing
           const indexingProgress = 70 + (processedCount / totalDocCount) * 20; // 70-90% for indexing
           setupState.value.progress = Math.min(indexingProgress, 90);
           setupState.value.currentStepDescription = `Building search index... ${processedCount}/${totalDocCount} products indexed`;
 
-          // Set up for next batch
-          if (batchResult.rows.length === BATCH_SIZE) {
-            startkey = batchResult.rows[batchResult.rows.length - 1].id;
-          } else {
-            hasMoreData = false; // Last batch was smaller than BATCH_SIZE, we're done
+          if (
+            processedCount >= totalDocCount ||
+            batchProducts.length < BATCH_SIZE
+          ) {
+            hasMoreData = false;
           }
-
-          // Small delay to prevent blocking the UI thread
           await new Promise((resolve) => setTimeout(resolve, 10));
         }
 

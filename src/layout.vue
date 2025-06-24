@@ -12,12 +12,12 @@ import {
   createPOSShortcuts,
   useKeyboardShortcuts,
 } from "@/composables/use-keyboard-shortcuts";
+import { useOrderStore } from "@/order/order-store";
 import { useNotificationStore } from "@/stores/notification-store";
-import { useOrderStore } from "@/stores/order-store";
 import { useSetupStore } from "@/stores/setup-store";
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { productService } from "./product/singleton";
+import { getProductService } from "./product/singleton";
 import { userTrackingService } from "./user-tracking/singleton";
 
 const barcode = ref("");
@@ -157,7 +157,8 @@ const addProduct = async () => {
   });
 
   try {
-    const fetchedProduct = await productService.getProductByBarcode(
+    const productService = await getProductService();
+    const fetchedProduct = await productService.findProductByBarcode(
       barcode.value,
     );
 

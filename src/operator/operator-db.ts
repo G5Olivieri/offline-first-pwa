@@ -1,6 +1,7 @@
 import { config } from "@/config/env";
-import { PouchDB } from "./pouchdb-config";
+import { PouchDB } from "@/db/pouchdb-config";
 import type { Operator } from "@/operator/operator";
+import { sync } from "@/db/sync";
 
 const POUCHDB_ADAPTER = config.pouchdb.adapter || "idb";
 
@@ -23,6 +24,7 @@ export const getOperatorDB = async (): Promise<PouchDB.Database<Operator>> => {
     index: { fields: ["role"] },
   });
 
+  sync(_operatorDB);
   return _operatorDB;
 };
 

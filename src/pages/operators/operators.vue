@@ -4,9 +4,9 @@ defineOptions({
 });
 
 import type { Operator } from "@/operator/operator";
-import { operatorService } from "@/operator/singleton";
+import { getOperatorService } from "@/operator/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
-import { useOrderStore } from "@/stores/order-store";
+import { useOrderStore } from "@/order/order-store";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -32,9 +32,12 @@ const selectOperator = async (operator: Operator) => {
 };
 
 onMounted(() => {
-  operatorService.listOperators().then((result) => {
-    operators.value = result.operators;
-  });
+  (async () => {
+    const operatorService = await getOperatorService();
+    operatorService.listOperators().then((result) => {
+      operators.value = result.operators;
+    });
+  })();
 });
 </script>
 <template>

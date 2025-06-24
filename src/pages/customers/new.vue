@@ -3,8 +3,8 @@ defineOptions({
   name: "NewCustomer",
 });
 
-import { customerService } from "@/customer/singleton";
-import { useOrderStore } from "@/stores/order-store";
+import { getCustomerService } from "@/customer/singleton";
+import { useOrderStore } from "@/order/order-store";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
@@ -47,6 +47,7 @@ const onSubmit = handleSubmit(async (values) => {
 
   try {
     const { name, document } = values;
+    const customerService = await getCustomerService();
     const customer = await customerService.createCustomer({ name, document });
     orderStore.selectCustomer(customer);
     router.push({ name: "home" });

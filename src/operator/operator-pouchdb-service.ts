@@ -1,6 +1,6 @@
 import { ConflictError, ValidationError } from "@/error/errors";
-import type { Operator } from "./operator";
-import type { OperatorService } from "./operator-service";
+import type { Operator } from "@/operator/operator";
+import type { OperatorService } from "@/operator/operator-service";
 
 export class OperatorPouchDBService implements OperatorService {
   constructor(private readonly db: PouchDB.Database<Operator>) {}

@@ -3,10 +3,10 @@ defineOptions({
   name: "ProductsPage",
 });
 
+import { useOrderStore } from "@/order/order-store";
 import type { Product } from "@/product/product";
-import { productService, searchService } from "@/product/singleton";
+import { getProductService, searchService } from "@/product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
-import { useOrderStore } from "@/stores/order-store";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -88,6 +88,7 @@ const searchStatus = computed(() => {
 const loadProducts = async () => {
   isLoading.value = true;
   try {
+    const productService = await getProductService();
     if (searchQuery.value.trim()) {
       userTrackingService.track("products.search", {
         query: searchQuery.value.trim(),
@@ -132,6 +133,7 @@ const deleteProduct = async (product: Product) => {
 
   if (result.confirmed) {
     try {
+      const productService = await getProductService();
       await productService.deleteProduct(product._id);
       notificationStore.showSuccess(
         "Product Deleted",

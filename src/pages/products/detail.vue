@@ -589,11 +589,10 @@ defineOptions({
   name: "ProductDetailPage",
 });
 
-import { getProductDB } from "@/db";
+import { useOrderStore } from "@/order/order-store";
 import type { Product } from "@/product/product";
-import { productService } from "@/product/singleton";
+import { getProductService } from "@/product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
-import { useOrderStore } from "@/stores/order-store";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -644,8 +643,8 @@ async function loadProduct(): Promise<void> {
   error.value = null;
 
   try {
-    const productDB = getProductDB();
-    const foundProduct = await productDB.get(productId);
+    const productService = await getProductService();
+    const foundProduct = await productService.getProduct(productId);
     if (foundProduct) {
       product.value = foundProduct;
     } else {
@@ -698,6 +697,7 @@ async function deleteProduct(): Promise<void> {
 
   if (result.confirmed) {
     try {
+      const productService = await getProductService();
       await productService.deleteProduct(product.value._id);
       notificationStore.showSuccess(
         "Product Deleted",

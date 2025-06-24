@@ -3,8 +3,8 @@ defineOptions({
   name: "NewOperator",
 });
 
-import { operatorService } from "@/operator/singleton";
-import { useOrderStore } from "@/stores/order-store";
+import { getOperatorService } from "@/operator/singleton";
+import { useOrderStore } from "@/order/order-store";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
@@ -33,6 +33,7 @@ const onSubmit = handleSubmit(async (values) => {
     name,
   });
   try {
+    const operatorService = await getOperatorService();
     const operator = await operatorService.createOperator({ name });
     orderStore.selectOperator(operator);
     router.push({ name: "home" });

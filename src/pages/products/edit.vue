@@ -4,7 +4,7 @@ defineOptions({
 });
 
 import type { Product } from "@/product/product";
-import { productService } from "@/product/singleton";
+import { getProductService } from "@/product/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -68,6 +68,7 @@ const loadProduct = async () => {
     isLoading.value = true;
     const productId = route.params.id as string;
 
+    const productService = await getProductService();
     const productDoc = await productService.getProduct(productId);
 
     product.value = productDoc;
@@ -107,6 +108,7 @@ const onSubmit = handleSubmit(async (values) => {
     changes: values,
   });
   try {
+    const productService = await getProductService();
     isSaving.value = true;
 
     const updatedProduct: Product = {

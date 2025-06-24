@@ -3,24 +3,22 @@ defineOptions({
   name: "UtilsPage",
 });
 
-import { getCustomerDB, getOperatorDB, getOrderDB, getProductDB } from "@/db";
+import { resetCustomerDB } from "@/customer/customer-db";
+import { resetOperatorDB } from "@/operator/operator-db";
+import { resetOrderDB } from "@/order/order-db";
+import { resetProductDB } from "@/product/product-db";
+
 import { searchService } from "@/product/singleton";
 
 const cleanDbs = async () => {
-  const orderDB = await getOrderDB();
-  const productDB = await getProductDB();
-  const customerDB = await getCustomerDB();
-  const operatorDB = await getOperatorDB();
-
-  await orderDB.destroy();
-  await productDB.destroy();
-  await customerDB.destroy();
-  await operatorDB.destroy();
+  await resetOrderDB();
+  await resetProductDB();
+  await resetCustomerDB();
+  await resetOperatorDB();
   await searchService.clearCache();
 
   console.log("All databases have been cleaned.");
   localStorage.clear();
-  window.location.reload();
 };
 </script>
 <template>

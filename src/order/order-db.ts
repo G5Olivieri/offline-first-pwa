@@ -1,6 +1,7 @@
 import { config } from "@/config/env";
-import { PouchDB } from "./pouchdb-config";
-import type { Order } from "@/types/order";
+import { PouchDB } from "@/db/pouchdb-config";
+import { sync } from "@/db/sync";
+import type { Order } from "@/order/order";
 
 const POUCHDB_ADAPTER = config.pouchdb.adapter || "idb";
 
@@ -26,6 +27,8 @@ export const getOrderDB = async (): Promise<PouchDB.Database<Order>> => {
   await _orderDB.createIndex({
     index: { fields: ["terminal_id"] },
   });
+
+  sync(_orderDB);
 
   return _orderDB;
 };

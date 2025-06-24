@@ -1,6 +1,7 @@
 import { config } from "@/config/env";
-import { PouchDB } from "./pouchdb-config";
+import { sync } from "@/db/sync";
 import type { Product } from "@/product/product";
+import { PouchDB } from "../db/pouchdb-config";
 
 const POUCHDB_ADAPTER = config.pouchdb.adapter || "idb";
 
@@ -22,6 +23,8 @@ export const getProductDB = async (): Promise<PouchDB.Database<Product>> => {
   await _productDB.createIndex({
     index: { fields: ["category"] },
   });
+
+  sync(_productDB);
 
   return _productDB;
 };

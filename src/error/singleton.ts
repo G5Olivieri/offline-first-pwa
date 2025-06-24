@@ -1,9 +1,9 @@
 import { config } from "@/config/env";
-import { ConsoleEventTrackHandler } from "./console-event-track-handler";
-import { ErrorTrackingPubSub } from "./error-tracking-service";
-import type { EventTrackHandler } from "./event-track-handler";
-import { NullTrackingService } from "./null-tracking-service";
-import { RemoteHttpEventTrackHandler } from "./remote-http-event-track-handler";
+import { ConsoleEventTrackHandler } from "@/error/console-event-track-handler";
+import { ErrorTrackingPubSub } from "@/error/error-tracking-pubsub";
+import type { EventTrackHandler } from "@/error/event-track-handler";
+import { NullTrackingService } from "@/error/null-tracking-service";
+import { RemoteHttpEventTrackHandler } from "@/error/remote-http-event-track-handler";
 
 const getTrackingService = () => {
   if (config.tracking.error.enabled) {

@@ -4,7 +4,7 @@ defineOptions({
 });
 
 import { formatCurrency } from "@/config/env";
-import { useOrderStore } from "@/stores/order-store";
+import { useOrderStore } from "@/order/order-store";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";

@@ -1,12 +1,12 @@
-import { getCustomerDB } from "@/db";
-import { ErrorTrackingPubSub } from "@/error/error-tracking-service";
-import { CustomerPouchDBService } from "./customer-pouch-dbservice";
-import { CustomerServiceWithErrorHandlingDecorator } from "./customer-service-with-error-handling-decorator";
-import type { Customer } from "./customer";
+import { getCustomerDB } from "@/customer/customer-db";
+import { CustomerPouchDBService } from "@/customer/customer-pouch-dbservice";
+import type { CustomerService } from "@/customer/customer-service";
+import { CustomerServiceWithErrorHandlingDecorator } from "@/customer/customer-service-with-error-handling-decorator";
+import { ErrorTrackingPubSub } from "@/error/error-tracking-pubsub";
 
-let _customerService: CustomerServiceWithErrorHandlingDecorator | null = null;
+let _customerService: CustomerService | null = null;
 
-export const getCustomerService = async (): Promise<CustomerServiceWithErrorHandlingDecorator> => {
+export const getCustomerService = async (): Promise<CustomerService> => {
   if (_customerService) {
     return _customerService;
   }
@@ -18,32 +18,4 @@ export const getCustomerService = async (): Promise<CustomerServiceWithErrorHand
   );
 
   return _customerService;
-};
-
-// Legacy export for backward compatibility
-export const customerService = {
-  async getCustomer(id: string) {
-    const service = await getCustomerService();
-    return service.getCustomerByID(id);
-  },
-  async listCustomers(options?: { limit?: number; skip?: number }) {
-    const service = await getCustomerService();
-    return service.listCustomers(options);
-  },
-  async createCustomer(customer: Pick<Customer, "name" | "document">) {
-    const service = await getCustomerService();
-    return service.createCustomer(customer);
-  },
-  async updateCustomer(customer: Customer) {
-    const service = await getCustomerService();
-    return service.updateCustomer(customer);
-  },
-  async deleteCustomer(id: string) {
-    const service = await getCustomerService();
-    return service.deleteCustomer(id);
-  },
-  async findByDocument(document: string) {
-    const service = await getCustomerService();
-    return service.findByDocument(document);
-  },
 };

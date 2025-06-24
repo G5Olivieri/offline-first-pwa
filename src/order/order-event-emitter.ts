@@ -1,14 +1,14 @@
 import type { Customer } from "@/customer/customer";
 import type { ErrorTracking } from "@/error/error-tracking";
+import { errorTrackingService } from "@/error/singleton";
 import {
   AbstractTypedEventEmitter,
   type ExtractEvent,
   type TypedEventEmitter,
 } from "@/interfaces/typed-event-emitter";
 import type { Operator } from "@/operator/operator";
+import type { Order } from "@/order/order";
 import type { Product } from "@/product/product";
-import type { Order } from "@/types/order";
-import { errorTrackingService } from "@/error/singleton";
 
 export type OrderEventTypeMap = {
   stock_limit_reached: {

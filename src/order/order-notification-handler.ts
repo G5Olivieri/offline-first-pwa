@@ -1,8 +1,11 @@
 import type { ErrorTracking } from "@/error/error-tracking";
 import { ValidationError } from "@/error/errors";
+import {
+  orderEventEmitter,
+  type OrderEvent,
+} from "@/order/order-event-emitter";
 import type { Product } from "@/product/product";
-import type { NotificationService } from "./notification-service";
-import { orderEventEmitter, type OrderEvent } from "./order-event-emitter";
+import type { NotificationService } from "@/services/notification-service";
 
 export class OrderNotificationHandler {
   private unsubscribeFunctions: Array<() => void> = [];

@@ -90,7 +90,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import type { Item } from "@/types/order";
+import type { Item } from "@/order/order";
 import { userTrackingService } from "@/user-tracking/singleton";
 
 const props = defineProps<{

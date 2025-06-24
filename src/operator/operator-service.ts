@@ -1,4 +1,4 @@
-import type { Operator } from "./operator";
+import type { Operator } from "@/operator/operator";
 
 export interface OperatorService {
   createOperator(operator: Pick<Operator, "name">): Promise<Operator>;

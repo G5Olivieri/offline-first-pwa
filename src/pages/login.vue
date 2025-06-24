@@ -62,7 +62,7 @@ onMounted(() => {
     .checkLoginStatus()
     .then((isLoggedIn) => {
       if (isLoggedIn) {
-        const next = String(router.currentRoute.value.query.next) || "/";
+        const next = String(router.currentRoute.value.query.next || "/");
         router.push(next);
       }
     })
@@ -79,7 +79,7 @@ async function onLogin() {
   }
   try {
     await auth.login(username.value, password.value, config.couchdbUrl);
-    const next = String(router.currentRoute.value.query.next) || "/";
+    const next = String(router.currentRoute.value.query.next || "/");
     router.push(next);
   } catch (e) {
     console.error("Login error:", e);

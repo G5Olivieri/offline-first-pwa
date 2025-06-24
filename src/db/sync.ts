@@ -1,4 +1,5 @@
 import { config } from "@/config/env";
+import { useAuthStore } from "@/stores/auth-store";
 
 export const sync = (local: PouchDB.Database) => {
   if (config.enableSync && config.couchdbUrl) {
@@ -22,6 +23,8 @@ export const sync = (local: PouchDB.Database) => {
       })
       .on("error", (err) => {
         console.error(`${name} DB replication error:`, err);
+        const authStore = useAuthStore();
+        authStore.handleUnauthorized();
       })
       .on("paused", () => {
         console.log(`${name} DB replication paused.`);

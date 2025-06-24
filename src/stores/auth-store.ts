@@ -1,3 +1,4 @@
+import { router } from "@/router";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
@@ -26,6 +27,11 @@ export const useAuthStore = defineStore("auth", () => {
     isLoggedIn.value = false;
   }
 
+  async function handleUnauthorized() {
+    isLoggedIn.value = false;
+    router.push({ name: "login" });
+  }
+
   async function checkLoginStatus() {
     try {
       const res = await fetch(`${import.meta.env.VITE_COUCHDB_URL}/_session`, {
@@ -46,5 +52,5 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  return { isLoggedIn, login, logout, checkLoginStatus };
+  return { isLoggedIn, login, logout, checkLoginStatus, handleUnauthorized };
 });

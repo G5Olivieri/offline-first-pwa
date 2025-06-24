@@ -23,6 +23,7 @@ export const sync = (local: PouchDB.Database) => {
       })
       .on("error", (err) => {
         console.error(`${name} DB replication error:`, err);
+        // TODO: remove store dependency
         const authStore = useAuthStore();
         authStore.handleUnauthorized();
       })

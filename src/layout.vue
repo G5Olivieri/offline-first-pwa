@@ -14,6 +14,7 @@ import {
 } from "@/composables/use-keyboard-shortcuts";
 import { useOrderStore } from "@/order/order-store";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useOnlineStatusStore } from "@/stores/online-status-store";
 import { useSetupStore } from "@/stores/setup-store";
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -28,6 +29,8 @@ const showOrderDialog = ref(false);
 const orderStore = useOrderStore();
 const notificationStore = useNotificationStore();
 const setupStore = useSetupStore();
+const onlineStatusStore = useOnlineStatusStore();
+
 const isHome = computed(() => router.currentRoute.value.path === "/");
 const isCheckout = computed(
   () => router.currentRoute.value.path === "/checkout",
@@ -429,7 +432,14 @@ onMounted(() => {
 
             <div class="flex flex-col items-center gap-2 flex-shrink-0">
               <ClockComponent />
-              <!-- TODO: SyncStatusComponent -->
+              <div v-if="onlineStatusStore.isFullyOnline">
+                <span class="text-xs text-green-600 font-medium"> Online </span>
+              </div>
+              <div v-else>
+                <span class="text-xs text-yellow-600 font-medium">
+                  Offline
+                </span>
+              </div>
             </div>
           </div>
         </div>

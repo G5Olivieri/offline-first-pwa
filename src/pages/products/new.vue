@@ -383,8 +383,8 @@
 
 <script setup lang="ts">
 import ErrorBoundary from "@/components/error-boundary.vue";
-import type { Product } from "@/product/product";
 import { getProductService } from "@/product/get-product-service";
+import type { Product } from "@/product/product";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
@@ -511,7 +511,10 @@ const onSubmit = handleSubmit(async (values) => {
         values.activeIngredient.trim() && {
           activeIngredient: values.activeIngredient.trim(),
         }),
-      ...(values.tags && values.tags.trim() && { tags: values.tags.trim() }),
+      ...(values.tags &&
+        values.tags.trim() && {
+          tags: values.tags.split(",").map((tag) => tag.trim()),
+        }),
     };
 
     await productService.createProduct(productData);

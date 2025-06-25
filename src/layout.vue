@@ -428,15 +428,13 @@ onMounted(() => {
                   </svg>
                 </RouterLink>
               </div>
-            </div>
-
-            <div class="flex flex-col items-center gap-2 flex-shrink-0">
+            </div> <div class="flex flex-col items-center gap-2 flex-shrink-0">
               <ClockComponent />
               <div v-if="onlineStatusStore.isFullyOnline">
                 <span class="text-xs text-green-600 font-medium"> Online </span>
               </div>
               <div v-else>
-                <span class="text-xs text-yellow-600 font-medium">
+                <span class="text-xs text-red-600 font-medium">
                   Offline
                 </span>
               </div>

@@ -45,12 +45,15 @@ export const getOrderDB = async (): Promise<PouchDB.Database<Order>> => {
               // Only supported in IndexedDB adapter
               if (POUCHDB_ADAPTER === "indexeddb") {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (_orderDB as any).purge(doc._id, doc._rev).then((result) => {
-                  console.log(
-                    `Purged order ${doc._id} (${doc.status}):`,
-                    result,
-                  );
-                });
+                (_orderDB as any)
+                  .purge(doc._id, doc._rev)
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  .then((result: any) => {
+                    console.log(
+                      `Purged order ${doc._id} (${doc.status}):`,
+                      result,
+                    );
+                  });
                 // TODO: purge old orders
               }
             }

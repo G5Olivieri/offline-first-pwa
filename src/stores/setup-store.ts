@@ -1,5 +1,8 @@
 import type { Product } from "@/product/product";
-import { getProductService, searchService } from "@/product/get-product-service";
+import {
+  getProductService,
+  searchService,
+} from "@/product/get-product-service";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 

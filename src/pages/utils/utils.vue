@@ -8,7 +8,7 @@ import { resetOperatorDB } from "@/operator/operator-db";
 import { resetOrderDB } from "@/order/order-db";
 import { resetProductDB } from "@/product/product-db";
 
-import { searchService } from "@/product/singleton";
+import { searchService } from "@/product/get-product-service";
 
 const cleanDbs = async () => {
   await resetOrderDB();

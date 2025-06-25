@@ -1,15 +1,15 @@
 import type { Customer } from "@/customer/customer";
-import { getCustomerService } from "@/customer/singleton";
+import { getCustomerService } from "@/customer/get-customer-service";
 import { errorTrackingService } from "@/error/singleton";
 import type { Operator } from "@/operator/operator";
-import { getOperatorService } from "@/operator/singleton";
+import { getOperatorService } from "@/operator/get-operator-service";
 import type { Item, Order, PaymentMethod } from "@/order/order";
 import { OrderStatus } from "@/order/order";
 import { getOrderDB } from "@/order/order-db";
 import { orderEventEmitter } from "@/order/order-event-emitter";
 import { startOrderNotificationHandler } from "@/order/order-notification-handler";
 import type { Product } from "@/product/product";
-import { getProductService } from "@/product/singleton";
+import { getProductService } from "@/product/get-product-service";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useTerminalStore } from "@/stores/terminal-store";
 import { useLocalStorage } from "@vueuse/core";

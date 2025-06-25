@@ -9,10 +9,10 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 - **Framework**: Vue 3 with TypeScript (Composition API with `<script setup>`)
 - **Build Tool**: Vite 6.x
 - **PWA**: Vite PWA Plugin (`vite-plugin-pwa`) with Workbox for offline caching
-- **Database**: PouchDB Browser (`pouchdb-browser`) for local storage, CouchDB for remote sync
+- **Database**: PouchDB Browser (`pouchdb-browser`) for indexeddb, CouchDB for remote sync
 - **State Management**: Pinia stores for reactive state management
-- **Validation**: Vee-Validate with Zod schemas (planned)
-- **Styling**: Tailwind CSS with custom components (planned)
+- **Validation**: Vee-Validate with Zod schemas
+- **Styling**: Tailwind CSS with custom components
 - **Configuration**: Environment-based configuration with type safety (`/src/config/env.ts`)
 - **Deployment**: Docker with nginx, Kubernetes with Helm charts, Istio service mesh
 - **TypeScript**: Full TypeScript support with strict type checking
@@ -37,11 +37,12 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 
 ### 1. Project Structure
 
+- Project designed by entities packages `src/products`, `src/customers`, `src/operators`, `src/orders`, don't by functionality.
 - Use Vite’s default project structure.
-- Place PouchDB logic in `/src/db/`.
+- Place PouchDB logic in `/src/<module>/*-db.ts`.
 - Place service worker and PWA logic in `/src/pwa/`.
 - Use Vue SFCs (`.vue`) for all components.
-- All file and folder names must follow the **snake_case** convention.
+- All file and folder names must follow the **kebab-case** convention.
 
 ### 2. PWA Integration
 
@@ -53,8 +54,6 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 
 ### 3. PouchDB Usage
 
-- Initialization and configuration in `/src/db.ts` using `pouchdb-browser`.
-- Uses `pouchdb-find` plugin for advanced queries with indexes.
 - Provides typed database instances for each entity (products, customers, operators, orders).
 - Includes sync logic to remote CouchDB endpoint when `SYNCING` is enabled.
 - Environment-controlled sync behavior with proper error handling.
@@ -83,8 +82,8 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 - Use Vue’s reactivity for syncing DB changes to UI.
 - Keep all state in Vue’s Composition API or Pinia.
 - Keep all logic modular and composable.
-- **Always use snake_case for all file names and helpers.**
-- Use always alias imports for better readability (e.g., `@/db` for database imports).
+- **Always use kebab-case for all file names and helpers.**
+- Use always alias imports for better readability (e.g., `@/products` for database imports).
 - Don't comment the code.
 
 ### 7. VueJS Best Practices
@@ -115,6 +114,7 @@ This is a **Point of Sale (POS) Frontend Application** built as an offline-first
 - Avoid Unnecessary Re-renders: Use v-once or v-memo for static content.
 
 5. Accessibility and UX
+
 - ARIA Attributes: Add ARIA attributes for better accessibility.
 - Keyboard Navigation: Ensure interactive elements are keyboard-accessible.
 - Loading States: Provide visual feedback for async operations (e.g., spinners).

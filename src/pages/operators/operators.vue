@@ -4,7 +4,7 @@ defineOptions({
 });
 
 import type { Operator } from "@/operator/operator";
-import { getOperatorService } from "@/operator/singleton";
+import { getOperatorService } from "@/operator/get-operator-service";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOrderStore } from "@/order/order-store";
 import { userTrackingService } from "@/user-tracking/singleton";

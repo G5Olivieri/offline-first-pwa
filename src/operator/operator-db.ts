@@ -16,14 +16,6 @@ export const getOperatorDB = async (): Promise<PouchDB.Database<Operator>> => {
     adapter: POUCHDB_ADAPTER,
   }) as PouchDB.Database<Operator>;
 
-  await _operatorDB.createIndex({
-    index: { fields: ["username"] },
-  });
-
-  await _operatorDB.createIndex({
-    index: { fields: ["role"] },
-  });
-
   sync(_operatorDB);
   return _operatorDB;
 };

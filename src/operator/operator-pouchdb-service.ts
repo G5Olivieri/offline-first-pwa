@@ -27,14 +27,6 @@ export class OperatorPouchDBService implements OperatorService {
   async createOperator(newOperator: Pick<Operator, "name">): Promise<Operator> {
     this.validateOperator(newOperator);
 
-    // Check if operator with this name already exists
-    const existingOperator = await this.findByName(newOperator.name);
-    if (existingOperator) {
-      throw new ConflictError(
-        `Operator with name '${newOperator.name}' already exists`,
-      );
-    }
-
     const operatorData: Operator = {
       _id: crypto.randomUUID(),
       name: newOperator.name.trim(),

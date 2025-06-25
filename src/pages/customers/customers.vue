@@ -4,7 +4,7 @@ defineOptions({
 });
 
 import { type Customer } from "@/customer/customer";
-import { getCustomerService } from "@/customer/singleton";
+import { getCustomerService } from "@/customer/get-customer-service";
 import { useOrderStore } from "@/order/order-store";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { computed, ref } from "vue";

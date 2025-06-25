@@ -591,7 +591,7 @@ defineOptions({
 
 import { useOrderStore } from "@/order/order-store";
 import type { Product } from "@/product/product";
-import { getProductService } from "@/product/singleton";
+import { getProductService } from "@/product/get-product-service";
 import { useNotificationStore } from "@/stores/notification-store";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { computed, onMounted, ref } from "vue";

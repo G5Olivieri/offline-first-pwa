@@ -17,7 +17,7 @@ import { useNotificationStore } from "@/stores/notification-store";
 import { useSetupStore } from "@/stores/setup-store";
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { getProductService } from "./product/singleton";
+import { getProductService } from "./product/get-product-service";
 import { userTrackingService } from "./user-tracking/singleton";
 
 const barcode = ref("");

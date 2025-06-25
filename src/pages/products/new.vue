@@ -384,7 +384,7 @@
 <script setup lang="ts">
 import ErrorBoundary from "@/components/error-boundary.vue";
 import type { Product } from "@/product/product";
-import { getProductService } from "@/product/singleton";
+import { getProductService } from "@/product/get-product-service";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";

@@ -3,7 +3,7 @@ defineOptions({
   name: "NewOperator",
 });
 
-import { getOperatorService } from "@/operator/singleton";
+import { getOperatorService } from "@/operator/get-operator-service";
 import { useOrderStore } from "@/order/order-store";
 import { userTrackingService } from "@/user-tracking/singleton";
 import { toTypedSchema } from "@vee-validate/zod";

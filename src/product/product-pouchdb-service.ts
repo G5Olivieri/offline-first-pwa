@@ -40,7 +40,7 @@ export class ProductPouchDBService implements ProductService {
   }
 
   async searchProducts(query: string, { limit = 100, skip = 0 } = {}) {
-    const searchResult = this.search.search(query, { limit, skip });
+    const searchResult = await this.search.search(query, { limit, skip });
     if (searchResult.count === 0) {
       return { count: 0, products: [] as Product[] };
     }

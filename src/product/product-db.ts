@@ -3,7 +3,6 @@ import { PouchDB } from "@/db/pouchdb-config";
 import type { Product } from "@/product/product";
 
 const POUCHDB_ADAPTER = config.pouchdb.adapter || "idb";
-const REMOTE_COUCHDB_URL = config.couchdbUrl;
 
 let _productDB: PouchDB.Database<Product> | null = null;
 
@@ -18,10 +17,6 @@ export const getProductDB = async (): Promise<PouchDB.Database<Product>> => {
 
   await _productDB.createIndex({
     index: { fields: ["barcode"] },
-  });
-
-  await _productDB.createIndex({
-    index: { fields: ["category"] },
   });
 
   // TODO: sync stock

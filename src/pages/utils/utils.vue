@@ -15,7 +15,7 @@ const cleanDbs = async () => {
   await resetProductDB();
   await resetCustomerDB();
   await resetOperatorDB();
-  await searchService.clearCache();
+  await searchService.clear();
 
   console.log("All databases have been cleaned.");
   localStorage.clear();

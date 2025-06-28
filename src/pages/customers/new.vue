@@ -5,7 +5,8 @@ defineOptions({
 
 import { getCustomerService } from "@/customer/get-customer-service";
 import { useOrderStore } from "@/order/order-store";
-import { userTrackingService } from "@/user-tracking/singleton";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { ref } from "vue";
@@ -40,7 +41,10 @@ const { value: document } = useField("document");
 const onSubmit = handleSubmit(async (values) => {
   if (isSubmitting.value) return;
 
-  userTrackingService.track("create_customer", values);
+  trackingService.track(EventType.USER, {
+    eventType: "create_customer",
+    values,
+  });
 
   isSubmitting.value = true;
   submitError.value = "";

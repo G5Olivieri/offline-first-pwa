@@ -73,7 +73,8 @@
 </template>
 
 <script setup lang="ts">
-import { errorTrackingService } from "@/error/singleton";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { computed, onErrorCaptured, ref, watch } from "vue";
 
 interface Props {
@@ -155,21 +156,17 @@ const errorDetails = computed(() => {
   };
 });
 
-// Capture errors from child components
 onErrorCaptured((err, instance, info) => {
   hasError.value = true;
   error.value = err;
   errorInfo.value = info;
 
-  // Call custom error handler if provided
   if (props.onError) {
     props.onError(err, instance, info);
   }
 
-  // Emit error event
   emit("error", err, info);
 
-  // Log to error tracking
   console.error("Error Boundary caught error:", {
     error: err,
     component: instance,
@@ -177,20 +174,20 @@ onErrorCaptured((err, instance, info) => {
     timestamp: new Date().toISOString(),
   });
 
-  errorTrackingService.track(err, {
+  trackingService.track(EventType.ERROR, {
+    message: err.message,
+    name: err.name,
+    stack: err.stack,
     component: instance,
     errorInfo: info,
     retryCount: retryCount.value,
   });
 
-  // Prevent error from propagating to global handler
   return false;
 });
 
-// Watch for error changes to auto-retry
 watch(error, (newError) => {
   if (newError && retryCount.value < maxRetries.value) {
-    // Auto-retry for network errors after a delay
     if (
       newError.message.includes("network") ||
       newError.message.includes("fetch")
@@ -214,7 +211,6 @@ const handleRetry = () => {
     error.value = null;
     errorInfo.value = "";
 
-    // Call custom retry handler if provided
     if (props.onRetry) {
       props.onRetry();
     }

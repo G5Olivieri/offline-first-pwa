@@ -4,13 +4,14 @@ defineOptions({
 });
 
 import { useOrderStore } from "@/order/order-store";
-import type { Product } from "@/product/product";
 import {
   getProductService,
   searchService,
 } from "@/product/get-product-service";
+import type { Product } from "@/product/product";
 import { useNotificationStore } from "@/stores/notification-store";
-import { userTrackingService } from "@/user-tracking/singleton";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -93,7 +94,8 @@ const loadProducts = async () => {
   try {
     const productService = await getProductService();
     if (searchQuery.value.trim()) {
-      userTrackingService.track("products.search", {
+      trackingService.track(EventType.USER, {
+        eventType: "products.search",
         query: searchQuery.value.trim(),
         type: searchType.value,
       });

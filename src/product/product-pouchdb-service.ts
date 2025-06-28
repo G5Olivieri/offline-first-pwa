@@ -1,7 +1,7 @@
 import { ConflictError, ValidationError } from "@/error/errors";
 import type { Product } from "@/product/product";
-import { ProductSearchService } from "./product-search-service";
-import type { ProductService } from "./product-service";
+import { ProductSearchService } from "@/product/product-search-service";
+import type { ProductService } from "@/product/product-service";
 
 export class ProductPouchDBService implements ProductService {
   public constructor(

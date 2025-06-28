@@ -6,7 +6,8 @@ defineOptions({
 import { type Customer } from "@/customer/customer";
 import { getCustomerService } from "@/customer/get-customer-service";
 import { useOrderStore } from "@/order/order-store";
-import { userTrackingService } from "@/user-tracking/singleton";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -23,7 +24,8 @@ const onSubmit = async () => {
     return;
   }
 
-  userTrackingService.track("customer_search", {
+  trackingService.track(EventType.USER, {
+    eventType: "customer_search",
     document: searchDocument.value,
   });
 
@@ -49,7 +51,8 @@ const onSubmit = async () => {
 };
 
 const selectCustomer = async (customer: Customer) => {
-  userTrackingService.track("customer_selected", {
+  trackingService.track(EventType.USER, {
+    eventType: "customer_selected",
     document: customer.document,
   });
   orderStore.selectCustomer(customer);

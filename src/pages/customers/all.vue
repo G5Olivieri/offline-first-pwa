@@ -5,8 +5,9 @@ defineOptions({
 
 import { type Customer } from "@/customer/customer";
 import { getCustomerService } from "@/customer/get-customer-service";
-import { errorTrackingService } from "@/error/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { onMounted, ref } from "vue";
 
 const customers = ref<Customer[]>([]);
@@ -18,11 +19,11 @@ const deleteCustomer = async (id: string) => {
     await customerService.deleteCustomer(id);
     customers.value = customers.value.filter((customer) => customer._id !== id);
   } catch (error) {
-    errorTrackingService.track(error as Error, {
-      component: "AllCustomers",
-      operation: "deleteCustomer",
+    trackingService.track(EventType.ERROR, {
+      message: (error as Error).message,
+      stack: (error as Error).stack,
+      eventType: "delete_customer",
       customerId: id,
-      timestamp: new Date(),
     });
     notificationStore.showError(
       "Delete Customer",
@@ -37,10 +38,10 @@ const fetchAll = async () => {
     const result = await customerService.listCustomers();
     customers.value = result.customers;
   } catch (error) {
-    errorTrackingService.track(error as Error, {
-      component: "AllCustomers",
-      operation: "fetchAll",
-      timestamp: new Date(),
+    trackingService.track(EventType.ERROR, {
+      message: (error as Error).message,
+      stack: (error as Error).stack,
+      eventType: "fetch_all_customers",
     });
     notificationStore.showError(
       "Fetch Customers",

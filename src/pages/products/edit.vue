@@ -3,10 +3,11 @@ defineOptions({
   name: "EditProduct",
 });
 
-import type { Product } from "@/product/product";
 import { getProductService } from "@/product/get-product-service";
+import type { Product } from "@/product/product";
 import { useNotificationStore } from "@/stores/notification-store";
-import { userTrackingService } from "@/user-tracking/singleton";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { onMounted, ref } from "vue";
@@ -103,7 +104,8 @@ const loadProduct = async () => {
 
 const onSubmit = handleSubmit(async (values) => {
   if (!product.value) return;
-  userTrackingService.track("update_product", {
+  trackingService.track(EventType.USER, {
+    eventType: "update_product",
     productId: product.value._id,
     changes: values,
   });

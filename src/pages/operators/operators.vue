@@ -3,11 +3,12 @@ defineOptions({
   name: "OperatorsPage",
 });
 
-import type { Operator } from "@/operator/operator";
 import { getOperatorService } from "@/operator/get-operator-service";
-import { useNotificationStore } from "@/stores/notification-store";
+import type { Operator } from "@/operator/operator";
 import { useOrderStore } from "@/order/order-store";
-import { userTrackingService } from "@/user-tracking/singleton";
+import { useNotificationStore } from "@/stores/notification-store";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -17,7 +18,8 @@ const orderStore = useOrderStore();
 const notificationStore = useNotificationStore();
 
 const selectOperator = async (operator: Operator) => {
-  userTrackingService.track("select_operator", {
+  trackingService.track(EventType.USER, {
+    eventType: "select_operator",
     operatorId: operator._id,
   });
   try {

@@ -1,6 +1,8 @@
 import { config } from "@/config/env";
-import { errorTrackingService } from "@/error/singleton";
+import { trackingService } from "@/tracking/singleton";
 import type { App } from "vue";
+import { EventType } from "./tracking";
+
 export class GlobalErrorHandler {
   setupVueErrorHandler(app: App) {
     app.config.errorHandler = (error, instance, info) => {
@@ -54,7 +56,13 @@ export class GlobalErrorHandler {
     error: Error,
     context: Record<string, unknown> = {},
   ) {
-    errorTrackingService.track(error, context);
+    trackingService.track(EventType.ERROR, {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      source: "global-error-handler",
+      ...context,
+    });
   }
 
   private getComponentName(instance: unknown): string {
@@ -80,12 +88,10 @@ export class GlobalErrorHandler {
 // Factory function to create and configure global error handler
 export function createGlobalErrorHandler(app: App) {
   if (config.tracking.error.globalEnabled === false) {
-    return null;
+    return;
   }
   const errorHandler = new GlobalErrorHandler();
 
   errorHandler.setupVueErrorHandler(app);
   errorHandler.setupWindowErrorHandler();
-
-  return errorHandler;
 }

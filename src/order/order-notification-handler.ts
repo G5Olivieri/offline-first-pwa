@@ -1,18 +1,17 @@
-import type { ErrorTracking } from "@/error/error-tracking";
-import { ValidationError } from "@/error/errors";
 import {
   orderEventEmitter,
   type OrderEvent,
 } from "@/order/order-event-emitter";
 import type { Product } from "@/product/product";
 import type { NotificationService } from "@/services/notification-service";
+import { EventType, type Tracking } from "@/tracking/tracking";
 
 export class OrderNotificationHandler {
   private unsubscribeFunctions: Array<() => void> = [];
 
   constructor(
     private notification: NotificationService,
-    private errorTracking: ErrorTracking,
+    private tracking: Tracking,
   ) {
     this.setupEventListeners();
   }
@@ -87,7 +86,8 @@ export class OrderNotificationHandler {
   }
 
   private handleOutOfStock(event: OrderEvent<"out_of_stock">) {
-    this.errorTracking.track(new Error("Out of stock error"), {
+    this.tracking.track(EventType.ERROR, {
+      message: "Out of stock error",
       component: "OrderStore",
       operation: "addProductToOrder",
       product: {
@@ -140,8 +140,9 @@ export class OrderNotificationHandler {
         "An unexpected error occurred while processing your order.",
     );
 
-    this.errorTracking.track(payload.error, {
-      ...payload.context,
+    this.tracking.track(EventType.ERROR, {
+      error: payload.error,
+      context: payload.context,
       component: "OrderStore",
     });
   }
@@ -149,7 +150,8 @@ export class OrderNotificationHandler {
   private handlePaymentValidationFailed(
     event: OrderEvent<"payment_validation_failed">,
   ) {
-    this.errorTracking.track(new ValidationError(event.payload.message), {
+    this.tracking.track(EventType.ERROR, {
+      message: event.payload.message,
       component: "OrderStore",
       operation: "validatePayment",
       context: event.payload.details || {},
@@ -162,10 +164,11 @@ export class OrderNotificationHandler {
 
   private handleOrderLoadFailed(event: OrderEvent<"order_load_failed">) {
     const payload = event.payload;
-    this.errorTracking.track(payload.error, {
+    this.tracking.track(EventType.ERROR, {
+      error: payload.error,
       component: "OrderStore",
       operation: "loadOrder",
-      ...event.payload.context,
+      context: event.payload.context,
     });
 
     this.notification.showError(
@@ -184,12 +187,12 @@ let orderNotificationHandler: OrderNotificationHandler | null = null;
 
 export const startOrderNotificationHandler = (
   notificationService: NotificationService,
-  errorTracking: ErrorTracking,
+  tracking: Tracking,
 ): OrderNotificationHandler => {
   if (!orderNotificationHandler) {
     orderNotificationHandler = new OrderNotificationHandler(
       notificationService,
-      errorTracking,
+      tracking,
     );
   }
   return orderNotificationHandler;

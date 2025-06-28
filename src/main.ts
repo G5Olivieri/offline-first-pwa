@@ -4,7 +4,7 @@ import { createPinia } from "pinia";
 import { createApp } from "vue";
 import "./style.css";
 
-import { createGlobalErrorHandler } from "@/error/global-error-handler";
+import { createGlobalErrorHandler } from "@/tracking/global-error-handler.ts";
 
 const app = createApp(App);
 const pinia = createPinia();

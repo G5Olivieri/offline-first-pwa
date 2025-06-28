@@ -205,7 +205,8 @@ defineOptions({
 
 import { getProductService } from "@/product/get-product-service";
 import { useNotificationStore } from "@/stores/notification-store";
-import { userTrackingService } from "@/user-tracking/singleton";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -231,7 +232,8 @@ const importProducts = async () => {
     return;
   }
 
-  userTrackingService.track("import_products", {
+  trackingService.track(EventType.USER, {
+    eventType: "import_products",
     fileName: file.value.name,
   });
   isImporting.value = true;

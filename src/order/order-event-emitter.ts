@@ -1,6 +1,4 @@
 import type { Customer } from "@/customer/customer";
-import type { ErrorTracking } from "@/error/error-tracking";
-import { errorTrackingService } from "@/error/singleton";
 import {
   AbstractTypedEventEmitter,
   type ExtractEvent,
@@ -9,6 +7,8 @@ import {
 import type { Operator } from "@/operator/operator";
 import type { Order } from "@/order/order";
 import type { Product } from "@/product/product";
+import { trackingService } from "@/tracking/singleton";
+import { EventType, type Tracking } from "@/tracking/tracking";
 
 export type OrderEventTypeMap = {
   stock_limit_reached: {
@@ -49,7 +49,7 @@ export class OrderEventEmitter
   extends AbstractTypedEventEmitter<OrderEventTypeMap>
   implements TypedEventEmitter<OrderEventTypeMap>
 {
-  public constructor(private readonly errorTracking: ErrorTracking) {
+  public constructor(private readonly tracking: Tracking) {
     super();
   }
 
@@ -57,15 +57,13 @@ export class OrderEventEmitter
     error: unknown,
     eventType: keyof OrderEventTypeMap,
   ): void {
-    this.errorTracking.track(
-      new Error(`Error in listener for event type "${eventType}": ${error}`),
-      {
-        eventType,
-        error,
-        timestamp: new Date(),
-      },
-    );
+    this.tracking.track(EventType.ERROR, {
+      message: `Error in listener for event type "${eventType}": ${error}`,
+      eventType,
+      error,
+      timestamp: new Date(),
+    });
   }
 }
 
-export const orderEventEmitter = new OrderEventEmitter(errorTrackingService);
+export const orderEventEmitter = new OrderEventEmitter(trackingService);

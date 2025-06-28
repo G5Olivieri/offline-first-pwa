@@ -91,7 +91,8 @@
 </template>
 <script setup lang="ts">
 import type { Item } from "@/order/order";
-import { userTrackingService } from "@/user-tracking/singleton";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 
 const props = defineProps<{
   item: Item;
@@ -103,14 +104,16 @@ const emit = defineEmits<{
 }>();
 
 const increase = () => {
-  userTrackingService.track("increase_item_quantity", {
+  trackingService.track(EventType.USER, {
+    eventType: "increase_item_quantity",
     itemId: props.item.product._id,
   });
   emit("increase", props.item);
 };
 
 const decrease = () => {
-  userTrackingService.track("decrease_item_quantity", {
+  trackingService.track(EventType.USER, {
+    eventType: "decrease_item_quantity",
     itemId: props.item.product._id,
   });
   emit("decrease", props.item);

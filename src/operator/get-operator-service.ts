@@ -1,7 +1,7 @@
-import { ErrorTrackingPubSub } from "@/error/error-tracking-pubsub";
 import { getOperatorDB } from "@/operator/operator-db";
 import { OperatorPouchDBService } from "@/operator/operator-pouchdb-service";
 import { OperatorServiceWithErrorHandlingDecorator } from "@/operator/operator-service-with-error-handling-decorator";
+import { getTrackingService } from "@/tracking/singleton";
 
 let _operatorService: OperatorServiceWithErrorHandlingDecorator | null = null;
 
@@ -14,7 +14,7 @@ export const getOperatorService =
     const operatorDB = await getOperatorDB();
     _operatorService = new OperatorServiceWithErrorHandlingDecorator(
       new OperatorPouchDBService(operatorDB),
-      new ErrorTrackingPubSub("OperatorService"),
+      getTrackingService("OperatorService"),
     );
 
     return _operatorService;

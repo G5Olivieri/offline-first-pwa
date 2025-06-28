@@ -147,9 +147,10 @@
 </template>
 
 <script setup lang="ts">
-import { errorTrackingService } from "@/error/singleton";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useOnlineStatusStore } from "@/stores/online-status-store";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -167,21 +168,13 @@ const currentUrl = computed(() => window.location.href);
 const isOnline = computed(() => onlineStatusStore.isOnline);
 const canGoBack = computed(() => window.history.length > 1);
 
-// Track 404 errors for analytics with enhanced context
 onMounted(() => {
-  const context = {
-    component: "NotFound",
-    operation: "404Navigation",
+  trackingService.track(EventType.ERROR, {
+    eventType: "page_not_found",
     url: route.fullPath,
     referrer: document.referrer,
     userAgent: navigator.userAgent,
-    timestamp: new Date(),
-  };
-
-  errorTrackingService.track(
-    new Error(`Page not found: ${route.fullPath}`),
-    context,
-  );
+  });
 });
 
 const goHome = async () => {
@@ -192,14 +185,14 @@ const goHome = async () => {
       "Successfully returned to home page",
     );
   } catch (error) {
-    errorTrackingService.track(new Error("Failed to navigate to home page"), {
-      error,
+    trackingService.track(EventType.ERROR, {
+      message: (error as Error).message,
+      stack: (error as Error).stack,
       component: "NotFound",
       operation: "goHome",
       url: route.fullPath,
       referrer: document.referrer,
       userAgent: navigator.userAgent,
-      timestamp: new Date(),
     });
     notificationStore.showError(
       "Navigation Error",
@@ -226,22 +219,14 @@ const goBack = async () => {
 };
 
 const reportIssue = () => {
-  const context = {
-    component: "NotFound",
-    operation: "UserReportedIssue",
+  trackingService.track(EventType.USER, {
+    message: `User reported 404 issue for path: ${route.fullPath}`,
+    eventType: "user_reported_issue",
     url: route.fullPath,
     referrer: document.referrer,
     userAgent: navigator.userAgent,
-    timestamp: new Date(),
-  };
+  });
 
-  // Track the user's report action
-  errorTrackingService.track(
-    new Error(`User reported 404 issue for path: ${route.fullPath}`),
-    context,
-  );
-
-  // Show confirmation notification
   notificationStore.showInfo(
     "Issue Reported",
     "Thank you for your feedback. Our team has been notified and will investigate this issue.",
@@ -251,7 +236,6 @@ const reportIssue = () => {
 </script>
 
 <style scoped>
-/* Additional styles for the 404 page */
 @keyframes bounce {
   0%,
   20%,

@@ -1,6 +1,5 @@
 import type { Customer } from "@/customer/customer";
 import { getCustomerService } from "@/customer/get-customer-service";
-import { errorTrackingService } from "@/error/singleton";
 import type { Operator } from "@/operator/operator";
 import { getOperatorService } from "@/operator/get-operator-service";
 import type { Item, Order, PaymentMethod } from "@/order/order";
@@ -16,6 +15,7 @@ import { useLocalStorage } from "@vueuse/core";
 import throttle from "lodash.throttle";
 import { defineStore } from "pinia";
 import { computed, onMounted, reactive, ref, toValue, watch } from "vue";
+import { getTrackingService } from "@/tracking/singleton";
 
 export const useOrderStore = defineStore("orderStore", () => {
   let orderDB: PouchDB.Database<Order> | null = null;
@@ -426,7 +426,7 @@ export const useOrderStore = defineStore("orderStore", () => {
   };
 
   onMounted(() => {
-    startOrderNotificationHandler(notificationStore, errorTrackingService);
+    startOrderNotificationHandler(notificationStore, getTrackingService("OrderStore"));
     loadOrder();
   });
 

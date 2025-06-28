@@ -1,13 +1,13 @@
-import type { ErrorTracking } from "@/error/error-tracking";
 import type { Operator } from "@/operator/operator";
 import type { OperatorService } from "@/operator/operator-service";
+import { EventType, type Tracking } from "@/tracking/tracking";
 
 export class OperatorServiceWithErrorHandlingDecorator
   implements OperatorService
 {
   constructor(
     private readonly operatorService: OperatorService,
-    private readonly errorTracking: ErrorTracking,
+    private readonly tracking: Tracking,
   ) {}
 
   private async withErrorHandling<T>(
@@ -17,7 +17,11 @@ export class OperatorServiceWithErrorHandlingDecorator
     try {
       return await operation();
     } catch (error) {
-      this.errorTracking.track(error as Error, context);
+      this.tracking.track(EventType.ERROR, {
+        message: (error as Error).message,
+        stack: (error as Error).stack,
+        context,
+      });
       throw error;
     }
   }

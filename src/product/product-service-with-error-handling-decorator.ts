@@ -1,13 +1,13 @@
-import type { ErrorTracking } from "@/error/error-tracking";
 import type { Product } from "@/product/product";
-import type { ProductService } from "./product-service";
+import type { ProductService } from "@/product/product-service";
+import { EventType, type Tracking } from "@/tracking/tracking";
 
 export class ProductServiceWithErrorHandlingDecorator
   implements ProductService
 {
   constructor(
     private readonly productService: ProductService,
-    private readonly errorTracking: ErrorTracking,
+    private readonly tracking: Tracking,
   ) {}
 
   private async withErrorHandling<T>(
@@ -17,7 +17,11 @@ export class ProductServiceWithErrorHandlingDecorator
     try {
       return await operation();
     } catch (error) {
-      this.errorTracking.track(error as Error, context);
+      this.tracking.track(EventType.ERROR, {
+        message: (error as Error).message,
+        stack: (error as Error).stack,
+        context,
+      });
       throw error;
     }
   }

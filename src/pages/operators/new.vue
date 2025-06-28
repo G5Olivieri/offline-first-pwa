@@ -5,7 +5,8 @@ defineOptions({
 
 import { getOperatorService } from "@/operator/get-operator-service";
 import { useOrderStore } from "@/order/order-store";
-import { userTrackingService } from "@/user-tracking/singleton";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
@@ -29,7 +30,8 @@ const orderStore = useOrderStore();
 const onSubmit = handleSubmit(async (values) => {
   const { name } = values;
 
-  userTrackingService.track("create_operator", {
+  trackingService.track(EventType.USER, {
+    eventType: "create_operator",
     name,
   });
   try {

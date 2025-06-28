@@ -1,6 +1,9 @@
 import { config } from "@/config/env";
 import { useAuthStore } from "@/stores/auth-store";
 
+// TODO: remove store dependency
+const authStore = useAuthStore();
+
 export const sync = (local: PouchDB.Database) => {
   if (config.enableSync && config.couchdbUrl) {
     const name = local.name;
@@ -27,8 +30,6 @@ export const sync = (local: PouchDB.Database) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (err as any).error === "unauthorized"
         ) {
-          // TODO: remove store dependency
-          const authStore = useAuthStore();
           authStore.handleUnauthorized();
         }
       })

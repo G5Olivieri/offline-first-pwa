@@ -19,7 +19,8 @@ import { useSetupStore } from "@/stores/setup-store";
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { getProductService } from "./product/get-product-service";
-import { userTrackingService } from "./user-tracking/singleton";
+import { trackingService } from "./tracking/singleton";
+import { EventType } from "./tracking/tracking";
 
 const barcode = ref("");
 const router = useRouter();
@@ -76,7 +77,8 @@ const gotoCheckout = () => {
 };
 
 const completeOrder = async () => {
-  userTrackingService.track("complete_order", {
+  trackingService.track(EventType.USER, {
+    eventType: "complete_order",
     orderId: orderStore.id,
   });
   if (!orderStore.id) {
@@ -94,7 +96,8 @@ const completeOrder = async () => {
 };
 
 const abandonOrder = async () => {
-  userTrackingService.track("abandon_order", {
+  trackingService.track(EventType.USER, {
+    eventType: "abandon_order",
     orderId: orderStore.id,
   });
   if (orderStore.id) {
@@ -155,7 +158,8 @@ const addProduct = async () => {
     return;
   }
 
-  userTrackingService.track("add_product", {
+  trackingService.track(EventType.USER, {
+    eventType: "add_product",
     barcode: barcode.value,
   });
 
@@ -428,15 +432,14 @@ onMounted(() => {
                   </svg>
                 </RouterLink>
               </div>
-            </div> <div class="flex flex-col items-center gap-2 flex-shrink-0">
+            </div>
+            <div class="flex flex-col items-center gap-2 flex-shrink-0">
               <ClockComponent />
               <div v-if="onlineStatusStore.isFullyOnline">
                 <span class="text-xs text-green-600 font-medium"> Online </span>
               </div>
               <div v-else>
-                <span class="text-xs text-red-600 font-medium">
-                  Offline
-                </span>
+                <span class="text-xs text-red-600 font-medium"> Offline </span>
               </div>
             </div>
           </div>

@@ -1,13 +1,14 @@
 import type { Customer } from "@/customer/customer";
-import type { ErrorTracking } from "@/error/error-tracking";
 import type { CustomerService } from "@/customer/customer-service";
+import type { Tracking } from "@/tracking/tracking";
+import { EventType } from "@/tracking/tracking";
 
 export class CustomerServiceWithErrorHandlingDecorator
   implements CustomerService
 {
   constructor(
     private readonly customerService: CustomerService,
-    private readonly errorTracking: ErrorTracking,
+    private readonly tracking: Tracking,
   ) {}
 
   private async withErrorHandling<T>(
@@ -17,7 +18,11 @@ export class CustomerServiceWithErrorHandlingDecorator
     try {
       return await operation();
     } catch (error) {
-      this.errorTracking.track(error as Error, context);
+      this.tracking.track(EventType.ERROR, {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        context,
+      });
       throw error;
     }
   }

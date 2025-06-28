@@ -1,7 +1,8 @@
 import { useAuthStore } from "@/stores/auth-store";
 import type { RouteRecordRaw } from "vue-router";
 import { createRouter, createWebHistory } from "vue-router";
-import { userTrackingService } from "./user-tracking/singleton";
+import { trackingService } from "./tracking/singleton";
+import { EventType } from "./tracking/tracking";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -95,16 +96,9 @@ export const router = createRouter({
   routes,
 });
 
-router.afterEach((to, from) => {
-  userTrackingService.track("navigation.after", {
-    from: from.name as string | null,
-    to: to.name as string | null,
-    url: to.fullPath,
-  });
-});
-
 router.beforeEach((to, from, next) => {
-  userTrackingService.track("navigation.before", {
+  trackingService.track(EventType.USER, {
+    eventType: "navigation.before",
     from: from.name as string | null,
     to: to.name as string | null,
     url: to.fullPath,
@@ -115,4 +109,13 @@ router.beforeEach((to, from, next) => {
   } else {
     next();
   }
+});
+
+router.afterEach((to, from) => {
+  trackingService.track(EventType.USER, {
+    eventType: "navigation.after",
+    from: from.name as string | null,
+    to: to.name as string | null,
+    url: to.fullPath,
+  });
 });

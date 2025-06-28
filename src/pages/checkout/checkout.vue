@@ -5,7 +5,8 @@ defineOptions({
 
 import { formatCurrency } from "@/config/env";
 import { useOrderStore } from "@/order/order-store";
-import { userTrackingService } from "@/user-tracking/singleton";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -30,7 +31,8 @@ const canProceed = computed(() => {
 
 const processPayment = async () => {
   if (!canProceed.value) return;
-  userTrackingService.track("complete_checkout", {
+  trackingService.track(EventType.USER, {
+    eventType: "complete_checkout",
     id: orderStore.id,
   });
   isProcessing.value = true;

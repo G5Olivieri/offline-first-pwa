@@ -385,7 +385,8 @@
 import ErrorBoundary from "@/components/error-boundary.vue";
 import { getProductService } from "@/product/get-product-service";
 import type { Product } from "@/product/product";
-import { userTrackingService } from "@/user-tracking/singleton";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { ref } from "vue";
@@ -472,7 +473,10 @@ const onSubmit = handleSubmit(async (values) => {
 
   try {
     const productService = await getProductService();
-    userTrackingService.track("create_product", values);
+    trackingService.track(EventType.USER, {
+      eventType: "create_product",
+      values,
+    });
 
     const productData: Omit<Product, "_id" | "rev"> = {
       name: values.name,
@@ -525,12 +529,16 @@ const onSubmit = handleSubmit(async (values) => {
 });
 
 const handleCancel = () => {
-  userTrackingService.track("cancel_create_product");
+  trackingService.track(EventType.USER, {
+    eventType: "cancel_create_product",
+  });
   router.push("/products");
 };
 
 const handleRetry = () => {
-  userTrackingService.track("retry_create_product");
+  trackingService.track(EventType.USER, {
+    eventType: "retry_create_product",
+  });
   console.log("Retrying form operation...");
 };
 </script>

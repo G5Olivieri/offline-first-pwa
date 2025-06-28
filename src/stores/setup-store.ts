@@ -164,7 +164,7 @@ export const useSetupStore = defineStore("setupStore", () => {
 
     // Clear search cache
     try {
-      await searchService.clearCache();
+      await searchService.clear();
     } catch (error) {
       console.error("Failed to clear search cache:", error);
     }

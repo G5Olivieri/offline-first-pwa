@@ -590,10 +590,11 @@ defineOptions({
 });
 
 import { useOrderStore } from "@/order/order-store";
-import type { Product } from "@/product/product";
 import { getProductService } from "@/product/get-product-service";
+import type { Product } from "@/product/product";
 import { useNotificationStore } from "@/stores/notification-store";
-import { userTrackingService } from "@/user-tracking/singleton";
+import { trackingService } from "@/tracking/singleton";
+import { EventType } from "@/tracking/tracking";
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -664,7 +665,8 @@ async function loadProduct(): Promise<void> {
 
 async function addToOrder(): Promise<void> {
   if (!product.value) return;
-  userTrackingService.track("product_add_to_order", {
+  trackingService.track(EventType.USER, {
+    eventType: "product_add_to_order",
     id: product.value._id,
   });
   try {
@@ -690,7 +692,8 @@ async function deleteProduct(): Promise<void> {
     { type: "error" },
   );
 
-  userTrackingService.track("product_deleted", {
+  trackingService.track(EventType.USER, {
+    eventType: "product_deleted",
     id: product.value._id,
     result: result.confirmed ? "confirmed" : "cancelled",
   });
